@@ -26,7 +26,8 @@ How to build with `libgit2` statically linked into a single executable without d
   replace github.com/libgit2/git2go/v30 => ./static/git2go
   ```
 
-- Build `git-get` with `--tags static` flag:
+- Build, install and test `git-get` with `--tags static` flag, eg:
   ```
   go build -i --tags static
+  go test --tags static
   ```
