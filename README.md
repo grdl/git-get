@@ -31,3 +31,17 @@ How to build with `libgit2` statically linked into a single executable without d
   go build -i --tags static
   go test --tags static
   ```
+
+## Features
+
+Show repo status:
+- uncommitted changes
+- untracked files
+- push needed (master, branch1, branch2 etc.)
+- pull needed
+- upstream missing
+- stashes?
+- state (merging, rebasing, conflict, cherry picking etc)
+- ahead/behind?
+- submodules?
+
