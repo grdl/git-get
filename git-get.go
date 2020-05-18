@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/libgit2/git2go/v30"
+	"fmt"
+
+	git "github.com/libgit2/git2go/v30"
 )
-import "fmt"
 
 func main() {
 	options := &git.CloneOptions{
