@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	git "github.com/libgit2/git2go/v30"
 )
 
@@ -21,19 +23,19 @@ const (
 func cleanupRepo(t *testing.T, repo *git.Repository) {
 	err := os.RemoveAll(repo.Workdir())
 	if err != nil {
-		t.Errorf("failed cleaning up repo %s", err.Error())
+		t.Errorf("failed cleaning up repo")
 	}
 }
 
 func newTempRepo() (*git.Repository, error) {
 	dir, err := ioutil.TempDir("", "test-repo-")
 	if err != nil {
-		return nil, fmt.Errorf("failed creating a temp repo %s", err.Error())
+		return nil, errors.Wrap(err, "failed creating a temp repo")
 	}
 
 	repo, err := git.InitRepository(dir, false)
 	if err != nil {
-		return nil, fmt.Errorf("failed initializing a temp repo %s", err.Error())
+		return nil, errors.Wrap(err, "failed initializing a temp repo")
 	}
 
 	return repo, nil
@@ -47,7 +49,7 @@ func newTempRepoWithUntracked() (*git.Repository, error) {
 
 	err = ioutil.WriteFile(path.Join(repo.Workdir(), ReadmeFile), []byte(ReadmeContent), 0644)
 	if err != nil {
-		return nil, fmt.Errorf("failed writing a file %s", err.Error())
+		return nil, errors.Wrap(err, "failed writing a file")
 	}
 
 	return repo, nil
@@ -61,17 +63,17 @@ func newTempRepoWithStaged() (*git.Repository, error) {
 
 	index, err := repo.Index()
 	if err != nil {
-		return nil, fmt.Errorf("failed getting repo index %s", err.Error())
+		return nil, errors.Wrap(err, "failed getting repo index")
 	}
 
 	err = index.AddByPath(ReadmeFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed adding file to index %s", err.Error())
+		return nil, errors.Wrap(err, "failed adding file to index")
 	}
 
 	err = index.Write()
 	if err != nil {
-		return nil, fmt.Errorf("failed writing index %s", err.Error())
+		return nil, errors.Wrap(err, "failed writing index")
 	}
 
 	return repo, nil
@@ -85,17 +87,17 @@ func newTempRepoWithCommit() (*git.Repository, error) {
 
 	index, err := repo.Index()
 	if err != nil {
-		return nil, fmt.Errorf("failed creating a temp repo %s", err.Error())
+		return nil, errors.Wrap(err, "failed creating a temp repo")
 	}
 
 	treeId, err := index.WriteTree()
 	if err != nil {
-		return nil, fmt.Errorf("failed building tree from index %s", err.Error())
+		return nil, errors.Wrap(err, "failed building tree from index")
 	}
 
 	tree, err := repo.LookupTree(treeId)
 	if err != nil {
-		return nil, fmt.Errorf("failed looking up tree %s", err.Error())
+		return nil, errors.Wrap(err, "failed looking up tree")
 	}
 
 	signature := &git.Signature{
@@ -107,36 +109,16 @@ func newTempRepoWithCommit() (*git.Repository, error) {
 
 	_, err = repo.CreateCommit("HEAD", signature, signature, message, tree)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating commit %s", err.Error())
+		return nil, errors.Wrap(err, "failed creating commit")
 	}
 
 	return repo, nil
-}
-func TestStatus(t *testing.T) {
-	repo, err := git.OpenRepository("/tmp/testgit")
-	if err != nil {
-		t.Fatalf("error: %s", err.Error())
-	}
-
-	defer cleanupRepo(t, repo)
-
-	opts := &git.StatusOptions{
-		Show:  git.StatusShowIndexAndWorkdir,
-		Flags: git.StatusOptIncludeUntracked | git.StatusOptIncludeIgnored,
-	}
-
-	status, _ := repo.StatusList(opts)
-	entryCount, _ := status.EntryCount()
-	for i := 0; i < entryCount; i++ {
-		entry, _ := status.ByIndex(i)
-		fmt.Println(entry)
-	}
 }
 
 func TestCreatingRepoWithCommit(t *testing.T) {
 	repo, err := newTempRepoWithCommit()
 	if err != nil {
-		t.Fatalf("failed creating test repository %s", err.Error())
+		t.Fatalf("failed creating test repository")
 	}
 	defer cleanupRepo(t, repo)
 	fmt.Println(repo.Path())
