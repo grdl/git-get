@@ -6,7 +6,7 @@ import (
 	git "github.com/libgit2/git2go/v30"
 )
 
-func TestStatusEntriesWithEmptyRepo(t *testing.T) {
+func TestStatusWithEmptyRepo(t *testing.T) {
 	repo, err := newTestRepo()
 	checkFatal(t, err)
 	defer cleanupRepo(t, repo)
@@ -17,9 +17,16 @@ func TestStatusEntriesWithEmptyRepo(t *testing.T) {
 	if len(entries) != 0 {
 		t.Errorf("Empty repo should have no status entries")
 	}
+
+	statuses, err := GetStatus(repo.Workdir())
+	checkFatal(t, err)
+
+	if len(statuses) != 1 && statuses[0] != StatusOk {
+		t.Errorf("Empty repo should have a single StatusOk status")
+	}
 }
 
-func TestStatusEntriesWithSingleUnstagedFile(t *testing.T) {
+func TestStatusWithSingleUnstagedFile(t *testing.T) {
 	repo, err := newTestRepo()
 	checkFatal(t, err)
 	defer cleanupRepo(t, repo)
@@ -37,9 +44,16 @@ func TestStatusEntriesWithSingleUnstagedFile(t *testing.T) {
 	if entries[0].Status != git.StatusWtNew {
 		t.Errorf("Invalid status, got %d; want %d", entries[0].Status, git.StatusWtNew)
 	}
+
+	statuses, err := GetStatus(repo.Workdir())
+	checkFatal(t, err)
+
+	if len(statuses) != 1 && statuses[0] != StatusUntrackedFiles {
+		t.Errorf("Empty repo should have a single StatusUntrackedFiles status")
+	}
 }
 
-func TestStatusEntriesWithSingleStagedFile(t *testing.T) {
+func TestStatusWithSingleStagedFile(t *testing.T) {
 	repo, err := newTestRepo()
 	checkFatal(t, err)
 	defer cleanupRepo(t, repo)
@@ -59,9 +73,16 @@ func TestStatusEntriesWithSingleStagedFile(t *testing.T) {
 	if entries[0].Status != git.StatusIndexNew {
 		t.Errorf("Invalid status, got %d; want %d", entries[0].Status, git.StatusIndexNew)
 	}
+
+	statuses, err := GetStatus(repo.Workdir())
+	checkFatal(t, err)
+
+	if len(statuses) != 1 && statuses[0] != StatusUncommittedChanges {
+		t.Errorf("Empty repo should have a single SStatusUncommittedChange status")
+	}
 }
 
-func TestStatusEntriesWithSingleCommit(t *testing.T) {
+func TestStatusWithSingleCommit(t *testing.T) {
 	repo, err := newTestRepo()
 	checkFatal(t, err)
 	defer cleanupRepo(t, repo)
@@ -79,9 +100,16 @@ func TestStatusEntriesWithSingleCommit(t *testing.T) {
 	if len(entries) != 0 {
 		t.Errorf("Repo with no uncommitted files should have no status entries")
 	}
+
+	statuses, err := GetStatus(repo.Workdir())
+	checkFatal(t, err)
+
+	if len(statuses) != 1 && statuses[0] != StatusOk {
+		t.Errorf("Repo with no uncommitted files should have a single StatusOk status")
+	}
 }
 
-func TestStatusEntriesWithMultipleCommits(t *testing.T) {
+func TestStatusWithMultipleCommits(t *testing.T) {
 	repo, err := newTestRepo()
 	checkFatal(t, err)
 	defer cleanupRepo(t, repo)
@@ -105,5 +133,11 @@ func TestStatusEntriesWithMultipleCommits(t *testing.T) {
 
 	if len(entries) != 0 {
 		t.Errorf("Repo with no uncommitted files should have no status entries")
+	}
+	statuses, err := GetStatus(repo.Workdir())
+	checkFatal(t, err)
+
+	if len(statuses) != 1 && statuses[0] != StatusOk {
+		t.Errorf("Repo with no uncommitted files should have a single StatusOk status")
 	}
 }

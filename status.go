@@ -14,14 +14,41 @@ const (
 	StatusUnknown
 )
 
-func GetStatus(path string) (RepoStatus, error) {
+func GetStatus(path string) ([]RepoStatus, error) {
 	repo, err := git.OpenRepository(path)
 	if err != nil {
-		return StatusUnknown, errors.Wrap(err, "failed opening repository")
+		return nil, errors.Wrap(err, "failed opening repository")
 	}
 
-	_, err = statusEntries(repo)
-	return StatusOk, nil
+	entries, err := statusEntries(repo)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed opening repository")
+	}
+
+	statusSet := make(map[RepoStatus]bool)
+
+	statusSet[StatusOk] = true
+	for _, entry := range entries {
+		switch entry.Status {
+		case git.StatusWtNew:
+			statusSet[StatusUntrackedFiles] = true
+			statusSet[StatusOk] = false
+		case git.StatusIndexNew:
+			statusSet[StatusUncommittedChanges] = true
+			statusSet[StatusOk] = false
+		default:
+			statusSet[StatusUnknown] = true
+			statusSet[StatusOk] = false
+		}
+	}
+
+	var statusSlice []RepoStatus
+	for k, v := range statusSet {
+		if v {
+			statusSlice = append(statusSlice, k)
+		}
+	}
+	return statusSlice, nil
 }
 
 func statusEntries(repo *git.Repository) ([]git.StatusEntry, error) {
