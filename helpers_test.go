@@ -25,63 +25,41 @@ func cleanupRepo(t *testing.T, repo *git.Repository) {
 	}
 }
 
-func newTestRepo() (*git.Repository, error) {
+func newTestRepo(t *testing.T) *git.Repository {
 	dir, err := ioutil.TempDir("", "test-repo-")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed creating a temp repo")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed creating test repo directory"))
 
 	repo, err := git.InitRepository(dir, false)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed initializing a temp repo")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed initializing a temp repo"))
 
-	return repo, nil
+	return repo
 }
 
-func createFile(repo *git.Repository, name string) error {
+func createFile(t *testing.T, repo *git.Repository, name string) {
 	err := ioutil.WriteFile(path.Join(repo.Workdir(), name), []byte("I'm a file"), 0644)
-	if err != nil {
-		return errors.Wrap(err, "failed writing a file")
-	}
-
-	return nil
+	checkFatal(t, errors.Wrap(err, "Failed writing a file"))
 }
 
-func stageFile(repo *git.Repository, name string) error {
+func stageFile(t *testing.T, repo *git.Repository, name string) {
 	index, err := repo.Index()
-	if err != nil {
-		return errors.Wrap(err, "failed getting repo index")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed getting repo index"))
 
 	err = index.AddByPath(name)
-	if err != nil {
-		return errors.Wrap(err, "failed adding file to index")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed adding file to index"))
 
 	err = index.Write()
-	if err != nil {
-		return errors.Wrap(err, "failed writing index")
-	}
-
-	return nil
+	checkFatal(t, errors.Wrap(err, "Failed writing index"))
 }
 
-func createCommit(repo *git.Repository, message string) error {
+func createCommit(t *testing.T, repo *git.Repository, message string) {
 	index, err := repo.Index()
-	if err != nil {
-		return errors.Wrap(err, "failed creating a temp repo")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed getting repo index"))
 
 	treeId, err := index.WriteTree()
-	if err != nil {
-		return errors.Wrap(err, "failed building tree from index")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed building tree from index"))
 
 	tree, err := repo.LookupTree(treeId)
-	if err != nil {
-		return errors.Wrap(err, "failed looking up tree")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed looking up tree id"))
 
 	signature := &git.Signature{
 		Name:  "Some Guy",
@@ -90,27 +68,19 @@ func createCommit(repo *git.Repository, message string) error {
 	}
 
 	empty, err := repo.IsEmpty()
-	if err != nil {
-		return errors.Wrap(err, "failed cheching if repo is empty")
-	}
+	checkFatal(t, errors.Wrap(err, "Failed checking if repo is empty"))
 
 	if !empty {
 		currentBranch, err := repo.Head()
-		if err != nil {
-			return errors.Wrap(err, "failed getting current branch")
-		}
+		checkFatal(t, errors.Wrap(err, "Failed getting current branch"))
 
 		currentTip, err := repo.LookupCommit(currentBranch.Target())
-		if err != nil {
-			return errors.Wrap(err, "failed getting current tip")
-		}
+		checkFatal(t, errors.Wrap(err, "Failed getting current tip"))
+
 		_, err = repo.CreateCommit("HEAD", signature, signature, message, tree, currentTip)
 	} else {
 		_, err = repo.CreateCommit("HEAD", signature, signature, message, tree)
 	}
-	if err != nil {
-		return errors.Wrap(err, "failed creating commit")
-	}
 
-	return nil
+	checkFatal(t, errors.Wrap(err, "Failed creating a commit"))
 }

@@ -7,8 +7,7 @@ import (
 )
 
 func TestStatusWithEmptyRepo(t *testing.T) {
-	repo, err := newTestRepo()
-	checkFatal(t, err)
+	repo := newTestRepo(t)
 	defer cleanupRepo(t, repo)
 
 	entries, err := statusEntries(repo)
@@ -26,19 +25,17 @@ func TestStatusWithEmptyRepo(t *testing.T) {
 	}
 }
 
-func TestStatusWithSingleUnstagedFile(t *testing.T) {
-	repo, err := newTestRepo()
-	checkFatal(t, err)
+func TestStatusWithUntrackedFile(t *testing.T) {
+	repo := newTestRepo(t)
 	defer cleanupRepo(t, repo)
 
-	err = createFile(repo, "SomeFile")
-	checkFatal(t, err)
+	createFile(t, repo, "SomeFile")
 
 	entries, err := statusEntries(repo)
 	checkFatal(t, err)
 
 	if len(entries) != 1 {
-		t.Errorf("Repo with single unstaged file should have only one status entry")
+		t.Errorf("Repo with untracked file should have only one status entry")
 	}
 
 	if entries[0].Status != git.StatusWtNew {
@@ -49,25 +46,30 @@ func TestStatusWithSingleUnstagedFile(t *testing.T) {
 	checkFatal(t, err)
 
 	if len(statuses) != 1 && statuses[0] != StatusUntrackedFiles {
-		t.Errorf("Empty repo should have a single StatusUntrackedFiles status")
+		t.Errorf("Repo with untracked file should have a single StatusUntrackedFiles status")
 	}
 }
 
-func TestStatusWithSingleStagedFile(t *testing.T) {
-	repo, err := newTestRepo()
-	checkFatal(t, err)
+func TestStatusWithUnstagedFile(t *testing.T) {
+	//todo
+}
+
+func TestStatusWithUntrackedButIgnoredFile(t *testing.T) {
+	//todo
+}
+
+func TestStatusWithStagedFile(t *testing.T) {
+	repo := newTestRepo(t)
 	defer cleanupRepo(t, repo)
 
-	err = createFile(repo, "SomeFile")
-	checkFatal(t, err)
-	err = stageFile(repo, "SomeFile")
-	checkFatal(t, err)
+	createFile(t, repo, "SomeFile")
+	stageFile(t, repo, "SomeFile")
 
 	entries, err := statusEntries(repo)
 	checkFatal(t, err)
 
 	if len(entries) != 1 {
-		t.Errorf("Repo with single staged file should have only one status entry")
+		t.Errorf("Repo with staged file should have only one status entry")
 	}
 
 	if entries[0].Status != git.StatusIndexNew {
@@ -78,21 +80,17 @@ func TestStatusWithSingleStagedFile(t *testing.T) {
 	checkFatal(t, err)
 
 	if len(statuses) != 1 && statuses[0] != StatusUncommittedChanges {
-		t.Errorf("Empty repo should have a single SStatusUncommittedChange status")
+		t.Errorf("Repo with staged file should have a single StatusUncommittedChange status")
 	}
 }
 
 func TestStatusWithSingleCommit(t *testing.T) {
-	repo, err := newTestRepo()
-	checkFatal(t, err)
+	repo := newTestRepo(t)
 	defer cleanupRepo(t, repo)
 
-	err = createFile(repo, "SomeFile")
-	checkFatal(t, err)
-	err = stageFile(repo, "SomeFile")
-	checkFatal(t, err)
-	err = createCommit(repo, "Initial commit")
-	checkFatal(t, err)
+	createFile(t, repo, "SomeFile")
+	stageFile(t, repo, "SomeFile")
+	createCommit(t, repo, "Initial commit")
 
 	entries, err := statusEntries(repo)
 	checkFatal(t, err)
@@ -110,23 +108,15 @@ func TestStatusWithSingleCommit(t *testing.T) {
 }
 
 func TestStatusWithMultipleCommits(t *testing.T) {
-	repo, err := newTestRepo()
-	checkFatal(t, err)
+	repo := newTestRepo(t)
 	defer cleanupRepo(t, repo)
 
-	err = createFile(repo, "SomeFile")
-	checkFatal(t, err)
-	err = stageFile(repo, "SomeFile")
-	checkFatal(t, err)
-	err = createCommit(repo, "Initial commit")
-	checkFatal(t, err)
-
-	err = createFile(repo, "AnotherFile")
-	checkFatal(t, err)
-	err = stageFile(repo, "AnotherFile")
-	checkFatal(t, err)
-	err = createCommit(repo, "Second commit")
-	checkFatal(t, err)
+	createFile(t, repo, "SomeFile")
+	stageFile(t, repo, "SomeFile")
+	createCommit(t, repo, "Initial commit")
+	createFile(t, repo, "AnotherFile")
+	stageFile(t, repo, "AnotherFile")
+	createCommit(t, repo, "Second commit")
 
 	entries, err := statusEntries(repo)
 	checkFatal(t, err)
