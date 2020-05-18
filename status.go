@@ -17,12 +17,12 @@ const (
 func GetStatus(path string) ([]RepoStatus, error) {
 	repo, err := git.OpenRepository(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed opening repository")
+		return nil, errors.Wrap(err, "Failed opening repository")
 	}
 
 	entries, err := statusEntries(repo)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed opening repository")
+		return nil, errors.Wrap(err, "Failed opening repository")
 	}
 
 	statusSet := make(map[RepoStatus]bool)
@@ -59,19 +59,19 @@ func statusEntries(repo *git.Repository) ([]git.StatusEntry, error) {
 
 	status, err := repo.StatusList(opts)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed getting repository status")
+		return nil, errors.Wrap(err, "Failed getting repository status")
 	}
 
 	entryCount, err := status.EntryCount()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed getting repository status count")
+		return nil, errors.Wrap(err, "Failed getting repository status count")
 	}
 
 	var entries []git.StatusEntry
 	for i := 0; i < entryCount; i++ {
 		entry, err := status.ByIndex(i)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed getting repository status entry")
+			return nil, errors.Wrap(err, "Failed getting repository status entry")
 		}
 
 		entries = append(entries, entry)
