@@ -32,6 +32,10 @@ func newTestRepo(t *testing.T) *git.Repository {
 	repo, err := git.InitRepository(dir, false)
 	checkFatal(t, errors.Wrap(err, "Failed initializing a temp repo"))
 
+	// Automatically remove repo when test is over
+	t.Cleanup(func() {
+		cleanupRepo(t, repo)
+	})
 	return repo
 }
 

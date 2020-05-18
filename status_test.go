@@ -8,7 +8,6 @@ import (
 
 func TestStatusWithEmptyRepo(t *testing.T) {
 	repo := newTestRepo(t)
-	defer cleanupRepo(t, repo)
 
 	entries, err := statusEntries(repo)
 	checkFatal(t, err)
@@ -27,8 +26,6 @@ func TestStatusWithEmptyRepo(t *testing.T) {
 
 func TestStatusWithUntrackedFile(t *testing.T) {
 	repo := newTestRepo(t)
-	defer cleanupRepo(t, repo)
-
 	createFile(t, repo, "SomeFile")
 
 	entries, err := statusEntries(repo)
@@ -60,8 +57,6 @@ func TestStatusWithUntrackedButIgnoredFile(t *testing.T) {
 
 func TestStatusWithStagedFile(t *testing.T) {
 	repo := newTestRepo(t)
-	defer cleanupRepo(t, repo)
-
 	createFile(t, repo, "SomeFile")
 	stageFile(t, repo, "SomeFile")
 
@@ -86,8 +81,6 @@ func TestStatusWithStagedFile(t *testing.T) {
 
 func TestStatusWithSingleCommit(t *testing.T) {
 	repo := newTestRepo(t)
-	defer cleanupRepo(t, repo)
-
 	createFile(t, repo, "SomeFile")
 	stageFile(t, repo, "SomeFile")
 	createCommit(t, repo, "Initial commit")
@@ -109,8 +102,6 @@ func TestStatusWithSingleCommit(t *testing.T) {
 
 func TestStatusWithMultipleCommits(t *testing.T) {
 	repo := newTestRepo(t)
-	defer cleanupRepo(t, repo)
-
 	createFile(t, repo, "SomeFile")
 	stageFile(t, repo, "SomeFile")
 	createCommit(t, repo, "Initial commit")
