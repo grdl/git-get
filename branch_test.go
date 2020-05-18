@@ -1,18 +1,27 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
-	git "github.com/libgit2/git2go/v30"
+	"github.com/pkg/errors"
 )
 
-func TestBranches(t *testing.T) {
-	repo, err := git.OpenRepository("/home/grdl/workspace/gitlab.com/grdl/git-get")
-	checkFatal(t, err)
+func TestNewBranch(t *testing.T) {
+	repo := newTestRepo(t)
 
-	branches, err := Branches(repo)
-	checkFatal(t, err)
+	createFile(t, repo, "file")
+	stageFile(t, repo, "file")
+	createCommit(t, repo, "Initial commit")
+	branch := createBranch(t, repo, "branch")
 
-	fmt.Println(len(branches))
+	status, err := NewBranchStatus(branch)
+	checkFatal(t, errors.Wrap(err, "Failed getting branch status"))
+
+	if status.Name != "branch" {
+		t.Errorf("Wrong branch name, got %s; want %s", status.Name, "branch")
+	}
+
+	if status.IsRemote != false {
+		t.Errorf("Branch should be local")
+	}
 }

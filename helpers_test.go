@@ -55,7 +55,7 @@ func stageFile(t *testing.T, repo *git.Repository, name string) {
 	checkFatal(t, errors.Wrap(err, "Failed writing index"))
 }
 
-func createCommit(t *testing.T, repo *git.Repository, message string) {
+func createCommit(t *testing.T, repo *git.Repository, message string) *git.Commit {
 	index, err := repo.Index()
 	checkFatal(t, errors.Wrap(err, "Failed getting repo index"))
 
@@ -74,6 +74,7 @@ func createCommit(t *testing.T, repo *git.Repository, message string) {
 	empty, err := repo.IsEmpty()
 	checkFatal(t, errors.Wrap(err, "Failed checking if repo is empty"))
 
+	var commitId *git.Oid
 	if !empty {
 		currentBranch, err := repo.Head()
 		checkFatal(t, errors.Wrap(err, "Failed getting current branch"))
@@ -81,10 +82,26 @@ func createCommit(t *testing.T, repo *git.Repository, message string) {
 		currentTip, err := repo.LookupCommit(currentBranch.Target())
 		checkFatal(t, errors.Wrap(err, "Failed getting current tip"))
 
-		_, err = repo.CreateCommit("HEAD", signature, signature, message, tree, currentTip)
+		commitId, err = repo.CreateCommit("HEAD", signature, signature, message, tree, currentTip)
 	} else {
-		_, err = repo.CreateCommit("HEAD", signature, signature, message, tree)
+		commitId, err = repo.CreateCommit("HEAD", signature, signature, message, tree)
 	}
 
-	checkFatal(t, errors.Wrap(err, "Failed creating a commit"))
+	commit, err := repo.LookupCommit(commitId)
+	checkFatal(t, errors.Wrap(err, "Failed looking up a commit"))
+
+	return commit
+}
+
+func createBranch(t *testing.T, repo *git.Repository, name string) *git.Branch {
+	head, err := repo.Head()
+	checkFatal(t, errors.Wrap(err, "Failed getting repo head"))
+
+	commit, err := repo.LookupCommit(head.Target())
+	checkFatal(t, errors.Wrap(err, "Failed getting commit id from head"))
+
+	branch, err := repo.CreateBranch(name, commit, false)
+	checkFatal(t, errors.Wrap(err, "Failed creating branch"))
+
+	return branch
 }

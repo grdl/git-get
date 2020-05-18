@@ -1,5 +1,7 @@
 # git-get
 
+`git get` - a better way to clone and manage git repositories.
+
 ## Build
 
 How to build with `libgit2` statically linked into a single executable without dependencies:
