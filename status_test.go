@@ -16,11 +16,15 @@ func TestStatusWithEmptyRepo(t *testing.T) {
 		t.Errorf("Empty repo should have no status entries")
 	}
 
-	statuses, err := GetStatus(repo.Workdir())
+	status, err := Status(repo.Workdir())
 	checkFatal(t, err)
 
-	if len(statuses) != 1 && statuses[0] != StatusOk {
-		t.Errorf("Empty repo should have a single StatusOk status")
+	if status.HasUntrackedFiles != false {
+		t.Errorf("Repo should not have untracked files")
+	}
+
+	if status.HasUncommittedChanges != false {
+		t.Errorf("Repo should not have uncommitted changes")
 	}
 }
 
@@ -39,11 +43,15 @@ func TestStatusWithUntrackedFile(t *testing.T) {
 		t.Errorf("Invalid status, got %d; want %d", entries[0].Status, git.StatusWtNew)
 	}
 
-	statuses, err := GetStatus(repo.Workdir())
+	status, err := Status(repo.Workdir())
 	checkFatal(t, err)
 
-	if len(statuses) != 1 && statuses[0] != StatusUntrackedFiles {
-		t.Errorf("Repo with untracked file should have a single StatusUntrackedFiles status")
+	if status.HasUntrackedFiles != true {
+		t.Errorf("Repo should have untracked files")
+	}
+
+	if status.HasUncommittedChanges != false {
+		t.Errorf("Repo should not have uncommitted changes")
 	}
 }
 
@@ -71,11 +79,15 @@ func TestStatusWithStagedFile(t *testing.T) {
 		t.Errorf("Invalid status, got %d; want %d", entries[0].Status, git.StatusIndexNew)
 	}
 
-	statuses, err := GetStatus(repo.Workdir())
+	status, err := Status(repo.Workdir())
 	checkFatal(t, err)
 
-	if len(statuses) != 1 && statuses[0] != StatusUncommittedChanges {
-		t.Errorf("Repo with staged file should have a single StatusUncommittedChange status")
+	if status.HasUntrackedFiles != false {
+		t.Errorf("Repo should not have untracked files")
+	}
+
+	if status.HasUncommittedChanges != true {
+		t.Errorf("Repo should have uncommitted changes")
 	}
 }
 
@@ -92,11 +104,15 @@ func TestStatusWithSingleCommit(t *testing.T) {
 		t.Errorf("Repo with no uncommitted files should have no status entries")
 	}
 
-	statuses, err := GetStatus(repo.Workdir())
+	status, err := Status(repo.Workdir())
 	checkFatal(t, err)
 
-	if len(statuses) != 1 && statuses[0] != StatusOk {
-		t.Errorf("Repo with no uncommitted files should have a single StatusOk status")
+	if status.HasUntrackedFiles != false {
+		t.Errorf("Repo should not have untracked files")
+	}
+
+	if status.HasUncommittedChanges != false {
+		t.Errorf("Repo should not have uncommitted changes")
 	}
 }
 
@@ -115,10 +131,14 @@ func TestStatusWithMultipleCommits(t *testing.T) {
 	if len(entries) != 0 {
 		t.Errorf("Repo with no uncommitted files should have no status entries")
 	}
-	statuses, err := GetStatus(repo.Workdir())
+	status, err := Status(repo.Workdir())
 	checkFatal(t, err)
 
-	if len(statuses) != 1 && statuses[0] != StatusOk {
-		t.Errorf("Repo with no uncommitted files should have a single StatusOk status")
+	if status.HasUntrackedFiles != false {
+		t.Errorf("Repo should not have untracked files")
+	}
+
+	if status.HasUncommittedChanges != false {
+		t.Errorf("Repo should not have uncommitted changes")
 	}
 }

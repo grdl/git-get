@@ -5,50 +5,35 @@ import (
 	"github.com/pkg/errors"
 )
 
-type RepoStatus int
+type RepoStatus struct {
+	HasUntrackedFiles     bool
+	HasUncommittedChanges bool
+	BranchStatuses        []BranchStatus
+}
 
-const (
-	StatusOk RepoStatus = iota
-	StatusUntrackedFiles
-	StatusUncommittedChanges
-	StatusUnknown
-)
+func Status(path string) (RepoStatus, error) {
+	var status RepoStatus
 
-func GetStatus(path string) ([]RepoStatus, error) {
 	repo, err := git.OpenRepository(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed opening repository")
+		return status, errors.Wrap(err, "Failed opening repository")
 	}
 
 	entries, err := statusEntries(repo)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed opening repository")
+		return status, errors.Wrap(err, "Failed getting repository status")
 	}
 
-	statusSet := make(map[RepoStatus]bool)
-
-	statusSet[StatusOk] = true
 	for _, entry := range entries {
 		switch entry.Status {
 		case git.StatusWtNew:
-			statusSet[StatusUntrackedFiles] = true
-			statusSet[StatusOk] = false
+			status.HasUntrackedFiles = true
 		case git.StatusIndexNew:
-			statusSet[StatusUncommittedChanges] = true
-			statusSet[StatusOk] = false
-		default:
-			statusSet[StatusUnknown] = true
-			statusSet[StatusOk] = false
+			status.HasUncommittedChanges = true
 		}
 	}
 
-	var statusSlice []RepoStatus
-	for k, v := range statusSet {
-		if v {
-			statusSlice = append(statusSlice, k)
-		}
-	}
-	return statusSlice, nil
+	return status, nil
 }
 
 func statusEntries(repo *git.Repository) ([]git.StatusEntry, error) {
