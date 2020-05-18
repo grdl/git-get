@@ -89,7 +89,25 @@ func createCommit(repo *git.Repository, message string) error {
 		When:  time.Date(2000, 01, 01, 16, 00, 00, 0, time.UTC),
 	}
 
-	_, err = repo.CreateCommit("HEAD", signature, signature, message, tree)
+	empty, err := repo.IsEmpty()
+	if err != nil {
+		return errors.Wrap(err, "failed cheching if repo is empty")
+	}
+
+	if !empty {
+		currentBranch, err := repo.Head()
+		if err != nil {
+			return errors.Wrap(err, "failed getting current branch")
+		}
+
+		currentTip, err := repo.LookupCommit(currentBranch.Target())
+		if err != nil {
+			return errors.Wrap(err, "failed getting current tip")
+		}
+		_, err = repo.CreateCommit("HEAD", signature, signature, message, tree, currentTip)
+	} else {
+		_, err = repo.CreateCommit("HEAD", signature, signature, message, tree)
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed creating commit")
 	}
