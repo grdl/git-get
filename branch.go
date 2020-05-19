@@ -15,7 +15,7 @@ type BranchStatus struct {
 	Behind      int
 }
 
-func Branches(repo *git.Repository) ([]BranchStatus, error) {
+func Branches(repo *git.Repository) (map[string]BranchStatus, error) {
 	iter, err := repo.NewBranchIterator(git.BranchAll)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed creating branch iterator")
@@ -31,14 +31,14 @@ func Branches(repo *git.Repository) ([]BranchStatus, error) {
 		return nil, errors.Wrap(err, "Failed iterating over branches")
 	}
 
-	var statuses []BranchStatus
+	statuses := make(map[string]BranchStatus)
 	for _, branch := range branches {
 		status, err := NewBranchStatus(repo, branch)
 		if err != nil {
-			// TODO: handle error
+			// TODO: Handle error. We should tell user that we couldn't read status of that branch but probably shouldn't exit
 			continue
 		}
-		statuses = append(statuses, status)
+		statuses[status.Name] = status
 	}
 
 	return statuses, nil
@@ -53,31 +53,38 @@ func NewBranchStatus(repo *git.Repository, branch *git.Branch) (BranchStatus, er
 	}
 	status.Name = name
 
-	status.IsRemote = branch.IsRemote()
+	// If branch is a remote one, return immediately. Upstream can only be found for local branches.
+	if branch.IsRemote() {
+		status.IsRemote = true
+		return status, nil
+	}
 
 	upstream, err := branch.Upstream()
 	if err != nil && !git.IsErrorCode(err, git.ErrNotFound) {
 		return status, errors.Wrap(err, "Failed getting branch upstream")
 	}
 
-	if upstream != nil {
-		status.HasUpstream = true
+	// If there's no upstream, return immediately. Ahead/Behind can only be found when upstream exists.
+	if upstream == nil {
+		return status, nil
+	}
 
-		ahead, behind, err := repo.AheadBehind(branch.Target(), upstream.Target())
-		if err != nil {
-			return status, errors.Wrap(err, "Failed getting ahead/behind information")
-		}
+	status.HasUpstream = true
 
-		status.Ahead = ahead
-		status.Behind = behind
+	ahead, behind, err := repo.AheadBehind(branch.Target(), upstream.Target())
+	if err != nil {
+		return status, errors.Wrap(err, "Failed getting ahead/behind information")
+	}
 
-		if ahead > 0 {
-			status.NeedsPush = true
-		}
+	status.Ahead = ahead
+	status.Behind = behind
 
-		if behind > 0 {
-			status.NeedsPull = true
-		}
+	if ahead > 0 {
+		status.NeedsPush = true
+	}
+
+	if behind > 0 {
+		status.NeedsPull = true
 	}
 
 	return status, nil

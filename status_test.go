@@ -140,6 +140,28 @@ func TestStatusWithMultipleCommits(t *testing.T) {
 	if len(entries) != 0 {
 		t.Errorf("Repo with no uncommitted files should have no status entries")
 	}
+
+	status, err := NewRepoStatus(repo.Workdir())
+	checkFatal(t, err)
+
+	want := RepoStatus{
+		HasUntrackedFiles:     false,
+		HasUncommittedChanges: false,
+		BranchStatuses:        nil,
+	}
+
+	if !reflect.DeepEqual(status, want) {
+		t.Errorf("Wrong repo status, got %+v; want %+v", status, want)
+	}
+}
+
+func TestStatusCloned(t *testing.T) {
+	origin := newTestRepo(t)
+	dir := newTempDir(t)
+
+	repo, err := CloneRepo(origin.Path(), dir)
+	checkFatal(t, err)
+
 	status, err := NewRepoStatus(repo.Workdir())
 	checkFatal(t, err)
 

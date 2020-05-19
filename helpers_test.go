@@ -18,24 +18,26 @@ func checkFatal(t *testing.T, err error) {
 	}
 }
 
-func cleanupRepo(t *testing.T, repo *git.Repository) {
-	err := os.RemoveAll(repo.Workdir())
-	if err != nil {
-		t.Errorf("failed cleaning up repo")
-	}
-}
-
-func newTestRepo(t *testing.T) *git.Repository {
-	dir, err := ioutil.TempDir("", "test-repo-")
+func newTempDir(t *testing.T) string {
+	dir, err := ioutil.TempDir("", "git-get-repo-")
 	checkFatal(t, errors.Wrap(err, "Failed creating test repo directory"))
-
-	repo, err := git.InitRepository(dir, false)
-	checkFatal(t, errors.Wrap(err, "Failed initializing a temp repo"))
 
 	// Automatically remove repo when test is over
 	t.Cleanup(func() {
-		cleanupRepo(t, repo)
+		err := os.RemoveAll(dir)
+		if err != nil {
+			t.Errorf("failed cleaning up repo")
+		}
 	})
+
+	return dir
+}
+
+func newTestRepo(t *testing.T) *git.Repository {
+	dir := newTempDir(t)
+	repo, err := git.InitRepository(dir, false)
+	checkFatal(t, errors.Wrap(err, "Failed initializing a temp repo"))
+
 	return repo
 }
 
