@@ -107,3 +107,34 @@ func createBranch(t *testing.T, repo *git.Repository, name string) *git.Branch {
 
 	return branch
 }
+
+func checkoutBranch(t *testing.T, repo *git.Repository, name string) {
+	branch, err := repo.LookupBranch(name, git.BranchAll)
+
+	// If branch can't be found, let's check if it's a remote branch
+	if branch == nil {
+		branch, err = repo.LookupBranch("origin/"+name, git.BranchAll)
+	}
+	checkFatal(t, errors.Wrap(err, "Failed looking up branch"))
+
+	// If branch is remote, we need to create a local one first
+	if branch.IsRemote() {
+		commit, err := repo.LookupCommit(branch.Target())
+		checkFatal(t, errors.Wrap(err, "Failed looking up commit"))
+
+		localBranch, err := repo.CreateBranch(name, commit, false)
+		checkFatal(t, errors.Wrap(err, "Failed creating local branch"))
+
+		err = localBranch.SetUpstream("origin/" + name)
+		checkFatal(t, errors.Wrap(err, "Failed setting upstream"))
+	}
+
+	err = repo.SetHead("refs/heads/" + name)
+	checkFatal(t, errors.Wrap(err, "Failed setting head"))
+
+	options := &git.CheckoutOpts{
+		Strategy: git.CheckoutForce,
+	}
+	err = repo.CheckoutHead(options)
+	checkFatal(t, errors.Wrap(err, "Failed checking out tree"))
+}

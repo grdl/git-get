@@ -37,10 +37,17 @@ func TestClonedBranches(t *testing.T) {
 	stageFile(t, origin, "file")
 	createCommit(t, origin, "Initial commit")
 
+	createBranch(t, origin, "branch")
+
 	repo, err := CloneRepo(origin.Path(), newTempDir(t))
 	checkFatal(t, err)
 
-	createBranch(t, repo, "branch")
+	createBranch(t, repo, "local")
+
+	checkoutBranch(t, repo, "branch")
+	createFile(t, repo, "anotherFile")
+	stageFile(t, repo, "anotherFile")
+	createCommit(t, repo, "Second commit")
 
 	branches, err := Branches(repo)
 	checkFatal(t, err)
@@ -61,6 +68,18 @@ func TestClonedBranches(t *testing.T) {
 		}},
 		{branches["branch"], BranchStatus{
 			Name:        "branch",
+			IsRemote:    false,
+			HasUpstream: true,
+			Ahead:       1,
+			NeedsPush:   true,
+		}},
+		{branches["origin/branch"], BranchStatus{
+			Name:        "origin/branch",
+			IsRemote:    true,
+			HasUpstream: false,
+		}},
+		{branches["local"], BranchStatus{
+			Name:        "local",
 			IsRemote:    false,
 			HasUpstream: false,
 		}},
