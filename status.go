@@ -11,7 +11,7 @@ type RepoStatus struct {
 	BranchStatuses        []BranchStatus
 }
 
-func Status(path string) (RepoStatus, error) {
+func NewRepoStatus(path string) (RepoStatus, error) {
 	var status RepoStatus
 
 	repo, err := git.OpenRepository(path)
