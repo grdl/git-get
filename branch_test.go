@@ -45,34 +45,30 @@ func TestClonedBranches(t *testing.T) {
 	branches, err := Branches(repo)
 	checkFatal(t, err)
 
-	master := branches["master"]
-	wantMaster := BranchStatus{
-		Name:        "master",
-		IsRemote:    false,
-		HasUpstream: true,
+	var tests = []struct {
+		got  BranchStatus
+		want BranchStatus
+	}{
+		{branches["master"], BranchStatus{
+			Name:        "master",
+			IsRemote:    false,
+			HasUpstream: true,
+		}},
+		{branches["origin/master"], BranchStatus{
+			Name:        "origin/master",
+			IsRemote:    true,
+			HasUpstream: false,
+		}},
+		{branches["branch"], BranchStatus{
+			Name:        "branch",
+			IsRemote:    false,
+			HasUpstream: false,
+		}},
 	}
 
-	originMaster := branches["origin/master"]
-	wantOriginMaster := BranchStatus{
-		Name:        "origin/master",
-		IsRemote:    true,
-		HasUpstream: false,
-	}
-
-	branch := branches["branch"]
-	wantBranch := BranchStatus{
-		Name:        "branch",
-		IsRemote:    false,
-		HasUpstream: false,
-	}
-
-	if !reflect.DeepEqual(master, wantMaster) {
-		t.Errorf("Wrong branch status, got %+v; want %+v", master, wantMaster)
-	}
-	if !reflect.DeepEqual(originMaster, wantOriginMaster) {
-		t.Errorf("Wrong branch status, got %+v; want %+v", originMaster, wantOriginMaster)
-	}
-	if !reflect.DeepEqual(branch, wantBranch) {
-		t.Errorf("Wrong branch status, got %+v; want %+v", branch, wantBranch)
+	for _, test := range tests {
+		if !reflect.DeepEqual(test.got, test.want) {
+			t.Errorf("Wrong branch status, got %+v; want %+v", test.got, test.want)
+		}
 	}
 }
