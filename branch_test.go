@@ -2,11 +2,9 @@ package main
 
 import (
 	"testing"
-
-	"github.com/pkg/errors"
 )
 
-func TestNewBranch(t *testing.T) {
+func TestNewLocalBranch(t *testing.T) {
 	repo := newTestRepo(t)
 
 	createFile(t, repo, "file")
@@ -14,14 +12,20 @@ func TestNewBranch(t *testing.T) {
 	createCommit(t, repo, "Initial commit")
 	branch := createBranch(t, repo, "branch")
 
-	status, err := NewBranchStatus(branch)
-	checkFatal(t, errors.Wrap(err, "Failed getting branch status"))
+	status, err := NewBranchStatus(repo, branch)
+	checkFatal(t, err)
 
-	if status.Name != "branch" {
-		t.Errorf("Wrong branch name, got %s; want %s", status.Name, "branch")
+	want := BranchStatus{
+		Name:        "branch",
+		IsRemote:    false,
+		HasUpstream: false,
+		NeedsPull:   false,
+		NeedsPush:   false,
+		Ahead:       0,
+		Behind:      0,
 	}
 
-	if status.IsRemote != false {
-		t.Errorf("Branch should be local")
+	if status != want {
+		t.Errorf("Wrong branch status, got %+v; want %+v", status, want)
 	}
 }

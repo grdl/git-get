@@ -33,7 +33,7 @@ func Branches(repo *git.Repository) ([]BranchStatus, error) {
 
 	var statuses []BranchStatus
 	for _, branch := range branches {
-		status, err := NewBranchStatus(branch)
+		status, err := NewBranchStatus(repo, branch)
 		if err != nil {
 			// TODO: handle error
 			continue
@@ -44,7 +44,7 @@ func Branches(repo *git.Repository) ([]BranchStatus, error) {
 	return statuses, nil
 }
 
-func NewBranchStatus(branch *git.Branch) (BranchStatus, error) {
+func NewBranchStatus(repo *git.Repository, branch *git.Branch) (BranchStatus, error) {
 	var status BranchStatus
 
 	name, err := branch.Name()
@@ -55,12 +55,28 @@ func NewBranchStatus(branch *git.Branch) (BranchStatus, error) {
 
 	status.IsRemote = branch.IsRemote()
 
-	_, err = branch.Upstream()
-	if err != nil {
-		if git.IsErrorCode(err, git.ErrNotFound) {
-			status.HasUpstream = false
-		} else {
-			return status, errors.Wrap(err, "Failed getting branch upstream")
+	upstream, err := branch.Upstream()
+	if err != nil && !git.IsErrorCode(err, git.ErrNotFound) {
+		return status, errors.Wrap(err, "Failed getting branch upstream")
+	}
+
+	if upstream != nil {
+		status.HasUpstream = true
+
+		ahead, behind, err := repo.AheadBehind(branch.Target(), upstream.Target())
+		if err != nil {
+			return status, errors.Wrap(err, "Failed getting ahead/behind information")
+		}
+
+		status.Ahead = ahead
+		status.Behind = behind
+
+		if ahead > 0 {
+			status.NeedsPush = true
+		}
+
+		if behind > 0 {
+			status.NeedsPull = true
 		}
 	}
 
