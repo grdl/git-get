@@ -23,7 +23,7 @@ func TestStatusWithEmptyRepo(t *testing.T) {
 	want := RepoStatus{
 		HasUntrackedFiles:     false,
 		HasUncommittedChanges: false,
-		BranchStatuses:        nil,
+		BranchStatuses:        status.BranchStatuses,
 	}
 
 	if !reflect.DeepEqual(status, want) {
@@ -52,7 +52,7 @@ func TestStatusWithUntrackedFile(t *testing.T) {
 	want := RepoStatus{
 		HasUntrackedFiles:     true,
 		HasUncommittedChanges: false,
-		BranchStatuses:        nil,
+		BranchStatuses:        status.BranchStatuses,
 	}
 
 	if !reflect.DeepEqual(status, want) {
@@ -90,7 +90,7 @@ func TestStatusWithStagedFile(t *testing.T) {
 	want := RepoStatus{
 		HasUntrackedFiles:     false,
 		HasUncommittedChanges: true,
-		BranchStatuses:        nil,
+		BranchStatuses:        status.BranchStatuses,
 	}
 
 	if !reflect.DeepEqual(status, want) {
@@ -117,7 +117,7 @@ func TestStatusWithSingleCommit(t *testing.T) {
 	want := RepoStatus{
 		HasUntrackedFiles:     false,
 		HasUncommittedChanges: false,
-		BranchStatuses:        nil,
+		BranchStatuses:        status.BranchStatuses,
 	}
 
 	if !reflect.DeepEqual(status, want) {
@@ -147,7 +147,7 @@ func TestStatusWithMultipleCommits(t *testing.T) {
 	want := RepoStatus{
 		HasUntrackedFiles:     false,
 		HasUncommittedChanges: false,
-		BranchStatuses:        nil,
+		BranchStatuses:        status.BranchStatuses,
 	}
 
 	if !reflect.DeepEqual(status, want) {
@@ -168,7 +168,7 @@ func TestStatusCloned(t *testing.T) {
 	want := RepoStatus{
 		HasUntrackedFiles:     false,
 		HasUncommittedChanges: false,
-		BranchStatuses:        nil,
+		BranchStatuses:        status.BranchStatuses,
 	}
 
 	if !reflect.DeepEqual(status, want) {

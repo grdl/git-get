@@ -8,7 +8,7 @@ import (
 type RepoStatus struct {
 	HasUntrackedFiles     bool
 	HasUncommittedChanges bool
-	BranchStatuses        []BranchStatus
+	BranchStatuses        map[string]BranchStatus
 }
 
 func NewRepoStatus(path string) (RepoStatus, error) {
@@ -32,6 +32,12 @@ func NewRepoStatus(path string) (RepoStatus, error) {
 			status.HasUncommittedChanges = true
 		}
 	}
+
+	branchStatuses, err := Branches(repo)
+	if err != nil {
+		return status, errors.Wrap(err, "Failed getting branches statuses")
+	}
+	status.BranchStatuses = branchStatuses
 
 	return status, nil
 }

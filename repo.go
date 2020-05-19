@@ -18,3 +18,24 @@ func CloneRepo(url string, path string) (*git.Repository, error) {
 	repo, err := git.Clone(url, path, options)
 	return repo, errors.Wrap(err, "Failed cloning repo")
 }
+
+func Fetch(repo *git.Repository) error {
+	remotes, err := repo.Remotes.List()
+	if err != nil {
+		return errors.Wrap(err, "Failed listing remotes")
+	}
+
+	for _, r := range remotes {
+		remote, err := repo.Remotes.Lookup(r)
+		if err != nil {
+			return errors.Wrap(err, "Failed looking up remote")
+		}
+
+		err = remote.Fetch(nil, nil, "")
+		if err != nil {
+			return errors.Wrap(err, "Failed fetching remote")
+		}
+	}
+
+	return nil
+}
