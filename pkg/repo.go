@@ -6,7 +6,12 @@ import (
 	git "github.com/libgit2/git2go/v30"
 )
 
-func CloneRepo(url string, path string) (*git.Repository, error) {
+type Repo struct {
+	repo   *git.Repository
+	Status *RepoStatus
+}
+
+func CloneRepo(url string, path string) error {
 	options := &git.CloneOptions{
 		CheckoutOpts:         nil,
 		FetchOptions:         nil,
@@ -15,18 +20,50 @@ func CloneRepo(url string, path string) (*git.Repository, error) {
 		RemoteCreateCallback: nil,
 	}
 
-	repo, err := git.Clone(url, path, options)
-	return repo, errors.Wrap(err, "Failed cloning repo")
+	_, err := git.Clone(url, path, options)
+	if err != nil {
+		return errors.Wrap(err, "Failed cloning repo")
+	}
+	return nil
 }
 
-func Fetch(repo *git.Repository) error {
-	remotes, err := repo.Remotes.List()
+func OpenRepo(path string) (*Repo, error) {
+	r, err := git.OpenRepository(path)
 	if err != nil {
-		return errors.Wrap(err, "Failed listing remotes")
+		return nil, errors.Wrap(err, "Failed opening repo")
 	}
 
-	for _, r := range remotes {
-		remote, err := repo.Remotes.Lookup(r)
+	repoStatus, err := loadStatus(r)
+	if err != nil {
+		return nil, err
+	}
+
+	repo := &Repo{
+		repo:   r,
+		Status: repoStatus,
+	}
+
+	return repo, nil
+}
+
+func (r *Repo) Reload() error {
+	status, err := loadStatus(r.repo)
+	if err != nil {
+		return err
+	}
+
+	r.Status = status
+	return nil
+}
+
+func (r *Repo) Fetch() error {
+	remoteNames, err := r.repo.Remotes.List()
+	if err != nil {
+		return errors.Wrap(err, "Failed listing remoteNames")
+	}
+
+	for _, name := range remoteNames {
+		remote, err := r.repo.Remotes.Lookup(name)
 		if err != nil {
 			return errors.Wrap(err, "Failed looking up remote")
 		}
