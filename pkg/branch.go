@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	git "github.com/libgit2/git2go/v30"
