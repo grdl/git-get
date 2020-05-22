@@ -157,11 +157,11 @@ func TestStatusWithMultipleCommits(t *testing.T) {
 
 func TestStatusCloned(t *testing.T) {
 	origin := newTestRepo(t)
-	dir := newTempDir(t)
+	repoRoot := newTempDir(t)
 
-	err := CloneRepo(origin.Path(), dir)
+	path, err := CloneRepo(origin.Path(), repoRoot)
 	checkFatal(t, err)
-	repo, err := OpenRepo(dir)
+	repo, err := OpenRepo(path)
 	checkFatal(t, err)
 
 	status, err := loadStatus(repo.repo)
@@ -212,10 +212,10 @@ func TestBranchCloned(t *testing.T) {
 
 	createBranch(t, origin, "branch")
 
-	dir := newTempDir(t)
-	err := CloneRepo(origin.Path(), dir)
+	repoRoot := newTempDir(t)
+	path, err := CloneRepo(origin.Path(), repoRoot)
 	checkFatal(t, err)
-	repo, err := OpenRepo(dir)
+	repo, err := OpenRepo(path)
 	checkFatal(t, err)
 
 	createBranch(t, repo.repo, "local")

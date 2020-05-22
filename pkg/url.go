@@ -13,7 +13,7 @@ import (
 // See: https://golang.org/src/cmd/go/internal/get/vcs.go
 var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+)@([a-zA-Z0-9._-]+):(.*)$`)
 
-func URLToPath(rawurl string) (string, error) {
+func URLToPath(rawurl string) (repoPath string, err error) {
 	url, err := parseURL(rawurl)
 	if err != nil {
 		return "", err
@@ -23,13 +23,13 @@ func URLToPath(rawurl string) (string, error) {
 	repoHost := strings.Split(url.Host, ":")[0]
 
 	// remove trailing ".git" from repo name
-	localPath := path.Join(repoHost, url.Path)
-	localPath = strings.TrimSuffix(localPath, ".git")
+	repoPath = path.Join(repoHost, url.Path)
+	repoPath = strings.TrimSuffix(repoPath, ".git")
 
 	// remove tilde (~) char from username
-	localPath = strings.ReplaceAll(localPath, "~", "")
+	repoPath = strings.ReplaceAll(repoPath, "~", "")
 
-	return localPath, nil
+	return repoPath, nil
 }
 
 func parseURL(rawurl string) (url *urlpkg.URL, err error) {

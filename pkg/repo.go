@@ -14,7 +14,17 @@ type Repo struct {
 	Status *RepoStatus
 }
 
-func CloneRepo(url string, path string) error {
+func CloneRepo(url string, repoRoot string) (path string, err error) {
+	repoPath, err := URLToPath(url)
+	if err != nil {
+		return path, err
+	}
+
+	path, err = MakeDir(repoRoot, repoPath)
+	if err != nil {
+		return path, err
+	}
+
 	options := &git.CloneOptions{
 		CheckoutOpts:         nil,
 		FetchOptions:         nil,
@@ -23,11 +33,11 @@ func CloneRepo(url string, path string) error {
 		RemoteCreateCallback: nil,
 	}
 
-	_, err := git.Clone(url, path, options)
+	_, err = git.Clone(url, path, options)
 	if err != nil {
-		return errors.Wrap(err, "Failed cloning repo")
+		return path, errors.Wrap(err, "Failed cloning repo")
 	}
-	return nil
+	return path, nil
 }
 
 func OpenRepo(path string) (*Repo, error) {

@@ -13,12 +13,12 @@ func TestFetch(t *testing.T) {
 	createCommit(t, origin, "Initial commit")
 
 	// Clone the origin repo
-	dir := newTempDir(t)
-	err := CloneRepo(origin.Path(), dir)
+	repoRoot := newTempDir(t)
+	path, err := CloneRepo(origin.Path(), repoRoot)
 	checkFatal(t, err)
 
 	// Open cloned repo and load its status
-	repo, err := OpenRepo(dir)
+	repo, err := OpenRepo(path)
 	checkFatal(t, err)
 
 	// Check cloned status. It should not be behind origin
