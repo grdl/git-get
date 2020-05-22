@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	urlpkg "net/url"
 	"reflect"
 	"testing"
 
@@ -159,7 +160,9 @@ func TestStatusCloned(t *testing.T) {
 	origin := newTestRepo(t)
 	repoRoot := newTempDir(t)
 
-	path, err := CloneRepo(origin.Path(), repoRoot)
+	url, err := urlpkg.Parse(origin.Path())
+	checkFatal(t, err)
+	path, err := CloneRepo(url, repoRoot)
 	checkFatal(t, err)
 	repo, err := OpenRepo(path)
 	checkFatal(t, err)
@@ -213,7 +216,9 @@ func TestBranchCloned(t *testing.T) {
 	createBranch(t, origin, "branch")
 
 	repoRoot := newTempDir(t)
-	path, err := CloneRepo(origin.Path(), repoRoot)
+	url, err := urlpkg.Parse(origin.Path())
+	checkFatal(t, err)
+	path, err := CloneRepo(url, repoRoot)
 	checkFatal(t, err)
 	repo, err := OpenRepo(path)
 	checkFatal(t, err)

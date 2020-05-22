@@ -1,6 +1,8 @@
 package pkg
 
-import "testing"
+import (
+	"testing"
+)
 
 // Following URLs are considered valid according to https://git-scm.com/docs/git-clone#_git_urls:
 // ssh://[user@]host.xz[:port]/path/to/repo.git
@@ -47,10 +49,12 @@ func TestURLParse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, err := URLToPath(test.in)
+		url, err := ParseURL(test.in)
 		if err != nil {
 			t.Errorf("Error parsing URL: %+v", err)
 		}
+
+		got := URLToPath(url)
 
 		if got != test.want {
 			t.Errorf("Wrong result of parsing URL: %s, got: %s; want: %s", test.in, got, test.want)
@@ -68,11 +72,10 @@ func TestInvalidURLParse(t *testing.T) {
 		//"git@github.com:1234:grdl/git-get.git",
 	}
 
-	for _, url := range invalidURLs {
-		got, err := URLToPath(url)
+	for _, in := range invalidURLs {
+		got, err := ParseURL(in)
 		if err == nil {
-			t.Errorf("Wrong result of parsing invalid URL: %s, got: %s, want: error", url, got)
+			t.Errorf("Wrong result of parsing invalid URL: %s, got: %s, want: error", in, got)
 		}
 	}
-
 }

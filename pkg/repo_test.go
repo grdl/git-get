@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	urlpkg "net/url"
 	"os"
 	"testing"
 )
@@ -14,7 +15,9 @@ func TestFetch(t *testing.T) {
 
 	// Clone the origin repo
 	repoRoot := newTempDir(t)
-	path, err := CloneRepo(origin.Path(), repoRoot)
+	url, err := urlpkg.Parse(origin.Path())
+	checkFatal(t, err)
+	path, err := CloneRepo(url, repoRoot)
 	checkFatal(t, err)
 
 	// Open cloned repo and load its status

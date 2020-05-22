@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	urlpkg "net/url"
 	"os"
 	"path"
 
@@ -14,11 +15,8 @@ type Repo struct {
 	Status *RepoStatus
 }
 
-func CloneRepo(url string, repoRoot string) (path string, err error) {
-	repoPath, err := URLToPath(url)
-	if err != nil {
-		return path, err
-	}
+func CloneRepo(url *urlpkg.URL, repoRoot string) (path string, err error) {
+	repoPath := URLToPath(url)
 
 	path, err = MakeDir(repoRoot, repoPath)
 	if err != nil {
@@ -33,7 +31,7 @@ func CloneRepo(url string, repoRoot string) (path string, err error) {
 		RemoteCreateCallback: nil,
 	}
 
-	_, err = git.Clone(url, path, options)
+	_, err = git.Clone(url.String(), path, options)
 	if err != nil {
 		return path, errors.Wrap(err, "Failed cloning repo")
 	}
