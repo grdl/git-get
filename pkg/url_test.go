@@ -19,18 +19,15 @@ func TestURLParse(t *testing.T) {
 		in   string
 		want string
 	}{
-
 		{"ssh://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
 		{"ssh://user@github.com/grdl/git-get.git", "github.com/grdl/git-get"},
-		{"ssh://user@github.com/~user/grdl/git-get.git", "github.com/~user/grdl/git-get"}, // TODO: is this what we want or should the result be github.com/grdl/git-get?
+		{"ssh://user@github.com:1234/grdl/git-get.git", "github.com/grdl/git-get"},
+		{"ssh://user@github.com/~user/grdl/git-get.git", "github.com/user/grdl/git-get"},
+		{"git+ssh://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
 		{"git@github.com:grdl/git-get.git", "github.com/grdl/git-get"},
-		{"git@github.com:/~user/grdl/git-get.git", "github.com/grdl/git-get"},
-
-		{"https://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
-		{"https://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
-		{"https://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
-		{"https://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
-
+		{"git@github.com:/~user/grdl/git-get.git", "github.com/user/grdl/git-get"},
+		{"git://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
+		{"git://github.com/~user/grdl/git-get.git", "github.com/user/grdl/git-get"},
 		{"https://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
 		{"http://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
 		{"https://github.com/grdl/git-get", "github.com/grdl/git-get"},
@@ -42,12 +39,11 @@ func TestURLParse(t *testing.T) {
 		{"https://github.com/grdl/git-get/", "github.com/grdl/git-get"},
 		{"https://github.com/grdl/git-get/////", "github.com/grdl/git-get"},
 		{"https://github.com/grdl/git-get.git/////", "github.com/grdl/git-get"},
-
+		{"ftp://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
+		{"ftps://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
+		{"rsync://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
 		{"local/grdl/git-get/", "local/grdl/git-get"},
 		{"file://local/grdl/git-get", "local/grdl/git-get"},
-		{"https://github.com/grdl/git-get/////", "github.com/grdl/git-get"},
-		{"https://github.com/grdl/git-get/////", "github.com/grdl/git-get"},
-		{"https://github.com/grdl/git-get/////", "github.com/grdl/git-get"},
 	}
 
 	for _, test := range tests {
@@ -60,4 +56,21 @@ func TestURLParse(t *testing.T) {
 			t.Errorf("Wrong result of parsing URL: %s, got: %s; want: %s", test.in, got, test.want)
 		}
 	}
+}
+
+func TestInvalidURLParse(t *testing.T) {
+	invalidURLs := []string{
+		"",
+		//TODO: This URL is technically a correct scp-like syntax. Not sure how to handle it
+		"github.com:grdl/git-git.get.git",
+		"git@github.com:1234:grdl/git-get.git",
+	}
+
+	for _, url := range invalidURLs {
+		got, err := URLToPath(url)
+		if err == nil {
+			t.Errorf("Wrong result of parsing invalid URL: %s, got: %s, want: error", url, got)
+		}
+	}
+
 }
