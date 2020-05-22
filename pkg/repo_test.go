@@ -1,6 +1,9 @@
 package pkg
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestFetch(t *testing.T) {
 	// Create origin repo with a single commit in master
@@ -41,5 +44,20 @@ func TestFetch(t *testing.T) {
 
 	if repo.Status.Branches["master"].Ahead != 0 {
 		t.Errorf("Master should not be ahead")
+	}
+}
+
+func TestMakeDir(t *testing.T) {
+	repoRoot := newTempDir(t)
+	repoPath := "github.com/grdl/git-get"
+
+	dir, err := MakeDir(repoRoot, repoPath)
+	checkFatal(t, err)
+
+	stat, err := os.Stat(dir)
+	checkFatal(t, err)
+
+	if !stat.IsDir() {
+		t.Errorf("Path is not a directory: %s", dir)
 	}
 }

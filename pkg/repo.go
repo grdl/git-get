@@ -1,6 +1,9 @@
 package pkg
 
 import (
+	"os"
+	"path"
+
 	"github.com/pkg/errors"
 
 	git "github.com/libgit2/git2go/v30"
@@ -75,4 +78,14 @@ func (r *Repo) Fetch() error {
 	}
 
 	return nil
+}
+
+func MakeDir(repoRoot, repoPath string) (string, error) {
+	dir := path.Join(repoRoot, repoPath)
+	err := os.MkdirAll(dir, 0775)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed creating repo directory")
+	}
+
+	return dir, nil
 }
