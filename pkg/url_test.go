@@ -63,7 +63,9 @@ func TestInvalidURLParse(t *testing.T) {
 		"",
 		//TODO: This URL is technically a correct scp-like syntax. Not sure how to handle it
 		"github.com:grdl/git-git.get.git",
-		"git@github.com:1234:grdl/git-get.git",
+
+		//TODO: Is this a valid git URL?
+		//"git@github.com:1234:grdl/git-get.git",
 	}
 
 	for _, url := range invalidURLs {
