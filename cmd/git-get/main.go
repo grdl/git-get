@@ -2,14 +2,33 @@ package main
 
 import (
 	"fmt"
+	"git-get/pkg"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
+const ReposRoot = "/tmp/gitget"
+
 var cmd = &cobra.Command{
-	Use:   "git-get",
-	Short: "git get",
+	Use:     "git-get",
+	Short:   "git get",
+	RunE:    Run,
+	Version: "0.0.0",
+}
+
+func init() {
+	//cmd.PersistentFlags().
+}
+
+func Run(cmd *cobra.Command, args []string) error {
+	url, err := pkg.ParseURL(args[0])
+	if err != nil {
+		return err
+	}
+
+	_, err = pkg.CloneRepo(url, ReposRoot)
+	return err
 }
 
 func Execute() {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
 	git "github.com/libgit2/git2go/v30"
@@ -13,6 +14,28 @@ import (
 type Repo struct {
 	repo   *git.Repository
 	Status *RepoStatus
+}
+
+func credentialsCallback(url string, username string, allowedTypes git.CredType) (*git.Cred, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed getting user home directory")
+	}
+
+	// TODO: Add option to provide custom path
+	publicKey := path.Join(home, ".ssh", "id_rsa.pub")
+	privateKey := path.Join(home, ".ssh", "id_rsa")
+
+	cred, err := git.NewCredSshKey(username, publicKey, privateKey, "")
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed getting SSH credentials")
+	}
+	return cred, err
+}
+
+func certificateCheckCallback(cert *git.Certificate, valid bool, hostname string) git.ErrorCode {
+	// TODO: check the certificate
+	return 0
 }
 
 func CloneRepo(url *urlpkg.URL, repoRoot string) (path string, err error) {
@@ -24,15 +47,20 @@ func CloneRepo(url *urlpkg.URL, repoRoot string) (path string, err error) {
 	}
 
 	options := &git.CloneOptions{
-		CheckoutOpts:         nil,
-		FetchOptions:         nil,
-		Bare:                 false,
-		CheckoutBranch:       "",
-		RemoteCreateCallback: nil,
+		Bare:           false,
+		CheckoutBranch: "",
+		FetchOptions: &git.FetchOptions{
+			RemoteCallbacks: git.RemoteCallbacks{
+				CredentialsCallback:      credentialsCallback,
+				CertificateCheckCallback: certificateCheckCallback,
+			},
+		},
 	}
 
 	_, err = git.Clone(url.String(), path, options)
 	if err != nil {
+		_ = os.RemoveAll(path)
+
 		return path, errors.Wrap(err, "Failed cloning repo")
 	}
 	return path, nil

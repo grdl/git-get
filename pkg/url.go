@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// scpSyntax matches the SCP-like addresses used by the ssh procotol (eg, [user@]host.xz:path/to/repo.git/).
+// scpSyntax matches the SCP-like addresses used by the ssh protocol (eg, [user@]host.xz:path/to/repo.git/).
 // See: https://golang.org/src/cmd/go/internal/get/vcs.go
 var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+)@([a-zA-Z0-9._-]+):(.*)$`)
 
@@ -34,22 +34,34 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 		return nil, errors.New("Parsed URL is empty")
 	}
 
-	if url.Scheme == "" || url.Scheme == "git+ssh" {
+	if url.Scheme == "git+ssh" {
 		url.Scheme = "ssh"
 	}
+
+	// Default to "git" user when using ssh and no user is provided
+	if url.Scheme == "ssh" && url.User == nil {
+		url.User = urlpkg.User("git")
+	}
+
+	// Default to https
+	if url.Scheme == "" {
+		url.Scheme = "https"
+	}
+
+	// TODO: Default to github host
 
 	return url, nil
 }
 
 func URLToPath(url *urlpkg.URL) (repoPath string) {
-	// remove port numbers from host
+	// Remove port numbers from host
 	repoHost := strings.Split(url.Host, ":")[0]
 
-	// remove trailing ".git" from repo name
+	// Remove trailing ".git" from repo name
 	repoPath = path.Join(repoHost, url.Path)
 	repoPath = strings.TrimSuffix(repoPath, ".git")
 
-	// remove tilde (~) char from username
+	// Remove tilde (~) char from username
 	repoPath = strings.ReplaceAll(repoPath, "~", "")
 
 	return repoPath
