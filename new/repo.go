@@ -39,8 +39,25 @@ func CloneRepo(url *url.URL, path string, quiet bool) (r *Repo, err error) {
 		return nil, errors.Wrap(err, "Failed cloning repo")
 	}
 
-	r = &Repo{
-		repo: repo,
+	return newRepo(repo), nil
+}
+
+func OpenRepo(path string) (r *Repo, err error) {
+	repo, err := git.PlainOpen(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed opening repo")
 	}
-	return r, nil
+
+	return newRepo(repo), nil
+}
+
+func newRepo(repo *git.Repository) *Repo {
+	return &Repo{
+		repo: repo,
+		Status: &RepoStatus{
+			HasUntrackedFiles:     false,
+			HasUncommittedChanges: false,
+			Branches:              make(map[string]*BranchStatus),
+		},
+	}
 }

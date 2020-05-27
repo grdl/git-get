@@ -6,8 +6,8 @@ import (
 
 func TestRepoClone(t *testing.T) {
 	origin := NewRepoWithCommit(t)
-	path := NewTempDir(t)
 
+	path := NewTempDir(t)
 	repo, err := CloneRepo(origin.URL, path, true)
 	checkFatal(t, err)
 

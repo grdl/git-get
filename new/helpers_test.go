@@ -2,10 +2,12 @@ package new
 
 import (
 	"io/ioutil"
-	urlpkg "net/url"
+	pkgurl "net/url"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/go-git/go-git/v5/plumbing"
 
 	"github.com/go-git/go-git/v5/plumbing/object"
 
@@ -15,7 +17,8 @@ import (
 
 type TestRepo struct {
 	Repo *git.Repository
-	URL  *urlpkg.URL
+	Path string
+	URL  *pkgurl.URL
 	t    *testing.T
 }
 
@@ -25,11 +28,12 @@ func NewRepoEmpty(t *testing.T) *TestRepo {
 	repo, err := git.PlainInit(dir, false)
 	checkFatal(t, err)
 
-	url, err := urlpkg.Parse("file://" + dir)
+	url, err := ParseURL("file://" + dir)
 	checkFatal(t, err)
 
 	return &TestRepo{
 		Repo: repo,
+		Path: dir,
 		URL:  url,
 		t:    t,
 	}
@@ -108,20 +112,33 @@ func (r *TestRepo) NewCommit(msg string) {
 	checkFatal(r.t, errors.Wrap(err, "Failed creating commit"))
 }
 
-//
-//func createBranch(t *testing.T, repo *git.Repository, name string) *git.Branch {
-//	head, err := repo.Head()
-//	checkFatal(t, errors.Wrap(err, "Failed getting repo head"))
-//
-//	commit, err := repo.LookupCommit(head.Target())
-//	checkFatal(t, errors.Wrap(err, "Failed getting commit id from head"))
-//
-//	branch, err := repo.CreateBranch(name, commit, false)
-//	checkFatal(t, errors.Wrap(err, "Failed creating branch"))
-//
-//	return branch
-//}
-//
+func (r *TestRepo) NewBranch(name string) {
+	head, err := r.Repo.Head()
+	checkFatal(r.t, err)
+
+	ref := plumbing.NewHashReference(plumbing.NewBranchReferenceName(name), head.Hash())
+
+	err = r.Repo.Storer.SetReference(ref)
+	checkFatal(r.t, err)
+}
+
+func (r *TestRepo) Clone() *TestRepo {
+	dir := NewTempDir(r.t)
+
+	repo, err := CloneRepo(r.URL, dir, true)
+	checkFatal(r.t, err)
+
+	url, err := ParseURL("file://" + dir)
+	checkFatal(r.t, err)
+
+	return &TestRepo{
+		Repo: repo.repo,
+		Path: dir,
+		URL:  url,
+		t:    r.t,
+	}
+}
+
 //func checkoutBranch(t *testing.T, repo *git.Repository, name string) {
 //	branch, err := repo.LookupBranch(name, git.BranchAll)
 //
