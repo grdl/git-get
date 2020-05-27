@@ -2,13 +2,10 @@ package new
 
 import (
 	"io"
+	"net/url"
 	"os"
 
-	"github.com/go-git/go-git/v5/plumbing/cache"
-	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/pkg/errors"
-
-	"github.com/go-git/go-billy/v5"
 
 	"github.com/go-git/go-git/v5"
 )
@@ -18,14 +15,14 @@ type Repo struct {
 	Status *RepoStatus
 }
 
-func CloneRepo(url string, path billy.Filesystem, quiet bool) (r *Repo, err error) {
+func CloneRepo(url *url.URL, path string, quiet bool) (r *Repo, err error) {
 	var output io.Writer
 	if !quiet {
 		output = os.Stdout
 	}
 
 	opts := &git.CloneOptions{
-		URL:               url,
+		URL:               url.String(),
 		Auth:              nil,
 		RemoteName:        git.DefaultRemoteName,
 		ReferenceName:     "",
@@ -37,11 +34,7 @@ func CloneRepo(url string, path billy.Filesystem, quiet bool) (r *Repo, err erro
 		Tags:              git.AllTags,
 	}
 
-	dotgit, _ := path.Chroot(git.GitDirName)
-	s := filesystem.NewStorage(dotgit, cache.NewObjectLRUDefault())
-
-	repo, err := git.Clone(s, path, opts)
-
+	repo, err := git.PlainClone(path, false, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed cloning repo")
 	}

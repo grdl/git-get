@@ -2,31 +2,13 @@ package new
 
 import (
 	"testing"
-
-	"github.com/go-git/go-billy/v5/osfs"
-
-	"github.com/go-git/go-billy/v5/memfs"
 )
 
-func TestRepoCloneInMemory(t *testing.T) {
-	path := memfs.New()
-	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path, true)
-	checkFatal(t, err)
+func TestRepoClone(t *testing.T) {
+	origin := NewRepoWithCommit(t)
+	path := NewTempDir(t)
 
-	wt, err := repo.repo.Worktree()
-	checkFatal(t, err)
-
-	files, err := wt.Filesystem.ReadDir("")
-	checkFatal(t, err)
-
-	if len(files) == 0 {
-		t.Errorf("Cloned repo should contain files")
-	}
-}
-
-func TestRepoCloneOnDisk(t *testing.T) {
-	path := osfs.New(newTempDir(t))
-	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path, true)
+	repo, err := CloneRepo(origin.URL, path, true)
 	checkFatal(t, err)
 
 	wt, err := repo.repo.Worktree()
@@ -41,67 +23,66 @@ func TestRepoCloneOnDisk(t *testing.T) {
 }
 
 func TestRepoEmpty(t *testing.T) {
-	repo := newTestRepo(t)
+	repo := NewRepoEmpty(t)
 
-	wt, err := repo.Worktree()
+	wt, err := repo.Repo.Worktree()
 	checkFatal(t, err)
 
 	status, err := wt.Status()
+	checkFatal(t, err)
 	if !status.IsClean() {
 		t.Errorf("Empty repo should be clean")
 	}
 }
 
 func TestRepoWithUntrackedFile(t *testing.T) {
-	repo := newTestRepo(t)
-	createFile(t, repo, "file")
+	repo := NewRepoWithUntracked(t)
 
-	wt, err := repo.Worktree()
+	wt, err := repo.Repo.Worktree()
 	checkFatal(t, err)
 
 	status, err := wt.Status()
+	checkFatal(t, err)
 	if status.IsClean() {
 		t.Errorf("Repo with untracked file should not be clean")
 	}
 
-	if !status.IsUntracked("file") {
+	// TODO: remove magic strings
+	if !status.IsUntracked("README") {
 		t.Errorf("New file should be untracked")
 	}
 }
 
 func TestRepoWithStagedFile(t *testing.T) {
-	repo := newTestRepo(t)
-	createFile(t, repo, "file")
-	stageFile(t, repo, "file")
+	repo := NewRepoWithStaged(t)
 
-	wt, err := repo.Worktree()
+	wt, err := repo.Repo.Worktree()
 	checkFatal(t, err)
 
 	status, err := wt.Status()
+	checkFatal(t, err)
 	if status.IsClean() {
 		t.Errorf("Repo with staged file should not be clean")
 	}
 
-	if status.IsUntracked("file") {
+	if status.IsUntracked("README") {
 		t.Errorf("Staged file should not be untracked")
 	}
 }
 
 func TestRepoWithSingleCommit(t *testing.T) {
-	repo := newTestRepo(t)
-	createFile(t, repo, "file")
-	stageFile(t, repo, "file")
-	createCommit(t, repo, "Initial commit")
+	repo := NewRepoWithCommit(t)
 
-	wt, err := repo.Worktree()
+	wt, err := repo.Repo.Worktree()
 	checkFatal(t, err)
 
 	status, err := wt.Status()
+	checkFatal(t, err)
 	if !status.IsClean() {
 		t.Errorf("Repo with committed file should be clean")
 	}
 
-	if status.IsUntracked("file") {
+	if status.IsUntracked("README") {
 		t.Errorf("Committed file should not be untracked")
 	}
 }

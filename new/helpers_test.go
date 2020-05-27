@@ -2,26 +2,63 @@ package new
 
 import (
 	"io/ioutil"
+	urlpkg "net/url"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/object"
 
-	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/pkg/errors"
-	//"github.com/go-git/go-git/v5"
 )
 
-func checkFatal(t *testing.T, err error) {
-	if err != nil {
-		t.Fatalf("%+v", err)
+type TestRepo struct {
+	Repo *git.Repository
+	URL  *urlpkg.URL
+	t    *testing.T
+}
+
+func NewRepoEmpty(t *testing.T) *TestRepo {
+	dir := NewTempDir(t)
+
+	repo, err := git.PlainInit(dir, false)
+	checkFatal(t, err)
+
+	url, err := urlpkg.Parse("file://" + dir)
+	checkFatal(t, err)
+
+	return &TestRepo{
+		Repo: repo,
+		URL:  url,
+		t:    t,
 	}
 }
 
-func newTempDir(t *testing.T) string {
+func NewRepoWithUntracked(t *testing.T) *TestRepo {
+	repo := NewRepoEmpty(t)
+	repo.NewFile("README", "I'm a README file")
+
+	return repo
+}
+
+func NewRepoWithStaged(t *testing.T) *TestRepo {
+	repo := NewRepoEmpty(t)
+	repo.NewFile("README", "I'm a README file")
+	repo.AddFile("README")
+
+	return repo
+}
+func NewRepoWithCommit(t *testing.T) *TestRepo {
+	repo := NewRepoEmpty(t)
+	repo.NewFile("README", "I'm a README file")
+	repo.AddFile("README")
+	repo.NewCommit("Initial commit")
+
+	return repo
+}
+
+func NewTempDir(t *testing.T) string {
 	dir, err := ioutil.TempDir("", "git-get-repo-")
 	checkFatal(t, errors.Wrap(err, "Failed creating test repo directory"))
 
@@ -36,38 +73,28 @@ func newTempDir(t *testing.T) string {
 	return dir
 }
 
-func newTestRepo(t *testing.T) *git.Repository {
-	fs := memfs.New()
-	storage := memory.NewStorage()
-
-	repo, err := git.Init(storage, fs)
-	checkFatal(t, errors.Wrap(err, "Failed initializing a temp repo"))
-
-	return repo
-}
-
-func createFile(t *testing.T, repo *git.Repository, name string) {
-	wt, err := repo.Worktree()
-	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
+func (r *TestRepo) NewFile(name string, content string) {
+	wt, err := r.Repo.Worktree()
+	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
 
 	file, err := wt.Filesystem.Create(name)
-	checkFatal(t, errors.Wrap(err, "Failed creating a file"))
+	checkFatal(r.t, errors.Wrap(err, "Failed creating a file"))
 
-	_, err = file.Write([]byte("I'm a file"))
-	checkFatal(t, errors.Wrap(err, "Failed writing a file"))
+	_, err = file.Write([]byte(content))
+	checkFatal(r.t, errors.Wrap(err, "Failed writing a file"))
 }
 
-func stageFile(t *testing.T, repo *git.Repository, name string) {
-	wt, err := repo.Worktree()
-	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
+func (r *TestRepo) AddFile(name string) {
+	wt, err := r.Repo.Worktree()
+	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
 
 	_, err = wt.Add(name)
-	checkFatal(t, errors.Wrap(err, "Failed adding file to index"))
+	checkFatal(r.t, errors.Wrap(err, "Failed adding file to index"))
 }
 
-func createCommit(t *testing.T, repo *git.Repository, msg string) {
-	wt, err := repo.Worktree()
-	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
+func (r *TestRepo) NewCommit(msg string) {
+	wt, err := r.Repo.Worktree()
+	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
 
 	opts := &git.CommitOptions{
 		Author: &object.Signature{
@@ -78,7 +105,7 @@ func createCommit(t *testing.T, repo *git.Repository, msg string) {
 	}
 
 	_, err = wt.Commit(msg, opts)
-	checkFatal(t, errors.Wrap(err, "Failed creating commit"))
+	checkFatal(r.t, errors.Wrap(err, "Failed creating commit"))
 }
 
 //
@@ -125,3 +152,9 @@ func createCommit(t *testing.T, repo *git.Repository, msg string) {
 //	err = repo.CheckoutHead(options)
 //	checkFatal(t, errors.Wrap(err, "Failed checking out tree"))
 //}
+
+func checkFatal(t *testing.T, err error) {
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+}
