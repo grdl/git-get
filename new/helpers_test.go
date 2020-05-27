@@ -1,6 +1,8 @@
 package new
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -19,20 +21,20 @@ func checkFatal(t *testing.T, err error) {
 	}
 }
 
-//func newTempDir(t *testing.T) string {
-//	dir, err := ioutil.TempDir("", "git-get-repo-")
-//	checkFatal(t, errors.Wrap(err, "Failed creating test repo directory"))
-//
-//	// Automatically remove repo when test is over
-//	t.Cleanup(func() {
-//		err := os.RemoveAll(dir)
-//		if err != nil {
-//			t.Errorf("failed cleaning up repo")
-//		}
-//	})
-//
-//	return dir
-//}
+func newTempDir(t *testing.T) string {
+	dir, err := ioutil.TempDir("", "git-get-repo-")
+	checkFatal(t, errors.Wrap(err, "Failed creating test repo directory"))
+
+	// Automatically remove repo when test is over
+	t.Cleanup(func() {
+		err := os.RemoveAll(dir)
+		if err != nil {
+			t.Errorf("failed cleaning up repo")
+		}
+	})
+
+	return dir
+}
 
 func newTestRepo(t *testing.T) *git.Repository {
 	fs := memfs.New()

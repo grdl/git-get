@@ -1,6 +1,44 @@
 package new
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/go-git/go-billy/v5/osfs"
+
+	"github.com/go-git/go-billy/v5/memfs"
+)
+
+func TestRepoCloneInMemory(t *testing.T) {
+	path := memfs.New()
+	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path)
+	checkFatal(t, err)
+
+	wt, err := repo.repo.Worktree()
+	checkFatal(t, err)
+
+	files, err := wt.Filesystem.ReadDir("")
+	checkFatal(t, err)
+
+	if len(files) == 0 {
+		t.Errorf("Cloned repo should contain files")
+	}
+}
+
+func TestRepoCloneOnDisk(t *testing.T) {
+	path := osfs.New(newTempDir(t))
+	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path)
+	checkFatal(t, err)
+
+	wt, err := repo.repo.Worktree()
+	checkFatal(t, err)
+
+	files, err := wt.Filesystem.ReadDir("")
+	checkFatal(t, err)
+
+	if len(files) == 0 {
+		t.Errorf("Cloned repo should contain files")
+	}
+}
 
 func TestRepoEmpty(t *testing.T) {
 	repo := newTestRepo(t)

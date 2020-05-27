@@ -37,7 +37,7 @@ func (r *Repo) LoadStatus() error {
 	return nil
 }
 
-// hasUntracked returns true if there's any untracked file in the worktree
+// hasUntracked returns true if there are any untracked files in the worktree
 func hasUntracked(status git.Status) bool {
 	for _, fs := range status {
 		if fs.Worktree == git.Untracked {
@@ -45,4 +45,5 @@ func hasUntracked(status git.Status) bool {
 		}
 	}
 	return false
+
 }
