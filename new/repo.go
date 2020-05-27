@@ -1,6 +1,7 @@
 package new
 
 import (
+	"io"
 	"os"
 
 	"github.com/go-git/go-git/v5/plumbing/cache"
@@ -17,7 +18,12 @@ type Repo struct {
 	Status *RepoStatus
 }
 
-func CloneRepo(url string, path billy.Filesystem) (r *Repo, err error) {
+func CloneRepo(url string, path billy.Filesystem, quiet bool) (r *Repo, err error) {
+	var output io.Writer
+	if !quiet {
+		output = os.Stdout
+	}
+
 	opts := &git.CloneOptions{
 		URL:               url,
 		Auth:              nil,
@@ -27,7 +33,7 @@ func CloneRepo(url string, path billy.Filesystem) (r *Repo, err error) {
 		NoCheckout:        false,
 		Depth:             0,
 		RecurseSubmodules: git.NoRecurseSubmodules,
-		Progress:          os.Stdout,
+		Progress:          output,
 		Tags:              git.AllTags,
 	}
 

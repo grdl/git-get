@@ -10,7 +10,7 @@ import (
 
 func TestRepoCloneInMemory(t *testing.T) {
 	path := memfs.New()
-	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path)
+	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path, true)
 	checkFatal(t, err)
 
 	wt, err := repo.repo.Worktree()
@@ -26,7 +26,7 @@ func TestRepoCloneInMemory(t *testing.T) {
 
 func TestRepoCloneOnDisk(t *testing.T) {
 	path := osfs.New(newTempDir(t))
-	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path)
+	repo, err := CloneRepo("https://github.com/grdl/dotfiles", path, true)
 	checkFatal(t, err)
 
 	wt, err := repo.repo.Worktree()
