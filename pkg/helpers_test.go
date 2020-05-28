@@ -2,23 +2,142 @@ package pkg
 
 import (
 	"io/ioutil"
+	pkgurl "net/url"
 	"os"
-	"path"
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/go-git/go-git/v5/plumbing"
 
-	git "github.com/libgit2/git2go/v30"
+	"github.com/go-git/go-git/v5/plumbing/object"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/pkg/errors"
 )
 
-func checkFatal(t *testing.T, err error) {
-	if err != nil {
-		t.Fatalf("%+v", err)
+type TestRepo struct {
+	Repo *git.Repository
+	Path string
+	URL  *pkgurl.URL
+	t    *testing.T
+}
+
+func NewRepoEmpty(t *testing.T) *TestRepo {
+	dir := NewTempDir(t)
+
+	repo, err := git.PlainInit(dir, false)
+	checkFatal(t, err)
+
+	url, err := ParseURL("file://" + dir)
+	checkFatal(t, err)
+
+	return &TestRepo{
+		Repo: repo,
+		Path: dir,
+		URL:  url,
+		t:    t,
 	}
 }
 
-func newTempDir(t *testing.T) string {
+func NewRepoWithUntracked(t *testing.T) *TestRepo {
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
+
+	return tr
+}
+
+func NewRepoWithStaged(t *testing.T) *TestRepo {
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
+	tr.AddFile("README")
+
+	return tr
+}
+func NewRepoWithCommit(t *testing.T) *TestRepo {
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
+	tr.AddFile("README")
+	tr.NewCommit("Initial commit")
+
+	return tr
+}
+
+func NewRepoWithModified(t *testing.T) *TestRepo {
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
+	tr.AddFile("README")
+	tr.NewCommit("Initial commit")
+	tr.WriteFile("README", "I'm modified")
+
+	return tr
+}
+
+func NewRepoWithIgnored(t *testing.T) *TestRepo {
+	tr := NewRepoEmpty(t)
+	tr.WriteFile(".gitignore", "ignoreme")
+	tr.AddFile(".gitignore")
+	tr.NewCommit("Initial commit")
+	tr.WriteFile("ignoreme", "I'm being ignored")
+
+	return tr
+}
+
+func NewRepoWithLocalBranch(t *testing.T) *TestRepo {
+	tr := NewRepoWithCommit(t)
+	tr.NewBranch("local")
+	return tr
+}
+
+func NewRepoWithClonedBranch(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+	tr.NewBranch("local")
+
+	return tr
+}
+
+func NewRepoWithBranchAhead(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+	tr.WriteFile("new", "I'm a new file")
+	tr.AddFile("new")
+	tr.NewCommit("New commit")
+
+	return tr
+}
+
+func NewRepoWithBranchBehind(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+
+	origin.WriteFile("origin.new", "I'm a new file on origin")
+	origin.AddFile("origin.new")
+	origin.NewCommit("New origin commit")
+
+	tr.Fetch()
+	return tr
+}
+
+func NewRepoWithBranchAheadAndBehind(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+	tr.WriteFile("local.new", "I'm a new file on local")
+	tr.AddFile("local.new")
+	tr.NewCommit("New local commit")
+
+	origin.WriteFile("origin.new", "I'm a new file on origin")
+	origin.AddFile("origin.new")
+	origin.NewCommit("New origin commit")
+
+	tr.Fetch()
+	return tr
+}
+
+func NewTempDir(t *testing.T) string {
 	dir, err := ioutil.TempDir("", "git-get-repo-")
 	checkFatal(t, errors.Wrap(err, "Failed creating test repo directory"))
 
@@ -33,108 +152,79 @@ func newTempDir(t *testing.T) string {
 	return dir
 }
 
-func newTestRepo(t *testing.T) *git.Repository {
-	dir := newTempDir(t)
-	repo, err := git.InitRepository(dir, false)
-	checkFatal(t, errors.Wrap(err, "Failed initializing a temp repo"))
+func (r *TestRepo) WriteFile(name string, content string) {
+	wt, err := r.Repo.Worktree()
+	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
 
-	return repo
+	file, err := wt.Filesystem.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	checkFatal(r.t, errors.Wrap(err, "Failed opening a file"))
+
+	_, err = file.Write([]byte(content))
+	checkFatal(r.t, errors.Wrap(err, "Failed writing a file"))
 }
 
-func createFile(t *testing.T, repo *git.Repository, name string) {
-	err := ioutil.WriteFile(path.Join(repo.Workdir(), name), []byte("I'm a file"), 0644)
-	checkFatal(t, errors.Wrap(err, "Failed writing a file"))
+func (r *TestRepo) AddFile(name string) {
+	wt, err := r.Repo.Worktree()
+	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
+
+	_, err = wt.Add(name)
+	checkFatal(r.t, errors.Wrap(err, "Failed adding file to index"))
 }
 
-func stageFile(t *testing.T, repo *git.Repository, name string) {
-	index, err := repo.Index()
-	checkFatal(t, errors.Wrap(err, "Failed getting repo index"))
+func (r *TestRepo) NewCommit(msg string) {
+	wt, err := r.Repo.Worktree()
+	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
 
-	err = index.AddByPath(name)
-	checkFatal(t, errors.Wrap(err, "Failed adding file to index"))
+	opts := &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Some Guy",
+			Email: "someguy@example.com",
+			When:  time.Date(2000, 01, 01, 16, 00, 00, 0, time.UTC),
+		},
+	}
 
-	err = index.Write()
-	checkFatal(t, errors.Wrap(err, "Failed writing index"))
+	_, err = wt.Commit(msg, opts)
+	checkFatal(r.t, errors.Wrap(err, "Failed creating commit"))
 }
 
-func createCommit(t *testing.T, repo *git.Repository, message string) *git.Commit {
-	index, err := repo.Index()
-	checkFatal(t, errors.Wrap(err, "Failed getting repo index"))
+func (r *TestRepo) NewBranch(name string) {
+	head, err := r.Repo.Head()
+	checkFatal(r.t, err)
 
-	treeId, err := index.WriteTree()
-	checkFatal(t, errors.Wrap(err, "Failed building tree from index"))
+	ref := plumbing.NewHashReference(plumbing.NewBranchReferenceName(name), head.Hash())
 
-	tree, err := repo.LookupTree(treeId)
-	checkFatal(t, errors.Wrap(err, "Failed looking up tree id"))
-
-	signature := &git.Signature{
-		Name:  "Some Guy",
-		Email: "someguy@example.com",
-		When:  time.Date(2000, 01, 01, 16, 00, 00, 0, time.UTC),
-	}
-
-	empty, err := repo.IsEmpty()
-	checkFatal(t, errors.Wrap(err, "Failed checking if repo is empty"))
-
-	var commitId *git.Oid
-	if !empty {
-		currentBranch, err := repo.Head()
-		checkFatal(t, errors.Wrap(err, "Failed getting current branch"))
-
-		currentTip, err := repo.LookupCommit(currentBranch.Target())
-		checkFatal(t, errors.Wrap(err, "Failed getting current tip"))
-
-		commitId, err = repo.CreateCommit("HEAD", signature, signature, message, tree, currentTip)
-	} else {
-		commitId, err = repo.CreateCommit("HEAD", signature, signature, message, tree)
-	}
-
-	commit, err := repo.LookupCommit(commitId)
-	checkFatal(t, errors.Wrap(err, "Failed looking up a commit"))
-
-	return commit
+	err = r.Repo.Storer.SetReference(ref)
+	checkFatal(r.t, err)
 }
 
-func createBranch(t *testing.T, repo *git.Repository, name string) *git.Branch {
-	head, err := repo.Head()
-	checkFatal(t, errors.Wrap(err, "Failed getting repo head"))
+func (r *TestRepo) Clone() *TestRepo {
+	dir := NewTempDir(r.t)
 
-	commit, err := repo.LookupCommit(head.Target())
-	checkFatal(t, errors.Wrap(err, "Failed getting commit id from head"))
+	repo, err := CloneRepo(r.URL, dir, true)
+	checkFatal(r.t, err)
 
-	branch, err := repo.CreateBranch(name, commit, false)
-	checkFatal(t, errors.Wrap(err, "Failed creating branch"))
+	url, err := ParseURL("file://" + dir)
+	checkFatal(r.t, err)
 
-	return branch
+	return &TestRepo{
+		Repo: repo.repo,
+		Path: dir,
+		URL:  url,
+		t:    r.t,
+	}
 }
 
-func checkoutBranch(t *testing.T, repo *git.Repository, name string) {
-	branch, err := repo.LookupBranch(name, git.BranchAll)
-
-	// If branch can't be found, let's check if it's a remote branch
-	if branch == nil {
-		branch, err = repo.LookupBranch("origin/"+name, git.BranchAll)
-	}
-	checkFatal(t, errors.Wrap(err, "Failed looking up branch"))
-
-	// If branch is remote, we need to create a local one first
-	if branch.IsRemote() {
-		commit, err := repo.LookupCommit(branch.Target())
-		checkFatal(t, errors.Wrap(err, "Failed looking up commit"))
-
-		localBranch, err := repo.CreateBranch(name, commit, false)
-		checkFatal(t, errors.Wrap(err, "Failed creating local branch"))
-
-		err = localBranch.SetUpstream("origin/" + name)
-		checkFatal(t, errors.Wrap(err, "Failed setting upstream"))
+func (r *TestRepo) Fetch() {
+	repo := &Repo{
+		repo: r.Repo,
 	}
 
-	err = repo.SetHead("refs/heads/" + name)
-	checkFatal(t, errors.Wrap(err, "Failed setting head"))
+	err := repo.Fetch()
+	checkFatal(r.t, err)
+}
 
-	options := &git.CheckoutOpts{
-		Strategy: git.CheckoutForce,
+func checkFatal(t *testing.T, err error) {
+	if err != nil {
+		t.Fatalf("%+v", err)
 	}
-	err = repo.CheckoutHead(options)
-	checkFatal(t, errors.Wrap(err, "Failed checking out tree"))
 }

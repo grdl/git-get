@@ -1,153 +1,215 @@
 package pkg
 
 import (
-	git "github.com/libgit2/git2go/v30"
+	"sort"
+	"strings"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
 )
 
 type RepoStatus struct {
 	HasUntrackedFiles     bool
 	HasUncommittedChanges bool
-	Branches              map[string]BranchStatus
+	Branches              []*BranchStatus
 }
 
 type BranchStatus struct {
-	Name        string
-	IsRemote    bool
-	HasUpstream bool
-	NeedsPull   bool
-	NeedsPush   bool
-	Ahead       int
-	Behind      int
+	Name      string
+	Upstream  string
+	NeedsPull bool
+	NeedsPush bool
 }
 
-func loadStatus(r *git.Repository) (*RepoStatus, error) {
-	entries, err := statusEntries(r)
+func (r *Repo) LoadStatus() error {
+	wt, err := r.repo.Worktree()
 	if err != nil {
-		return nil, err
+		return errors.Wrap(err, "Failed getting worktree")
 	}
 
-	branches, err := branches(r)
+	status, err := wt.Status()
 	if err != nil {
-		return nil, err
+		return errors.Wrap(err, "Failed getting worktree status")
 	}
 
-	status := &RepoStatus{
-		Branches: branches,
+	r.Status.HasUncommittedChanges = hasUncommitted(status)
+	r.Status.HasUntrackedFiles = hasUntracked(status)
+
+	err = r.loadBranchesStatus()
+	if err != nil {
+		return err
 	}
 
-	for _, entry := range entries {
-		switch entry.Status {
-		case git.StatusWtNew:
-			status.HasUntrackedFiles = true
-		case git.StatusIndexNew:
-			status.HasUncommittedChanges = true
+	return nil
+}
+
+// hasUntracked returns true if there are any untracked files in the worktree
+func hasUntracked(status git.Status) bool {
+	for _, fs := range status {
+		if fs.Worktree == git.Untracked || fs.Staging == git.Untracked {
+			return true
 		}
 	}
 
-	return status, nil
+	return false
 }
 
-func statusEntries(r *git.Repository) ([]git.StatusEntry, error) {
-	opts := &git.StatusOptions{
-		Show:  git.StatusShowIndexAndWorkdir,
-		Flags: git.StatusOptIncludeUntracked,
+// hasUncommitted returns true if there are any uncommitted (but tracked) files in the worktree
+func hasUncommitted(status git.Status) bool {
+	// If repo is clean it means every file in worktree and staging has 'Unmodified' state
+	if status.IsClean() {
+		return false
 	}
 
-	status, err := r.StatusList(opts)
+	// If repo is not clean, check if any file has state different than 'Untracked' - it means they are tracked and have uncommitted modifications
+	for _, fs := range status {
+		if fs.Worktree != git.Untracked || fs.Staging != git.Untracked {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r *Repo) loadBranchesStatus() error {
+	iter, err := r.repo.Branches()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed getting repository status list")
+		return errors.Wrap(err, "Failed getting branches iterator")
 	}
 
-	entryCount, err := status.EntryCount()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed getting repository status list count")
-	}
-
-	var entries []git.StatusEntry
-	for i := 0; i < entryCount; i++ {
-		entry, err := status.ByIndex(i)
+	err = iter.ForEach(func(reference *plumbing.Reference) error {
+		bs, err := r.newBranchStatus(reference.Name().Short())
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed getting repository status entry")
+			return err
 		}
 
-		entries = append(entries, entry)
-	}
-
-	return entries, nil
-}
-
-func branches(r *git.Repository) (map[string]BranchStatus, error) {
-	iter, err := r.NewBranchIterator(git.BranchAll)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed creating branch iterator")
-	}
-
-	var branches []*git.Branch
-	err = iter.ForEach(func(branch *git.Branch, branchType git.BranchType) error {
-		branches = append(branches, branch)
+		r.Status.Branches = append(r.Status.Branches, bs)
 		return nil
 	})
-
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed iterating over branches")
+		return errors.Wrap(err, "Failed iterating over branches")
 	}
 
-	statuses := make(map[string]BranchStatus)
-	for _, branch := range branches {
-		status, err := branchStatus(branch)
-		if err != nil {
-			// TODO: Handle error. We should tell user that we couldn't read status of that branch but probably shouldn't exit
-			continue
-		}
-		statuses[status.Name] = status
-	}
-
-	return statuses, nil
+	// Sort branches by name. It's useful to have them sorted for printing and testing.
+	sort.Slice(r.Status.Branches, func(i, j int) bool {
+		return strings.Compare(r.Status.Branches[i].Name, r.Status.Branches[j].Name) < 0
+	})
+	return nil
 }
 
-func branchStatus(branch *git.Branch) (BranchStatus, error) {
-	var status BranchStatus
+func (r *Repo) newBranchStatus(branch string) (*BranchStatus, error) {
+	bs := &BranchStatus{
+		Name: branch,
+	}
 
-	name, err := branch.Name()
+	upstream, err := r.upstream(branch)
 	if err != nil {
-		return status, errors.Wrap(err, "Failed getting branch name")
-	}
-	status.Name = name
-
-	// If branch is a remote one, return immediately. Upstream can only be found for local branches.
-	if branch.IsRemote() {
-		status.IsRemote = true
-		return status, nil
+		return nil, err
 	}
 
-	upstream, err := branch.Upstream()
-	if err != nil && !git.IsErrorCode(err, git.ErrNotFound) {
-		return status, errors.Wrap(err, "Failed getting branch upstream")
+	if upstream == "" {
+		return bs, nil
 	}
 
-	// If there's no upstream, return immediately. Ahead/Behind can only be found when upstream exists.
-	if upstream == nil {
-		return status, nil
-	}
-
-	status.HasUpstream = true
-
-	ahead, behind, err := branch.Owner().AheadBehind(branch.Target(), upstream.Target())
+	needsPull, needsPush, err := r.needsPullOrPush(branch, upstream)
 	if err != nil {
-		return status, errors.Wrap(err, "Failed getting ahead/behind information")
+		return nil, err
 	}
 
-	status.Ahead = ahead
-	status.Behind = behind
+	bs.Upstream = upstream
+	bs.NeedsPush = needsPush
+	bs.NeedsPull = needsPull
 
-	if ahead > 0 {
-		status.NeedsPush = true
+	return bs, nil
+}
+
+// upstream finds if a given branch tracks an upstream.
+// Returns found upstream branch name (eg, origin/master) or empty string if branch doesn't track an upstream.
+//
+// Information about upstream is taken from .git/config file.
+// If a branch has an upstream, there's a [branch] section in the file with two fields:
+// "remote" - name of the remote containing upstreamn branch (or "." if upstream is a local branch)
+// "merge" - full ref name of the upstream branch (eg, ref/heads/master)
+func (r *Repo) upstream(branch string) (string, error) {
+	cfg, err := r.repo.Config()
+	if err != nil {
+		return "", errors.Wrap(err, "Failed getting repo config")
 	}
 
-	if behind > 0 {
-		status.NeedsPull = true
+	// Check if our branch exists in "branch" config sections. If not, it doesn't have an upstream configured.
+	bcfg := cfg.Branches[branch]
+	if bcfg == nil {
+		return "", nil
 	}
 
-	return status, nil
+	remote := bcfg.Remote
+	if remote == "" {
+		return "", nil
+	}
+
+	merge := bcfg.Merge.Short()
+	if merge == "" {
+		return "", nil
+	}
+	return remote + "/" + merge, nil
+}
+
+func (r *Repo) needsPullOrPush(localBranch string, upstreamBranch string) (needsPull bool, needsPush bool, err error) {
+	localHash, err := r.repo.ResolveRevision(plumbing.Revision(localBranch))
+	if err != nil {
+		return false, false, errors.Wrapf(err, "Failed resolving revision %s", localBranch)
+	}
+
+	upstreamHash, err := r.repo.ResolveRevision(plumbing.Revision(upstreamBranch))
+	if err != nil {
+		return false, false, errors.Wrapf(err, "Failed resolving revision %s", upstreamBranch)
+	}
+
+	localCommit, err := r.repo.CommitObject(*localHash)
+	if err != nil {
+		return false, false, errors.Wrapf(err, "Failed finding a commit for hash %s", localHash.String())
+	}
+
+	upstreamCommit, err := r.repo.CommitObject(*upstreamHash)
+	if err != nil {
+		return false, false, errors.Wrapf(err, "Failed finding a commit for hash %s", upstreamHash.String())
+	}
+
+	// If local branch hash is the same as upstream, it means there is no difference between local and upstream
+	if *localHash == *upstreamHash {
+		return false, false, nil
+	}
+
+	commons, err := localCommit.MergeBase(upstreamCommit)
+	if err != nil {
+		return false, false, errors.Wrapf(err, "Failed finding common ancestors for branches %s & %s", localBranch, upstreamBranch)
+	}
+
+	if len(commons) == 0 {
+		// TODO: No common ancestors. This should be an error
+		return false, false, nil
+	}
+
+	if len(commons) > 1 {
+		// TODO: multiple best ancestors. How to handle this?
+		return false, false, nil
+	}
+
+	mergeBase := commons[0]
+
+	// If merge base is the same as upstream branch, local branch is ahead and push is needed
+	// If merge base is the same as local branch, local branch is behind and pull is needed
+	// If merge base is something else, branches have diverged and merge is needed (both pull and push)
+	// ref: https://stackoverflow.com/a/17723781/1085632
+
+	if mergeBase.Hash == *upstreamHash {
+		return false, true, nil
+	}
+
+	if mergeBase.Hash == *localHash {
+		return true, false, nil
+	}
+
+	return true, true, nil
 }

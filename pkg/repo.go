@@ -1,14 +1,13 @@
 package pkg
 
 import (
-	urlpkg "net/url"
+	"io"
+	"net/url"
 	"os"
-	"path"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
-	git "github.com/libgit2/git2go/v30"
+	"github.com/go-git/go-git/v5"
 )
 
 type Repo struct {
@@ -16,112 +15,62 @@ type Repo struct {
 	Status *RepoStatus
 }
 
-func credentialsCallback(url string, username string, allowedTypes git.CredType) (*git.Cred, error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed getting user home directory")
+func CloneRepo(url *url.URL, path string, quiet bool) (r *Repo, err error) {
+	var output io.Writer
+	if !quiet {
+		output = os.Stdout
 	}
 
-	// TODO: Add option to provide custom path
-	publicKey := path.Join(home, ".ssh", "id_rsa.pub")
-	privateKey := path.Join(home, ".ssh", "id_rsa")
-
-	cred, err := git.NewCredSshKey(username, publicKey, privateKey, "")
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed getting SSH credentials")
+	opts := &git.CloneOptions{
+		URL:               url.String(),
+		Auth:              nil,
+		RemoteName:        git.DefaultRemoteName,
+		ReferenceName:     "",
+		SingleBranch:      false,
+		NoCheckout:        false,
+		Depth:             0,
+		RecurseSubmodules: git.NoRecurseSubmodules,
+		Progress:          output,
+		Tags:              git.AllTags,
 	}
-	return cred, err
+
+	repo, err := git.PlainClone(path, false, opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed cloning repo")
+	}
+
+	return newRepo(repo), nil
 }
 
-func certificateCheckCallback(cert *git.Certificate, valid bool, hostname string) git.ErrorCode {
-	// TODO: check the certificate
-	return 0
-}
-
-func CloneRepo(url *urlpkg.URL, repoRoot string) (path string, err error) {
-	repoPath := URLToPath(url)
-
-	path, err = MakeDir(repoRoot, repoPath)
-	if err != nil {
-		return path, err
-	}
-
-	options := &git.CloneOptions{
-		Bare:           false,
-		CheckoutBranch: "",
-		FetchOptions: &git.FetchOptions{
-			RemoteCallbacks: git.RemoteCallbacks{
-				CredentialsCallback:      credentialsCallback,
-				CertificateCheckCallback: certificateCheckCallback,
-			},
-		},
-	}
-
-	_, err = git.Clone(url.String(), path, options)
-	if err != nil {
-		_ = os.RemoveAll(path)
-
-		return path, errors.Wrap(err, "Failed cloning repo")
-	}
-	return path, nil
-}
-
-func OpenRepo(path string) (*Repo, error) {
-	r, err := git.OpenRepository(path)
+func OpenRepo(path string) (r *Repo, err error) {
+	repo, err := git.PlainOpen(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed opening repo")
 	}
 
-	repoStatus, err := loadStatus(r)
-	if err != nil {
-		return nil, err
-	}
-
-	repo := &Repo{
-		repo:   r,
-		Status: repoStatus,
-	}
-
-	return repo, nil
+	return newRepo(repo), nil
 }
 
-func (r *Repo) Reload() error {
-	status, err := loadStatus(r.repo)
-	if err != nil {
-		return err
+func newRepo(repo *git.Repository) *Repo {
+	return &Repo{
+		repo:   repo,
+		Status: &RepoStatus{},
 	}
-
-	r.Status = status
-	return nil
 }
 
+// Fetch performs a git fetch on all remotes
 func (r *Repo) Fetch() error {
-	remoteNames, err := r.repo.Remotes.List()
+	remotes, err := r.repo.Remotes()
 	if err != nil {
-		return errors.Wrap(err, "Failed listing remoteNames")
+		return errors.Wrap(err, "Failed getting remotes")
 	}
 
-	for _, name := range remoteNames {
-		remote, err := r.repo.Remotes.Lookup(name)
+	for _, remote := range remotes {
+		err = remote.Fetch(&git.FetchOptions{})
 		if err != nil {
-			return errors.Wrap(err, "Failed looking up remote")
-		}
-
-		err = remote.Fetch(nil, nil, "")
-		if err != nil {
-			return errors.Wrap(err, "Failed fetching remote")
+			return errors.Wrapf(err, "Failed fetching remote %s", remote.Config().Name)
 		}
 	}
 
 	return nil
-}
-
-func MakeDir(repoRoot, repoPath string) (string, error) {
-	dir := path.Join(repoRoot, repoPath)
-	err := os.MkdirAll(dir, 0775)
-	if err != nil {
-		return "", errors.Wrap(err, "Failed creating repo directory")
-	}
-
-	return dir, nil
 }

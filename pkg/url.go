@@ -14,7 +14,7 @@ import (
 var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+)@([a-zA-Z0-9._-]+):(.*)$`)
 
 func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
-	// If rawURL matches the SCP-like syntax, convert it into a standard ssh URL.
+	// If rawURL matches the SCP-like syntax, convert it into a standard ssh Path.
 	// eg, git@github.com:user/repo => ssh://git@github.com/user/repo
 	if m := scpSyntax.FindStringSubmatch(rawURL); m != nil {
 		url = &urlpkg.URL{
@@ -26,12 +26,12 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 	} else {
 		url, err = urlpkg.Parse(rawURL)
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed parsing URL")
+			return nil, errors.Wrap(err, "Failed parsing Path")
 		}
 	}
 
 	if url.Host == "" && url.Path == "" {
-		return nil, errors.New("Parsed URL is empty")
+		return nil, errors.New("Parsed Path is empty")
 	}
 
 	if url.Scheme == "git+ssh" {

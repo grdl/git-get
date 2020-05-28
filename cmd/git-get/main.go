@@ -27,7 +27,7 @@ func Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = pkg.CloneRepo(url, ReposRoot)
+	_, err = pkg.CloneRepo(url, ReposRoot, false)
 	return err
 }
 
