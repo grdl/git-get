@@ -40,26 +40,101 @@ func NewRepoEmpty(t *testing.T) *TestRepo {
 }
 
 func NewRepoWithUntracked(t *testing.T) *TestRepo {
-	repo := NewRepoEmpty(t)
-	repo.NewFile("README", "I'm a README file")
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
 
-	return repo
+	return tr
 }
 
 func NewRepoWithStaged(t *testing.T) *TestRepo {
-	repo := NewRepoEmpty(t)
-	repo.NewFile("README", "I'm a README file")
-	repo.AddFile("README")
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
+	tr.AddFile("README")
 
-	return repo
+	return tr
 }
 func NewRepoWithCommit(t *testing.T) *TestRepo {
-	repo := NewRepoEmpty(t)
-	repo.NewFile("README", "I'm a README file")
-	repo.AddFile("README")
-	repo.NewCommit("Initial commit")
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
+	tr.AddFile("README")
+	tr.NewCommit("Initial commit")
 
-	return repo
+	return tr
+}
+
+func NewRepoWithModified(t *testing.T) *TestRepo {
+	tr := NewRepoEmpty(t)
+	tr.WriteFile("README", "I'm a README file")
+	tr.AddFile("README")
+	tr.NewCommit("Initial commit")
+	tr.WriteFile("README", "I'm modified")
+
+	return tr
+}
+
+func NewRepoWithIgnored(t *testing.T) *TestRepo {
+	tr := NewRepoEmpty(t)
+	tr.WriteFile(".gitignore", "ignoreme")
+	tr.AddFile(".gitignore")
+	tr.NewCommit("Initial commit")
+	tr.WriteFile("ignoreme", "I'm being ignored")
+
+	return tr
+}
+
+func NewRepoWithLocalBranch(t *testing.T) *TestRepo {
+	tr := NewRepoWithCommit(t)
+	tr.NewBranch("local")
+	return tr
+}
+
+func NewRepoWithClonedBranch(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+	tr.NewBranch("local")
+
+	return tr
+}
+
+func NewRepoWithBranchAhead(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+	tr.WriteFile("new", "I'm a new file")
+	tr.AddFile("new")
+	tr.NewCommit("New commit")
+
+	return tr
+}
+
+func NewRepoWithBranchBehind(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+
+	origin.WriteFile("origin.new", "I'm a new file on origin")
+	origin.AddFile("origin.new")
+	origin.NewCommit("New origin commit")
+
+	tr.Fetch()
+	return tr
+}
+
+func NewRepoWithBranchAheadAndBehind(t *testing.T) *TestRepo {
+	origin := NewRepoWithCommit(t)
+
+	tr := origin.Clone()
+	tr.WriteFile("local.new", "I'm a new file on local")
+	tr.AddFile("local.new")
+	tr.NewCommit("New local commit")
+
+	origin.WriteFile("origin.new", "I'm a new file on origin")
+	origin.AddFile("origin.new")
+	origin.NewCommit("New origin commit")
+
+	tr.Fetch()
+	return tr
 }
 
 func NewTempDir(t *testing.T) string {
@@ -77,12 +152,12 @@ func NewTempDir(t *testing.T) string {
 	return dir
 }
 
-func (r *TestRepo) NewFile(name string, content string) {
+func (r *TestRepo) WriteFile(name string, content string) {
 	wt, err := r.Repo.Worktree()
 	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
 
-	file, err := wt.Filesystem.Create(name)
-	checkFatal(r.t, errors.Wrap(err, "Failed creating a file"))
+	file, err := wt.Filesystem.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	checkFatal(r.t, errors.Wrap(err, "Failed opening a file"))
 
 	_, err = file.Write([]byte(content))
 	checkFatal(r.t, errors.Wrap(err, "Failed writing a file"))
@@ -139,36 +214,14 @@ func (r *TestRepo) Clone() *TestRepo {
 	}
 }
 
-//func checkoutBranch(t *testing.T, repo *git.Repository, name string) {
-//	branch, err := repo.LookupBranch(name, git.BranchAll)
-//
-//	// If branch can't be found, let's check if it's a remote branch
-//	if branch == nil {
-//		branch, err = repo.LookupBranch("origin/"+name, git.BranchAll)
-//	}
-//	checkFatal(t, errors.Wrap(err, "Failed looking up branch"))
-//
-//	// If branch is remote, we need to create a local one first
-//	if branch.IsRemote() {
-//		commit, err := repo.LookupCommit(branch.Target())
-//		checkFatal(t, errors.Wrap(err, "Failed looking up commit"))
-//
-//		localBranch, err := repo.CreateBranch(name, commit, false)
-//		checkFatal(t, errors.Wrap(err, "Failed creating local branch"))
-//
-//		err = localBranch.SetUpstream("origin/" + name)
-//		checkFatal(t, errors.Wrap(err, "Failed setting upstream"))
-//	}
-//
-//	err = repo.SetHead("refs/heads/" + name)
-//	checkFatal(t, errors.Wrap(err, "Failed setting head"))
-//
-//	options := &git.CheckoutOpts{
-//		Strategy: git.CheckoutForce,
-//	}
-//	err = repo.CheckoutHead(options)
-//	checkFatal(t, errors.Wrap(err, "Failed checking out tree"))
-//}
+func (r *TestRepo) Fetch() {
+	repo := &Repo{
+		repo: r.Repo,
+	}
+
+	err := repo.Fetch()
+	checkFatal(r.t, err)
+}
 
 func checkFatal(t *testing.T, err error) {
 	if err != nil {

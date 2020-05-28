@@ -53,11 +53,24 @@ func OpenRepo(path string) (r *Repo, err error) {
 
 func newRepo(repo *git.Repository) *Repo {
 	return &Repo{
-		repo: repo,
-		Status: &RepoStatus{
-			HasUntrackedFiles:     false,
-			HasUncommittedChanges: false,
-			Branches:              make(map[string]*BranchStatus),
-		},
+		repo:   repo,
+		Status: &RepoStatus{},
 	}
+}
+
+// Fetch performs a git fetch on all remotes
+func (r *Repo) Fetch() error {
+	remotes, err := r.repo.Remotes()
+	if err != nil {
+		return errors.Wrap(err, "Failed getting remotes")
+	}
+
+	for _, remote := range remotes {
+		err = remote.Fetch(&git.FetchOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "Failed fetching remote %s", remote.Config().Name)
+		}
+	}
+
+	return nil
 }
