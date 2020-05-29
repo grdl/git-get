@@ -14,6 +14,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	testUser  = "Test User"
+	testEmail = "testuser@example.com"
+)
+
 func newRepoEmpty(t *testing.T) *Repo {
 	dir := newTempDir(t)
 
@@ -162,8 +167,8 @@ func (r *Repo) newCommit(t *testing.T, msg string) {
 
 	opts := &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  "Some Guy",
-			Email: "someguy@example.com",
+			Name:  testUser,
+			Email: testEmail,
 			When:  time.Date(2000, 01, 01, 16, 00, 00, 0, time.UTC),
 		},
 	}

@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const ReposRoot = "/tmp/gitget"
-
 var cmd = &cobra.Command{
 	Use:     "git-get <repo>",
 	Short:   "git get",
@@ -19,14 +17,14 @@ var cmd = &cobra.Command{
 }
 
 func init() {
-	//cmd.PersistentFlags().
+	pkg.LoadConf()
 }
 
 func Run(cmd *cobra.Command, args []string) {
 	url, err := pkg.ParseURL(args[0])
 	exitIfError(err)
 
-	_, err = pkg.CloneRepo(url, ReposRoot, false)
+	_, err = pkg.CloneRepo(url, pkg.Cfg.ReposRoot(), false)
 	exitIfError(err)
 }
 
