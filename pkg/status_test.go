@@ -7,25 +7,25 @@ import (
 
 func TestStatus(t *testing.T) {
 	var tests = []struct {
-		makeTestRepo func(*testing.T) *TestRepo
+		makeTestRepo func(*testing.T) *Repo
 		want         *RepoStatus
 	}{
-		{NewRepoEmpty, &RepoStatus{
+		{newRepoEmpty, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches:              nil,
 		}},
-		{NewRepoWithUntracked, &RepoStatus{
+		{newRepoWithUntracked, &RepoStatus{
 			HasUntrackedFiles:     true,
 			HasUncommittedChanges: false,
 			Branches:              nil,
 		}},
-		{NewRepoWithStaged, &RepoStatus{
+		{newRepoWithStaged, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: true,
 			Branches:              nil,
 		}},
-		{NewRepoWithCommit, &RepoStatus{
+		{newRepoWithCommit, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches: []*BranchStatus{
@@ -37,7 +37,7 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
-		{NewRepoWithModified, &RepoStatus{
+		{newRepoWithModified, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: true,
 			Branches: []*BranchStatus{
@@ -49,7 +49,7 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
-		{NewRepoWithIgnored, &RepoStatus{
+		{newRepoWithIgnored, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches: []*BranchStatus{
@@ -61,7 +61,7 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
-		{NewRepoWithLocalBranch, &RepoStatus{
+		{newRepoWithLocalBranch, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches: []*BranchStatus{
@@ -78,7 +78,7 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
-		{NewRepoWithClonedBranch, &RepoStatus{
+		{newRepoWithClonedBranch, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches: []*BranchStatus{
@@ -95,7 +95,7 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
-		{NewRepoWithBranchAhead, &RepoStatus{
+		{newRepoWithBranchAhead, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches: []*BranchStatus{
@@ -107,7 +107,7 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
-		{NewRepoWithBranchBehind, &RepoStatus{
+		{newRepoWithBranchBehind, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches: []*BranchStatus{
@@ -119,7 +119,7 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
-		{NewRepoWithBranchAheadAndBehind, &RepoStatus{
+		{newRepoWithBranchAheadAndBehind, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
 			Branches: []*BranchStatus{
@@ -134,12 +134,9 @@ func TestStatus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		tr := test.makeTestRepo(t)
+		repo := test.makeTestRepo(t)
 
-		repo, err := OpenRepo(tr.Path)
-		checkFatal(t, err)
-
-		err = repo.LoadStatus()
+		err := repo.LoadStatus()
 		checkFatal(t, err)
 
 		if !reflect.DeepEqual(repo.Status, test.want) {
@@ -147,3 +144,5 @@ func TestStatus(t *testing.T) {
 		}
 	}
 }
+
+// TODO: test branch status when tracking a local branch

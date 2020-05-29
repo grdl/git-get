@@ -1,6 +1,6 @@
 # git-get
 
-`git get` - a better way to clone and manage git repositories.
+`git get` - a better way to clone, organize and manage git repositories.
 
 ## Features
 
@@ -15,10 +15,3 @@ Show repo status:
 - ahead/behind?
 - submodules?
 
-
-
-find upstream branch
-https://github.com/src-d/go-git/issues/600
-
-ahead/behind:
-https://stackoverflow.com/questions/57566661/use-go-git-to-check-if-branch-has-been-pushed-to-remote

@@ -129,7 +129,7 @@ func (r *Repo) newBranchStatus(branch string) (*BranchStatus, error) {
 //
 // Information about upstream is taken from .git/config file.
 // If a branch has an upstream, there's a [branch] section in the file with two fields:
-// "remote" - name of the remote containing upstreamn branch (or "." if upstream is a local branch)
+// "remote" - name of the remote containing upstream branch (or "." if upstream is a local branch)
 // "merge" - full ref name of the upstream branch (eg, ref/heads/master)
 func (r *Repo) upstream(branch string) (string, error) {
 	cfg, err := r.repo.Config()

@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"io/ioutil"
-	pkgurl "net/url"
 	"os"
 	"testing"
 	"time"
@@ -15,129 +14,115 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TestRepo struct {
-	Repo *git.Repository
-	Path string
-	URL  *pkgurl.URL
-	t    *testing.T
-}
-
-func NewRepoEmpty(t *testing.T) *TestRepo {
-	dir := NewTempDir(t)
+func newRepoEmpty(t *testing.T) *Repo {
+	dir := newTempDir(t)
 
 	repo, err := git.PlainInit(dir, false)
 	checkFatal(t, err)
 
-	url, err := ParseURL("file://" + dir)
-	checkFatal(t, err)
-
-	return &TestRepo{
-		Repo: repo,
-		Path: dir,
-		URL:  url,
-		t:    t,
-	}
+	return newRepo(repo, dir)
 }
 
-func NewRepoWithUntracked(t *testing.T) *TestRepo {
-	tr := NewRepoEmpty(t)
-	tr.WriteFile("README", "I'm a README file")
+func newRepoWithUntracked(t *testing.T) *Repo {
+	r := newRepoEmpty(t)
+	r.writeFile(t, "README", "I'm a README file")
 
-	return tr
+	return r
 }
 
-func NewRepoWithStaged(t *testing.T) *TestRepo {
-	tr := NewRepoEmpty(t)
-	tr.WriteFile("README", "I'm a README file")
-	tr.AddFile("README")
+func newRepoWithStaged(t *testing.T) *Repo {
+	r := newRepoEmpty(t)
+	r.writeFile(t, "README", "I'm a README file")
+	r.addFile(t, "README")
 
-	return tr
-}
-func NewRepoWithCommit(t *testing.T) *TestRepo {
-	tr := NewRepoEmpty(t)
-	tr.WriteFile("README", "I'm a README file")
-	tr.AddFile("README")
-	tr.NewCommit("Initial commit")
-
-	return tr
+	return r
 }
 
-func NewRepoWithModified(t *testing.T) *TestRepo {
-	tr := NewRepoEmpty(t)
-	tr.WriteFile("README", "I'm a README file")
-	tr.AddFile("README")
-	tr.NewCommit("Initial commit")
-	tr.WriteFile("README", "I'm modified")
+func newRepoWithCommit(t *testing.T) *Repo {
+	r := newRepoEmpty(t)
+	r.writeFile(t, "README", "I'm a README file")
+	r.addFile(t, "README")
+	r.newCommit(t, "Initial commit")
 
-	return tr
+	return r
 }
 
-func NewRepoWithIgnored(t *testing.T) *TestRepo {
-	tr := NewRepoEmpty(t)
-	tr.WriteFile(".gitignore", "ignoreme")
-	tr.AddFile(".gitignore")
-	tr.NewCommit("Initial commit")
-	tr.WriteFile("ignoreme", "I'm being ignored")
+func newRepoWithModified(t *testing.T) *Repo {
+	r := newRepoEmpty(t)
+	r.writeFile(t, "README", "I'm a README file")
+	r.addFile(t, "README")
+	r.newCommit(t, "Initial commit")
+	r.writeFile(t, "README", "I'm modified")
 
-	return tr
+	return r
 }
 
-func NewRepoWithLocalBranch(t *testing.T) *TestRepo {
-	tr := NewRepoWithCommit(t)
-	tr.NewBranch("local")
-	return tr
+func newRepoWithIgnored(t *testing.T) *Repo {
+	r := newRepoEmpty(t)
+	r.writeFile(t, ".gitignore", "ignoreme")
+	r.addFile(t, ".gitignore")
+	r.newCommit(t, "Initial commit")
+	r.writeFile(t, "ignoreme", "I'm being ignored")
+
+	return r
 }
 
-func NewRepoWithClonedBranch(t *testing.T) *TestRepo {
-	origin := NewRepoWithCommit(t)
-
-	tr := origin.Clone()
-	tr.NewBranch("local")
-
-	return tr
+func newRepoWithLocalBranch(t *testing.T) *Repo {
+	r := newRepoWithCommit(t)
+	r.newBranch(t, "local")
+	return r
 }
 
-func NewRepoWithBranchAhead(t *testing.T) *TestRepo {
-	origin := NewRepoWithCommit(t)
+func newRepoWithClonedBranch(t *testing.T) *Repo {
+	origin := newRepoWithCommit(t)
 
-	tr := origin.Clone()
-	tr.WriteFile("new", "I'm a new file")
-	tr.AddFile("new")
-	tr.NewCommit("New commit")
+	r := origin.clone(t)
+	r.newBranch(t, "local")
 
-	return tr
+	return r
 }
 
-func NewRepoWithBranchBehind(t *testing.T) *TestRepo {
-	origin := NewRepoWithCommit(t)
+func newRepoWithBranchAhead(t *testing.T) *Repo {
+	origin := newRepoWithCommit(t)
 
-	tr := origin.Clone()
+	r := origin.clone(t)
+	r.writeFile(t, "new", "I'm a new file")
+	r.addFile(t, "new")
+	r.newCommit(t, "new commit")
 
-	origin.WriteFile("origin.new", "I'm a new file on origin")
-	origin.AddFile("origin.new")
-	origin.NewCommit("New origin commit")
-
-	tr.Fetch()
-	return tr
+	return r
 }
 
-func NewRepoWithBranchAheadAndBehind(t *testing.T) *TestRepo {
-	origin := NewRepoWithCommit(t)
+func newRepoWithBranchBehind(t *testing.T) *Repo {
+	origin := newRepoWithCommit(t)
 
-	tr := origin.Clone()
-	tr.WriteFile("local.new", "I'm a new file on local")
-	tr.AddFile("local.new")
-	tr.NewCommit("New local commit")
+	r := origin.clone(t)
 
-	origin.WriteFile("origin.new", "I'm a new file on origin")
-	origin.AddFile("origin.new")
-	origin.NewCommit("New origin commit")
+	origin.writeFile(t, "origin.new", "I'm a new file on origin")
+	origin.addFile(t, "origin.new")
+	origin.newCommit(t, "new origin commit")
 
-	tr.Fetch()
-	return tr
+	r.fetch(t)
+	return r
 }
 
-func NewTempDir(t *testing.T) string {
+func newRepoWithBranchAheadAndBehind(t *testing.T) *Repo {
+	origin := newRepoWithCommit(t)
+
+	r := origin.clone(t)
+	r.writeFile(t, "local.new", "I'm a new file on local")
+	r.addFile(t, "local.new")
+	r.newCommit(t, "new local commit")
+
+	origin.writeFile(t, "origin.new", "I'm a new file on origin")
+	origin.addFile(t, "origin.new")
+	origin.newCommit(t, "new origin commit")
+
+	r.fetch(t)
+	return r
+}
+
+func newTempDir(t *testing.T) string {
 	dir, err := ioutil.TempDir("", "git-get-repo-")
 	checkFatal(t, errors.Wrap(err, "Failed creating test repo directory"))
 
@@ -152,28 +137,28 @@ func NewTempDir(t *testing.T) string {
 	return dir
 }
 
-func (r *TestRepo) WriteFile(name string, content string) {
-	wt, err := r.Repo.Worktree()
-	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
+func (r *Repo) writeFile(t *testing.T, name string, content string) {
+	wt, err := r.repo.Worktree()
+	checkFatal(t, errors.Wrap(err, "Failed getting workree"))
 
 	file, err := wt.Filesystem.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	checkFatal(r.t, errors.Wrap(err, "Failed opening a file"))
+	checkFatal(t, errors.Wrap(err, "Failed opening a file"))
 
 	_, err = file.Write([]byte(content))
-	checkFatal(r.t, errors.Wrap(err, "Failed writing a file"))
+	checkFatal(t, errors.Wrap(err, "Failed writing a file"))
 }
 
-func (r *TestRepo) AddFile(name string) {
-	wt, err := r.Repo.Worktree()
-	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
+func (r *Repo) addFile(t *testing.T, name string) {
+	wt, err := r.repo.Worktree()
+	checkFatal(t, errors.Wrap(err, "Failed getting workree"))
 
 	_, err = wt.Add(name)
-	checkFatal(r.t, errors.Wrap(err, "Failed adding file to index"))
+	checkFatal(t, errors.Wrap(err, "Failed adding file to index"))
 }
 
-func (r *TestRepo) NewCommit(msg string) {
-	wt, err := r.Repo.Worktree()
-	checkFatal(r.t, errors.Wrap(err, "Failed getting worktree"))
+func (r *Repo) newCommit(t *testing.T, msg string) {
+	wt, err := r.repo.Worktree()
+	checkFatal(t, errors.Wrap(err, "Failed getting workree"))
 
 	opts := &git.CommitOptions{
 		Author: &object.Signature{
@@ -184,43 +169,33 @@ func (r *TestRepo) NewCommit(msg string) {
 	}
 
 	_, err = wt.Commit(msg, opts)
-	checkFatal(r.t, errors.Wrap(err, "Failed creating commit"))
+	checkFatal(t, errors.Wrap(err, "Failed creating commit"))
 }
 
-func (r *TestRepo) NewBranch(name string) {
-	head, err := r.Repo.Head()
-	checkFatal(r.t, err)
+func (r *Repo) newBranch(t *testing.T, name string) {
+	head, err := r.repo.Head()
+	checkFatal(t, err)
 
 	ref := plumbing.NewHashReference(plumbing.NewBranchReferenceName(name), head.Hash())
 
-	err = r.Repo.Storer.SetReference(ref)
-	checkFatal(r.t, err)
+	err = r.repo.Storer.SetReference(ref)
+	checkFatal(t, err)
 }
 
-func (r *TestRepo) Clone() *TestRepo {
-	dir := NewTempDir(r.t)
+func (r *Repo) clone(t *testing.T) *Repo {
+	dir := newTempDir(t)
+	url, err := ParseURL("file://" + r.path)
+	checkFatal(t, err)
 
-	repo, err := CloneRepo(r.URL, dir, true)
-	checkFatal(r.t, err)
+	repo, err := CloneRepo(url, dir, true)
+	checkFatal(t, err)
 
-	url, err := ParseURL("file://" + dir)
-	checkFatal(r.t, err)
-
-	return &TestRepo{
-		Repo: repo.repo,
-		Path: dir,
-		URL:  url,
-		t:    r.t,
-	}
+	return repo
 }
 
-func (r *TestRepo) Fetch() {
-	repo := &Repo{
-		repo: r.Repo,
-	}
-
-	err := repo.Fetch()
-	checkFatal(r.t, err)
+func (r *Repo) fetch(t *testing.T) {
+	err := r.Fetch()
+	checkFatal(t, err)
 }
 
 func checkFatal(t *testing.T, err error) {

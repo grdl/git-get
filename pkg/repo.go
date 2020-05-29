@@ -1,9 +1,11 @@
 package pkg
 
 import (
+	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path"
 
 	"github.com/pkg/errors"
 
@@ -12,13 +14,18 @@ import (
 
 type Repo struct {
 	repo   *git.Repository
+	path   string
 	Status *RepoStatus
 }
 
-func CloneRepo(url *url.URL, path string, quiet bool) (r *Repo, err error) {
+func CloneRepo(url *url.URL, reposRoot string, quiet bool) (*Repo, error) {
+	repoSubPath := URLToPath(url)
+	repoPath := path.Join(reposRoot, repoSubPath)
+
 	var output io.Writer
 	if !quiet {
 		output = os.Stdout
+		fmt.Printf("Cloning into '%s'...\n", repoPath)
 	}
 
 	opts := &git.CloneOptions{
@@ -34,26 +41,27 @@ func CloneRepo(url *url.URL, path string, quiet bool) (r *Repo, err error) {
 		Tags:              git.AllTags,
 	}
 
-	repo, err := git.PlainClone(path, false, opts)
+	repo, err := git.PlainClone(repoPath, false, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed cloning repo")
 	}
 
-	return newRepo(repo), nil
+	return newRepo(repo, repoPath), nil
 }
 
-func OpenRepo(path string) (r *Repo, err error) {
-	repo, err := git.PlainOpen(path)
+func OpenRepo(repoPath string) (*Repo, error) {
+	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed opening repo")
 	}
 
-	return newRepo(repo), nil
+	return newRepo(repo, repoPath), nil
 }
 
-func newRepo(repo *git.Repository) *Repo {
+func newRepo(repo *git.Repository, repoPath string) *Repo {
 	return &Repo{
 		repo:   repo,
+		path:   repoPath,
 		Status: &RepoStatus{},
 	}
 }
