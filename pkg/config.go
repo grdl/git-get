@@ -48,7 +48,7 @@ func (c *Conf) ReposRoot() string {
 		return reposRoot
 	}
 
-	if c.gitconfig == nil {
+	if c == nil || c.gitconfig == nil {
 		return defReposRoot
 	}
 
@@ -72,7 +72,7 @@ func (c *Conf) DefaultHost() string {
 		return defaultHost
 	}
 
-	if c.gitconfig == nil {
+	if c == nil || c.gitconfig == nil {
 		return DefaultHost
 	}
 
