@@ -8,12 +8,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+)
+
 var cmd = &cobra.Command{
 	Use:     "git-get <repo>",
 	Short:   "git get",
 	Run:     Run,
 	Args:    cobra.ExactArgs(1),
-	Version: "0.0.0",
+	Version: fmt.Sprintf("%s - %s, build at %s", version, commit, date),
 }
 
 func init() {
