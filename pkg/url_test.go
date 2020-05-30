@@ -44,7 +44,7 @@ func TestURLParse(t *testing.T) {
 		{"ftp://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
 		{"ftps://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
 		{"rsync://github.com/grdl/git-get.git", "github.com/grdl/git-get"},
-		{"local/grdl/git-get/", "local/grdl/git-get"},
+		{"local/grdl/git-get/", "github.com/local/grdl/git-get"},
 		{"file://local/grdl/git-get", "local/grdl/git-get"},
 	}
 

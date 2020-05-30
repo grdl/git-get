@@ -43,12 +43,15 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 		url.User = urlpkg.User("git")
 	}
 
-	// Default to https
+	// Default to configured defaultHost when host is empty
+	if url.Host == "" {
+		url.Host = Cfg.DefaultHost()
+	}
+
+	// Default to https when scheme is empty
 	if url.Scheme == "" {
 		url.Scheme = "https"
 	}
-
-	// TODO: Default to github host
 
 	return url, nil
 }
