@@ -28,3 +28,8 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+
+release:
+  github:
+    owner: grdl
+    name: git-get
