@@ -13,21 +13,25 @@ func TestStatus(t *testing.T) {
 		{newRepoEmpty, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               StatusUnknown,
 			Branches:              nil,
 		}},
 		{newRepoWithUntracked, &RepoStatus{
 			HasUntrackedFiles:     true,
 			HasUncommittedChanges: false,
+			Current:               StatusUnknown,
 			Branches:              nil,
 		}},
 		{newRepoWithStaged, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: true,
+			Current:               StatusUnknown,
 			Branches:              nil,
 		}},
 		{newRepoWithCommit, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               "master",
 			Branches: []*BranchStatus{
 				{
 					Name:      "master",
@@ -40,6 +44,7 @@ func TestStatus(t *testing.T) {
 		{newRepoWithModified, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: true,
+			Current:               "master",
 			Branches: []*BranchStatus{
 				{
 					Name:      "master",
@@ -52,6 +57,7 @@ func TestStatus(t *testing.T) {
 		{newRepoWithIgnored, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               "master",
 			Branches: []*BranchStatus{
 				{
 					Name:      "master",
@@ -64,6 +70,7 @@ func TestStatus(t *testing.T) {
 		{newRepoWithLocalBranch, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               "master",
 			Branches: []*BranchStatus{
 				{
 					Name:      "local",
@@ -81,6 +88,7 @@ func TestStatus(t *testing.T) {
 		{newRepoWithClonedBranch, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               "local",
 			Branches: []*BranchStatus{
 				{
 					Name:      "local",
@@ -95,9 +103,23 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
+		{newRepoWithDetachedHead, &RepoStatus{
+			HasUntrackedFiles:     false,
+			HasUncommittedChanges: false,
+			Current:               StatusDetached,
+			Branches: []*BranchStatus{
+				{
+					Name:      "master",
+					Upstream:  "",
+					NeedsPull: false,
+					NeedsPush: false,
+				},
+			},
+		}},
 		{newRepoWithBranchAhead, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               "master",
 			Branches: []*BranchStatus{
 				{
 					Name:      "master",
@@ -110,6 +132,7 @@ func TestStatus(t *testing.T) {
 		{newRepoWithBranchBehind, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               "master",
 			Branches: []*BranchStatus{
 				{
 					Name:      "master",
@@ -122,6 +145,7 @@ func TestStatus(t *testing.T) {
 		{newRepoWithBranchAheadAndBehind, &RepoStatus{
 			HasUntrackedFiles:     false,
 			HasUncommittedChanges: false,
+			Current:               "master",
 			Branches: []*BranchStatus{
 				{
 					Name:      "master",

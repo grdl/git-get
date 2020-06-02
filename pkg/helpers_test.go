@@ -83,6 +83,19 @@ func newRepoWithClonedBranch(t *testing.T) *Repo {
 
 	r := origin.clone(t)
 	r.newBranch(t, "local")
+	r.checkoutBranch(t, "local")
+
+	return r
+}
+
+func newRepoWithDetachedHead(t *testing.T) *Repo {
+	r := newRepoWithCommit(t)
+
+	r.writeFile(t, "new", "I'm a new file")
+	r.addFile(t, "new")
+	hash := r.newCommit(t, "new commit")
+
+	r.checkoutHash(t, hash)
 
 	return r
 }
@@ -144,7 +157,7 @@ func newTempDir(t *testing.T) string {
 
 func (r *Repo) writeFile(t *testing.T, name string, content string) {
 	wt, err := r.repo.Worktree()
-	checkFatal(t, errors.Wrap(err, "Failed getting workree"))
+	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
 
 	file, err := wt.Filesystem.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	checkFatal(t, errors.Wrap(err, "Failed opening a file"))
@@ -155,15 +168,15 @@ func (r *Repo) writeFile(t *testing.T, name string, content string) {
 
 func (r *Repo) addFile(t *testing.T, name string) {
 	wt, err := r.repo.Worktree()
-	checkFatal(t, errors.Wrap(err, "Failed getting workree"))
+	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
 
 	_, err = wt.Add(name)
 	checkFatal(t, errors.Wrap(err, "Failed adding file to index"))
 }
 
-func (r *Repo) newCommit(t *testing.T, msg string) {
+func (r *Repo) newCommit(t *testing.T, msg string) plumbing.Hash {
 	wt, err := r.repo.Worktree()
-	checkFatal(t, errors.Wrap(err, "Failed getting workree"))
+	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
 
 	opts := &git.CommitOptions{
 		Author: &object.Signature{
@@ -173,8 +186,9 @@ func (r *Repo) newCommit(t *testing.T, msg string) {
 		},
 	}
 
-	_, err = wt.Commit(msg, opts)
+	hash, err := wt.Commit(msg, opts)
 	checkFatal(t, errors.Wrap(err, "Failed creating commit"))
+	return hash
 }
 
 func (r *Repo) newBranch(t *testing.T, name string) {
@@ -201,6 +215,28 @@ func (r *Repo) clone(t *testing.T) *Repo {
 func (r *Repo) fetch(t *testing.T) {
 	err := r.Fetch()
 	checkFatal(t, err)
+}
+
+func (r *Repo) checkoutBranch(t *testing.T, name string) {
+	wt, err := r.repo.Worktree()
+	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
+
+	opts := &git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(name),
+	}
+	err = wt.Checkout(opts)
+	checkFatal(t, errors.Wrap(err, "Failed checking out branch"))
+}
+
+func (r *Repo) checkoutHash(t *testing.T, hash plumbing.Hash) {
+	wt, err := r.repo.Worktree()
+	checkFatal(t, errors.Wrap(err, "Failed getting worktree"))
+
+	opts := &git.CheckoutOptions{
+		Hash: hash,
+	}
+	err = wt.Checkout(opts)
+	checkFatal(t, errors.Wrap(err, "Failed checking out hash"))
 }
 
 func checkFatal(t *testing.T, err error) {

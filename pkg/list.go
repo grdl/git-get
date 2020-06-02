@@ -140,12 +140,6 @@ const (
 	ColorYellow = "\033[1;33m%s\033[0m"
 )
 
-const (
-	StatusOk          = "ok"
-	StatusUncommitted = "uncommitted"
-	StatusUntracked   = "untracked"
-)
-
 func PrintRepoStatus(repo *Repo) string {
 	status := fmt.Sprintf(ColorGreen, StatusOk)
 
