@@ -4,6 +4,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/go-git/go-billy/v5/osfs"
+
+	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
@@ -27,6 +31,21 @@ func (r *Repo) LoadStatus() error {
 	if err != nil {
 		return errors.Wrap(err, "Failed getting worktree")
 	}
+
+	// worktree.Status doesn't load gitignore patterns that may be defined outside of .gitignore file using excludesfile
+	// We need to load them explicitly here
+	// TODO: variables are not expanded so if excludesfile is declared like "~/gitignore_global" or "$HOME/gitignore_global", this will fail to open it
+	globalPatterns, err := gitignore.LoadGlobalPatterns(osfs.New(""))
+	if err != nil {
+		return errors.Wrap(err, "Failed loading global gitignore patterns")
+	}
+	wt.Excludes = append(wt.Excludes, globalPatterns...)
+
+	systemPatterns, err := gitignore.LoadSystemPatterns(osfs.New(""))
+	if err != nil {
+		return errors.Wrap(err, "Failed loading system gitignore patterns")
+	}
+	wt.Excludes = append(wt.Excludes, systemPatterns...)
 
 	status, err := wt.Status()
 	if err != nil {

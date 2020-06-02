@@ -146,3 +146,5 @@ func TestStatus(t *testing.T) {
 }
 
 // TODO: test branch status when tracking a local branch
+// TODO: newRepoWithGlobalGitignore
+// TODO: newRepoWithGlobalGitignoreSymlink
