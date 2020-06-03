@@ -119,12 +119,12 @@ func PrintRepos(repos []*Repo) {
 
 		seg[i] = make([]string, len(subpaths))
 
-		branch := t
+		node := t
 		for j, sub := range subpaths {
 			seg[i][j] = sub
 
 			if i > 0 && seg[i][j] == seg[i-1][j] {
-				branch = branch.FindLastNode()
+				node = node.FindLastNode()
 				continue
 			}
 
@@ -133,9 +133,18 @@ func PrintRepos(repos []*Repo) {
 			// if this is the last segment, it means that's the name of the repository and we need to print its status
 			if j == len(seg[i])-1 {
 				value = value + " " + renderWorktreeStatus(repo)
+
 			}
 
-			branch = branch.AddBranch(value)
+			node = node.AddBranch(value)
+			if j == len(seg[i])-1 {
+				for _, branch := range repo.Status.Branches {
+					if branch.Name != repo.Status.CurrentBranch {
+						node.AddNode(renderBranchStatus(branch))
+					}
+				}
+
+			}
 		}
 	}
 
