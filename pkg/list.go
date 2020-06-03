@@ -3,6 +3,7 @@ package pkg
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -21,7 +22,13 @@ var skipNode = errors.New(".git directory found, skipping this node")
 var repos []string
 
 func FindRepos() ([]string, error) {
+	repos = []string{}
+
 	root := Cfg.ReposRoot()
+
+	if _, err := os.Stat(root); err != nil {
+		return nil, fmt.Errorf("Repos root %s does not exist or can't be accessed", root)
+	}
 
 	walkOpts := &godirwalk.Options{
 		ErrorCallback: ErrorCb,
@@ -33,6 +40,10 @@ func FindRepos() ([]string, error) {
 	err := godirwalk.Walk(root, walkOpts)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(repos) == 0 {
+		return nil, fmt.Errorf("No git repos found in repos root %s", root)
 	}
 
 	return repos, nil
