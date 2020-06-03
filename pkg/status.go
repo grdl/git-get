@@ -16,6 +16,9 @@ import (
 const (
 	StatusUnknown     = "unknown"
 	StatusDetached    = "detached HEAD"
+	StatusNoUpstream  = "no upstream"
+	StatusAhead       = "ahead"
+	StatusBehind      = "behind"
 	StatusOk          = "ok"
 	StatusUncommitted = "uncommitted"
 	StatusUntracked   = "untracked"
@@ -24,7 +27,7 @@ const (
 type RepoStatus struct {
 	HasUntrackedFiles     bool
 	HasUncommittedChanges bool
-	Current               string
+	CurrentBranch         string
 	Branches              []*BranchStatus
 }
 
@@ -63,7 +66,7 @@ func (r *Repo) LoadStatus() error {
 
 	r.Status.HasUncommittedChanges = hasUncommitted(status)
 	r.Status.HasUntrackedFiles = hasUntracked(status)
-	r.Status.Current = currentBranch(r)
+	r.Status.CurrentBranch = currentBranch(r)
 
 	err = r.loadBranchesStatus()
 	if err != nil {

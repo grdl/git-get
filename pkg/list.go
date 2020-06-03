@@ -119,8 +119,6 @@ func PrintRepos(repos []*Repo) {
 
 		seg[i] = make([]string, len(subpaths))
 
-		//t.AddBranch(fmt.Sprintf("\033[1;31m%s\033[0m", path))
-
 		branch := t
 		for j, sub := range subpaths {
 			seg[i][j] = sub
@@ -134,7 +132,7 @@ func PrintRepos(repos []*Repo) {
 
 			// if this is the last segment, it means that's the name of the repository and we need to print its status
 			if j == len(seg[i])-1 {
-				value = value + PrintRepoStatus(repo)
+				value = value + " " + renderWorktreeStatus(repo)
 			}
 
 			branch = branch.AddBranch(value)
@@ -146,21 +144,88 @@ func PrintRepos(repos []*Repo) {
 
 const (
 	ColorRed    = "\033[1;31m%s\033[0m"
-	ColorGreen  = "\033[0;32m%s\033[0m"
+	ColorGreen  = "\033[1;32m%s\033[0m"
 	ColorBlue   = "\033[1;34m%s\033[0m"
 	ColorYellow = "\033[1;33m%s\033[0m"
 )
 
-func PrintRepoStatus(repo *Repo) string {
-	status := fmt.Sprintf(ColorGreen, StatusOk)
+func renderWorktreeStatus(repo *Repo) string {
+	clean := true
+	var status []string
+
+	// if current branch status can't be found it's probably a detached head
+	// TODO: what if current HEAD points to a tag?
+	if current := repo.findCurrentBranchStatus(); current == nil {
+		status = append(status, fmt.Sprintf(ColorYellow, repo.Status.CurrentBranch))
+	} else {
+		status = append(status, renderBranchStatus(current))
+	}
+
+	// TODO: this is ugly
+	// unset clean flag to use it to render braces around worktree status and remove "ok" from branch status if it's there
+	if repo.Status.HasUncommittedChanges || repo.Status.HasUntrackedFiles {
+		clean = false
+	}
+
+	if !clean {
+		status[len(status)-1] = strings.TrimSuffix(status[len(status)-1], StatusOk)
+		status = append(status, "[")
+	}
 
 	if repo.Status.HasUntrackedFiles {
-		status = fmt.Sprintf(ColorRed, StatusUntracked)
+		status = append(status, fmt.Sprintf(ColorRed, StatusUntracked))
 	}
 
 	if repo.Status.HasUncommittedChanges {
-		status = fmt.Sprintf(ColorRed, StatusUncommitted)
+		status = append(status, fmt.Sprintf(ColorRed, StatusUncommitted))
 	}
 
-	return " " + status
+	if !clean {
+		status = append(status, "]")
+	}
+
+	return strings.Join(status, " ")
+}
+
+func renderBranchStatus(branch *BranchStatus) string {
+	// ok indicates that the branch has upstream and is not ahead or behind it
+	ok := true
+	var status []string
+
+	status = append(status, fmt.Sprintf(ColorBlue, branch.Name))
+
+	if branch.Upstream == "" {
+		ok = false
+		status = append(status, fmt.Sprintf(ColorYellow, StatusNoUpstream))
+	}
+
+	if branch.NeedsPull {
+		ok = false
+		status = append(status, fmt.Sprintf(ColorYellow, StatusBehind))
+	}
+
+	if branch.NeedsPush {
+		ok = false
+		status = append(status, fmt.Sprintf(ColorYellow, StatusAhead))
+	}
+
+	if ok {
+		status = append(status, fmt.Sprintf(ColorGreen, StatusOk))
+	}
+
+	return strings.Join(status, " ")
+}
+
+func (r *Repo) findCurrentBranchStatus() *BranchStatus {
+	if r.Status.CurrentBranch == StatusDetached || r.Status.CurrentBranch == StatusUnknown {
+		return nil
+	}
+
+	for _, b := range r.Status.Branches {
+		if b.Name == r.Status.CurrentBranch {
+			return b
+		}
+	}
+
+	return nil
 }

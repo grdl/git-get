@@ -18,15 +18,30 @@ var cmd = &cobra.Command{
 	Use:     "git-get <repo>",
 	Short:   "git get",
 	Run:     Run,
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MaximumNArgs(1),
 	Version: fmt.Sprintf("%s - %s, build at %s", version, commit, date),
 }
 
+var list bool
+
 func init() {
 	pkg.LoadConf()
+
+	cmd.PersistentFlags().BoolVarP(&list, "list", "l", false, "Lists all repositories inside git-get root")
 }
 
 func Run(cmd *cobra.Command, args []string) {
+	if list {
+		paths, err := pkg.FindRepos()
+		exitIfError(err)
+
+		repos, err := pkg.OpenAll(paths)
+		exitIfError(err)
+
+		pkg.PrintRepos(repos)
+		os.Exit(0)
+	}
+
 	url, err := pkg.ParseURL(args[0])
 	exitIfError(err)
 
