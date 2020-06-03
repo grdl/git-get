@@ -136,8 +136,12 @@ func (r *Repo) loadBranchesStatus() error {
 		return errors.Wrap(err, "Failed iterating over branches")
 	}
 
-	// Sort branches by name. It's useful to have them sorted for printing and testing.
+	// Sort branches by name (but with "master" always at the top). It's useful to have them sorted for printing and testing.
 	sort.Slice(r.Status.Branches, func(i, j int) bool {
+		if r.Status.Branches[i].Name == "master" {
+			return true
+		}
+
 		return strings.Compare(r.Status.Branches[i].Name, r.Status.Branches[j].Name) < 0
 	})
 	return nil
