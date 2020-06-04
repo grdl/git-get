@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/spf13/viper"
 	"github.com/xlab/treeprint"
 
 	"github.com/go-git/go-git/v5"
@@ -24,7 +25,7 @@ var repos []string
 func FindRepos() ([]string, error) {
 	repos = []string{}
 
-	root := Cfg.ReposRoot()
+	root := viper.GetString(KeyReposRoot)
 
 	if _, err := os.Stat(root); err != nil {
 		return nil, fmt.Errorf("Repos root %s does not exist or can't be accessed", root)
@@ -105,7 +106,7 @@ func OpenAll(paths []string) ([]*Repo, error) {
 }
 
 func PrintRepos(repos []*Repo) {
-	root := Cfg.ReposRoot()
+	root := viper.GetString(KeyReposRoot)
 
 	seg := make([][]string, len(repos))
 

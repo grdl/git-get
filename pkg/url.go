@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
 // scpSyntax matches the SCP-like addresses used by the ssh protocol (eg, [user@]host.xz:path/to/repo.git/).
@@ -45,7 +46,7 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 
 	// Default to configured defaultHost when host is empty
 	if url.Host == "" {
-		url.Host = Cfg.DefaultHost()
+		url.Host = viper.GetString(KeyDefaultHost)
 	}
 
 	// Default to https when scheme is empty

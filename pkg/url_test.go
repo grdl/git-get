@@ -48,6 +48,9 @@ func TestURLParse(t *testing.T) {
 		{"file://local/grdl/git-get", "local/grdl/git-get"},
 	}
 
+	// We need to init config first so the default values are correctly loaded
+	InitConfig()
+
 	for _, test := range tests {
 		url, err := ParseURL(test.in)
 		if err != nil {

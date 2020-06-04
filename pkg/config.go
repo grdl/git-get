@@ -1,98 +1,85 @@
 package pkg
 
 import (
-	"os"
 	"path"
 	"strings"
 
 	"github.com/go-git/go-git/v5/config"
 	plumbing "github.com/go-git/go-git/v5/plumbing/format/config"
 	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
 )
 
 const (
-	CfgSection     = "gitget"
-	CfgReposRoot   = "reposRoot"
-	CfgDefaultHost = "defaultHost"
-
-	EnvReposRoot   = "GITGET_REPOSROOT"
-	EnvDefaultHost = "GITGET_DEFAULTHOST"
-
-	DefaultReposRootSubpath = "repositories"
-	DefaultHost             = "github.com"
+	GitgetPrefix   = "gitget"
+	KeyReposRoot   = "reposRoot"
+	DefReposRoot   = "repositories"
+	KeyDefaultHost = "defaultHost"
+	DefDefaultHost = "github.com"
 )
 
-var Cfg *Conf
-
-// Conf provides methods for accessing configuration values
-// Values are looked up in the following order: env variable, gitignore file, default value
-type Conf struct {
-	gitconfig *config.Config
+// gitconfig provides methods for looking up configiration values inside .gitconfig file
+type gitconfig struct {
+	*config.Config
 }
 
-func LoadConf() {
-	// We don't care if loading gitconfig file throws an error
-	// When gitconfig is nil, getters will just return the default values
-	gitconfig, _ := config.LoadConfig(config.GlobalScope)
+// InitConfig initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value
+// Viper doesn't support gitconfig file format so it can't find missing values there automatically. They need to be specified in setMissingValues func.
+func InitConfig() {
+	viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
+	viper.AutomaticEnv()
 
-	Cfg = &Conf{
-		gitconfig: gitconfig,
+	cfg := loadGitconfig()
+	setMissingValues(cfg)
+}
+
+// loadGitconfig loads configuration from a gitconfig file.
+// We ignore errors when gitconfig file can't be found, opened or parsed. In those cases viper will provide default config values.
+func loadGitconfig() *gitconfig {
+	// TODO: load system scope
+	cfg, _ := config.LoadConfig(config.GlobalScope)
+
+	return &gitconfig{
+		Config: cfg,
 	}
 }
 
-func (c *Conf) ReposRoot() string {
-	defReposRoot := path.Join(home(), DefaultReposRootSubpath)
-
-	reposRoot := os.Getenv(EnvReposRoot)
-	if reposRoot != "" {
-		return reposRoot
+// setMissingValues checks if config values are provided by flags or env vars. If not, it tries loading them from gitconfig file.
+// If that fails, the default values are used.
+func setMissingValues(cfg *gitconfig) {
+	if !viper.IsSet(KeyReposRoot) {
+		viper.Set(KeyReposRoot, cfg.get(KeyReposRoot, path.Join(home(), DefReposRoot)))
 	}
 
-	if c == nil || c.gitconfig == nil {
-		return defReposRoot
+	if !viper.IsSet(KeyDefaultHost) {
+		viper.Set(KeyDefaultHost, cfg.get(KeyDefaultHost, DefDefaultHost))
+	}
+}
+
+// get looks up the value for a given key in gitconfig file.
+// It returns the default value when gitconfig is missing, or it doesn't contain a gitget section,
+// or if the section is empty, or if it doesn't contain a valid value for the key.
+func (c *gitconfig) get(key string, def string) string {
+	if c == nil || c.Config == nil {
+		return def
 	}
 
-	gitget := c.findConfigSection(CfgSection)
+	gitget := c.findGitconfigSection(GitgetPrefix)
 	if gitget == nil {
-		return defReposRoot
+		return def
 	}
 
-	reposRoot = gitget.Option(CfgReposRoot)
-	reposRoot = strings.TrimSpace(reposRoot)
-	if reposRoot == "" {
-		return defReposRoot
+	opt := gitget.Option(key)
+	if strings.TrimSpace(opt) == "" {
+		return def
 	}
 
-	return reposRoot
+	return opt
 }
 
-func (c *Conf) DefaultHost() string {
-	defaultHost := os.Getenv(EnvDefaultHost)
-	if defaultHost != "" {
-		return defaultHost
-	}
-
-	if c == nil || c.gitconfig == nil {
-		return DefaultHost
-	}
-
-	gitget := c.findConfigSection(CfgSection)
-	if gitget == nil {
-		return DefaultHost
-	}
-
-	defaultHost = gitget.Option(CfgDefaultHost)
-	defaultHost = strings.TrimSpace(defaultHost)
-	if defaultHost == "" {
-		return DefaultHost
-	}
-
-	return defaultHost
-}
-
-func (c *Conf) findConfigSection(name string) *plumbing.Section {
-	for _, s := range c.gitconfig.Raw.Sections {
-		if s.Name == name {
+func (c *gitconfig) findGitconfigSection(name string) *plumbing.Section {
+	for _, s := range c.Raw.Sections {
+		if strings.ToLower(s.Name) == strings.ToLower(name) {
 			return s
 		}
 	}
@@ -100,9 +87,9 @@ func (c *Conf) findConfigSection(name string) *plumbing.Section {
 	return nil
 }
 
-// home returns path to a home directory or empty string if can't be found
+// home returns path to a home directory or empty string if can't be found.
 // Using empty string means that in the unlikely situation where home dir can't be found
-// and there's no reposRoot specified in the global config, the current dir will be used as repos root.
+// and there's no reposRoot specified by any of the config methods, the current dir will be used as repos root.
 func home() string {
 	home, err := homedir.Dir()
 	if err != nil {
