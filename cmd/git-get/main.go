@@ -24,20 +24,16 @@ var cmd = &cobra.Command{
 }
 
 var list bool
-var reposRoot string
 
 func init() {
-	// pkg.LoadConf()
-
 	cmd.PersistentFlags().BoolVarP(&list, "list", "l", false, "Lists all repositories inside git-get root")
-	cmd.PersistentFlags().StringVarP(&reposRoot, "reposRoot", "r", "", "repos root")
-	viper.BindPFlag("reposRoot", cmd.PersistentFlags().Lookup("reposRoot"))
-
-	pkg.InitConfig()
-
+	cmd.PersistentFlags().StringP(pkg.KeyReposRoot, "r", "", "repos root")
+	viper.BindPFlag(pkg.KeyReposRoot, cmd.PersistentFlags().Lookup(pkg.KeyReposRoot))
 }
 
 func Run(cmd *cobra.Command, args []string) {
+	pkg.InitConfig()
+
 	if list {
 		paths, err := pkg.FindRepos()
 		exitIfError(err)

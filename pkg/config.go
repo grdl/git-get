@@ -25,6 +25,8 @@ type gitconfig struct {
 
 // InitConfig initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value
 // Viper doesn't support gitconfig file format so it can't find missing values there automatically. They need to be specified in setMissingValues func.
+//
+// Because it reads the cli flags it needs to be called after the cmd.Execute().
 func InitConfig() {
 	viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
 	viper.AutomaticEnv()
@@ -47,11 +49,11 @@ func loadGitconfig() *gitconfig {
 // setMissingValues checks if config values are provided by flags or env vars. If not, it tries loading them from gitconfig file.
 // If that fails, the default values are used.
 func setMissingValues(cfg *gitconfig) {
-	if !viper.IsSet(KeyReposRoot) {
+	if isUnsetOrEmpty(KeyReposRoot) {
 		viper.Set(KeyReposRoot, cfg.get(KeyReposRoot, path.Join(home(), DefReposRoot)))
 	}
 
-	if !viper.IsSet(KeyDefaultHost) {
+	if isUnsetOrEmpty(KeyDefaultHost) {
 		viper.Set(KeyDefaultHost, cfg.get(KeyDefaultHost, DefDefaultHost))
 	}
 }
@@ -97,4 +99,8 @@ func home() string {
 	}
 
 	return home
+}
+
+func isUnsetOrEmpty(key string) bool {
+	return !viper.IsSet(key) || strings.TrimSpace(viper.GetString(key)) == ""
 }
