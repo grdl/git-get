@@ -73,12 +73,12 @@ func TestStatus(t *testing.T) {
 			CurrentBranch:         "master",
 			Branches: []*BranchStatus{
 				{
-					Name:      "local",
+					Name:      "master",
 					Upstream:  "",
 					NeedsPull: false,
 					NeedsPush: false,
 				}, {
-					Name:      "master",
+					Name:      "local",
 					Upstream:  "",
 					NeedsPull: false,
 					NeedsPush: false,
@@ -91,13 +91,13 @@ func TestStatus(t *testing.T) {
 			CurrentBranch:         "local",
 			Branches: []*BranchStatus{
 				{
-					Name:      "local",
-					Upstream:  "",
+					Name:      "master",
+					Upstream:  "origin/master",
 					NeedsPull: false,
 					NeedsPush: false,
 				}, {
-					Name:      "master",
-					Upstream:  "origin/master",
+					Name:      "local",
+					Upstream:  "",
 					NeedsPull: false,
 					NeedsPush: false,
 				},
