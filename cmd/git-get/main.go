@@ -28,7 +28,9 @@ var list bool
 func init() {
 	cmd.PersistentFlags().BoolVarP(&list, "list", "l", false, "Lists all repositories inside git-get root")
 	cmd.PersistentFlags().StringP(pkg.KeyReposRoot, "r", "", "repos root")
+	cmd.PersistentFlags().StringP(pkg.KeyPrivateKey, "p", "", "SSH private key path")
 	viper.BindPFlag(pkg.KeyReposRoot, cmd.PersistentFlags().Lookup(pkg.KeyReposRoot))
+	viper.BindPFlag(pkg.KeyPrivateKey, cmd.PersistentFlags().Lookup(pkg.KeyReposRoot))
 }
 
 func Run(cmd *cobra.Command, args []string) {

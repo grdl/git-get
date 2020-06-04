@@ -16,6 +16,8 @@ const (
 	DefReposRoot   = "repositories"
 	KeyDefaultHost = "defaultHost"
 	DefDefaultHost = "github.com"
+	KeyPrivateKey  = "privateKey"
+	DefPrivateKey  = "id_rsa"
 )
 
 // gitconfig provides methods for looking up configiration values inside .gitconfig file
@@ -55,6 +57,10 @@ func setMissingValues(cfg *gitconfig) {
 
 	if isUnsetOrEmpty(KeyDefaultHost) {
 		viper.Set(KeyDefaultHost, cfg.get(KeyDefaultHost, DefDefaultHost))
+	}
+
+	if isUnsetOrEmpty(KeyPrivateKey) {
+		viper.Set(KeyPrivateKey, cfg.get(KeyPrivateKey, path.Join(home(), ".ssh", DefPrivateKey)))
 	}
 }
 
