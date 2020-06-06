@@ -4,14 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/spf13/viper"
-	"github.com/xlab/treeprint"
-
 	"github.com/go-git/go-git/v5"
+	"github.com/spf13/viper"
 
 	"github.com/karrick/godirwalk"
 )
@@ -108,48 +105,8 @@ func OpenAll(paths []string) ([]*Repo, error) {
 func PrintRepos(repos []*Repo) {
 	root := viper.GetString(KeyReposRoot)
 
-	seg := make([][]string, len(repos))
-
-	t := treeprint.New()
-	t.SetValue(root)
-
-	for i, repo := range repos {
-		path := strings.TrimPrefix(repo.path, root)
-		path = strings.Trim(path, string(filepath.Separator))
-		subpaths := strings.Split(path, string(filepath.Separator))
-
-		seg[i] = make([]string, len(subpaths))
-
-		node := t
-		for j, sub := range subpaths {
-			seg[i][j] = sub
-
-			if i > 0 && seg[i][j] == seg[i-1][j] {
-				node = node.FindLastNode()
-				continue
-			}
-
-			value := seg[i][j]
-
-			// if this is the last segment, it means that's the name of the repository and we need to print its status
-			if j == len(seg[i])-1 {
-				value = value + " " + renderWorktreeStatus(repo)
-
-			}
-
-			node = node.AddBranch(value)
-			if j == len(seg[i])-1 {
-				for _, branch := range repo.Status.Branches {
-					if branch.Name != repo.Status.CurrentBranch {
-						node.AddNode(renderBranchStatus(branch))
-					}
-				}
-
-			}
-		}
-	}
-
-	fmt.Println(t.String())
+	tree := BuildTree(root, repos)
+	fmt.Println(RenderTree(tree))
 }
 
 const (

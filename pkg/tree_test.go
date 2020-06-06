@@ -2,100 +2,104 @@ package pkg
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
 	"testing"
-
-	"github.com/spf13/viper"
 )
 
-var paths = []string{
-
-	// "/home/grdl/repositories/gitlab.com/grdl/testflux",
-	"/home/grdl/repositories/bitbucket.org/gridarrow/istio",
-	"/home/grdl/repositories/bitbucket.org/grdl/bob",
-	"/home/grdl/repositories/github.com/fboender/multi-git-status",
-	"/home/grdl/repositories/github.com/grdl/git-get",
-	"/home/grdl/repositories/github.com/grdl/testflux",
-	"/home/grdl/repositories/github.com/johanhaleby/kubetail",
-	"/home/grdl/repositories/gitlab.com/grdl/git-get",
-	"/home/grdl/repositories/gitlab.com/grdl/grafana-dashboard-builder",
-	"/home/grdl/repositories/gitlab.com/grdl/dotfiles",
-}
-
 func TestTree(t *testing.T) {
-	InitConfig()
-	root := viper.GetString(KeyReposRoot)
+	var tests = []struct {
+		paths []string
+		want  string
+	}{
+		{
+			[]string{
+				"root/github.com/grdl/repo1",
+			}, `
+root/
+github.com/grdl/repo1
+`,
+		},
+		{
+			[]string{
+				"root/github.com/grdl/repo1",
+				"root/github.com/grdl/repo2",
+			}, `
+root/
+github.com/grdl/
+	repo1
+	repo2
+`,
+		},
+		{
+			[]string{
+				"root/gitlab.com/grdl/repo1",
+				"root/github.com/grdl/repo1",
+			}, `
+root/
+gitlab.com/grdl/repo1
+github.com/grdl/repo1
+`,
+		},
+		{
+			[]string{
+				"root/gitlab.com/grdl/repo1",
+				"root/gitlab.com/grdl/repo2",
+				"root/gitlab.com/other/repo1",
+				"root/github.com/grdl/repo1",
+				"root/github.com/grdl/nested/repo2",
+			}, `
+root/
+gitlab.com/
+	grdl/
+		repo1
+		repo2
+	other/repo1
+github.com/grdl/
+	repo1
+	nested/repo2
+`,
+		},
+		{
+			[]string{
+				"root/gitlab.com/grdl/nested/repo1",
+				"root/gitlab.com/grdl/nested/repo2",
+				"root/gitlab.com/other/repo1",
+			}, `
+root/
+gitlab.com/
+	grdl/nested/
+		repo1
+		repo2
+	other/repo1
+`,
+		},
+		{
+			[]string{
+				"root/gitlab.com/grdl/double/nested/repo1",
+				"root/gitlab.com/grdl/nested/repo2",
+				"root/gitlab.com/other/repo1",
+			}, `
+root/
+gitlab.com/
+	grdl/
+		double/nested/repo1
+		nested/repo2
+	other/repo1
+`,
+		},
+	}
 
-	tree := Root(root)
+	for i, test := range tests {
+		var repos []*Repo
+		for _, path := range test.paths {
+			repos = append(repos, &Repo{path: path})
+		}
 
-	for _, path := range paths {
-		p := strings.TrimPrefix(path, root)
-		p = strings.Trim(p, string(filepath.Separator))
-		subs := strings.Split(p, string(filepath.Separator))
+		tree := BuildTree("root", repos)
+		// Leading and trailing newlines are added to test cases for readability. We also need to add them to the rendering result.
+		got := fmt.Sprintf("\n%s\n", RenderTree(tree))
 
-		node := tree
-		for _, sub := range subs {
-			child := node.GetChild(sub)
-			if child == nil {
-				node = node.Add(sub)
-				continue
-			}
-			node = child
+		if got != test.want {
+			t.Errorf("Failed test case %d, got: %+v; want: %+v", i, got, test.want)
 		}
 	}
-
-	fmt.Println(tree)
-}
-
-func process(node *Node, val string) *Node {
-	found := node.GetChild(val)
-	if found == nil {
-		added := node.Add(val)
-		return added
-	}
-	return found
-}
-
-type Node struct {
-	val      string
-	parent   *Node
-	children []*Node
-}
-
-func Root(val string) *Node {
-	root := &Node{
-		val: val,
-	}
-	return root
-}
-
-// Add adds a child node
-func (n *Node) Add(val string) *Node {
-	if n.children == nil {
-		n.children = make([]*Node, 0)
-	}
-
-	new := &Node{
-		val:    val,
-		parent: n,
-	}
-	n.children = append(n.children, new)
-	return new
-}
-
-// GetChild finds a node with val inside this node's children (only 1 level deep).
-// Returns pointer to found child or nil if node doesn't have any children or doesn't have a child with sought value.
-func (n *Node) GetChild(val string) *Node {
-	if n.children == nil {
-		return nil
-	}
-
-	for _, child := range n.children {
-		if child.val == val {
-			return child
-		}
-	}
-
-	return nil
 }
