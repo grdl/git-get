@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -91,14 +92,15 @@ gitlab.com/
 	for i, test := range tests {
 		var repos []*Repo
 		for _, path := range test.paths {
-			repos = append(repos, &Repo{path: path})
+			repos = append(repos, newRepo(nil, path)) //&Repo{path: path})
 		}
 
 		tree := BuildTree("root", repos)
 		// Leading and trailing newlines are added to test cases for readability. We also need to add them to the rendering result.
-		got := fmt.Sprintf("\n%s\n", RenderTree(tree))
+		got := fmt.Sprintf("\n%s\n", RenderSmartTree(tree))
 
-		if got != test.want {
+		// Rendered tree uses spaces for indentation but the test cases use tabs.
+		if got != strings.ReplaceAll(test.want, "\t", "    ") {
 			t.Errorf("Failed test case %d, got: %+v; want: %+v", i, got, test.want)
 		}
 	}

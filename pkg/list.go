@@ -106,7 +106,7 @@ func PrintRepos(repos []*Repo) {
 	root := viper.GetString(KeyReposRoot)
 
 	tree := BuildTree(root, repos)
-	fmt.Println(RenderTree(tree))
+	fmt.Println(RenderSmartTree(tree))
 }
 
 const (
