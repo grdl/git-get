@@ -126,17 +126,30 @@ func newRepoWithBranchBehind(t *testing.T) *Repo {
 	return r
 }
 
+// generate repo with 2 commits ahead and 3 behind the origin
 func newRepoWithBranchAheadAndBehind(t *testing.T) *Repo {
 	origin := newRepoWithCommit(t)
 
 	r := origin.clone(t)
-	r.writeFile(t, "local.new", "I'm a new file on local")
+	r.writeFile(t, "local.new", "local 1")
 	r.addFile(t, "local.new")
-	r.newCommit(t, "new local commit")
+	r.newCommit(t, "1st local commit")
 
-	origin.writeFile(t, "origin.new", "I'm a new file on origin")
+	r.writeFile(t, "local.new", "local 2")
+	r.addFile(t, "local.new")
+	r.newCommit(t, "2nd local commit")
+
+	origin.writeFile(t, "origin.new", "origin 1")
 	origin.addFile(t, "origin.new")
-	origin.newCommit(t, "new origin commit")
+	origin.newCommit(t, "1st origin commit")
+
+	origin.writeFile(t, "origin.new", "origin 2")
+	origin.addFile(t, "origin.new")
+	origin.newCommit(t, "2nd origin commit")
+
+	origin.writeFile(t, "origin.new", "origin 3")
+	origin.addFile(t, "origin.new")
+	origin.newCommit(t, "3rd origin commit")
 
 	r.fetch(t)
 	return r

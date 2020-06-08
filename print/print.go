@@ -67,14 +67,14 @@ func printBranchStatus(branch *git.BranchStatus) string {
 		status = append(status, fmt.Sprintf(ColorYellow, git.StatusNoUpstream))
 	}
 
-	if branch.NeedsPull {
+	if branch.Behind != 0 {
 		ok = false
-		status = append(status, fmt.Sprintf(ColorYellow, git.StatusBehind))
+		status = append(status, fmt.Sprintf(ColorYellow, fmt.Sprintf("%d %s", branch.Behind, git.StatusBehind)))
 	}
 
-	if branch.NeedsPush {
+	if branch.Ahead != 0 {
 		ok = false
-		status = append(status, fmt.Sprintf(ColorYellow, git.StatusAhead))
+		status = append(status, fmt.Sprintf(ColorYellow, fmt.Sprintf("%d %s", branch.Ahead, git.StatusAhead)))
 	}
 
 	if ok {

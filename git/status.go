@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/go-git/go-git/v5/plumbing/revlist"
+
 	"github.com/spf13/viper"
 
 	"github.com/go-git/go-billy/v5/osfs"
@@ -35,10 +37,10 @@ type RepoStatus struct {
 }
 
 type BranchStatus struct {
-	Name      string
-	Upstream  string
-	NeedsPull bool
-	NeedsPush bool
+	Name     string
+	Upstream string
+	Ahead    int
+	Behind   int
 }
 
 func (r *Repo) LoadStatus() error {
@@ -172,14 +174,14 @@ func (r *Repo) newBranchStatus(branch string) (*BranchStatus, error) {
 		return bs, nil
 	}
 
-	needsPull, needsPush, err := r.needsPullOrPush(branch, upstream)
+	ahead, behind, err := r.aheadBehind(branch, upstream)
 	if err != nil {
 		return nil, err
 	}
 
 	bs.Upstream = upstream
-	bs.NeedsPush = needsPush
-	bs.NeedsPull = needsPull
+	bs.Ahead = ahead
+	bs.Behind = behind
 
 	return bs, nil
 }
@@ -215,61 +217,50 @@ func (r *Repo) upstream(branch string) (string, error) {
 	return remote + "/" + merge, nil
 }
 
-func (r *Repo) needsPullOrPush(localBranch string, upstreamBranch string) (needsPull bool, needsPush bool, err error) {
+func (r *Repo) aheadBehind(localBranch string, upstreamBranch string) (ahead int, behind int, err error) {
 	localHash, err := r.ResolveRevision(plumbing.Revision(localBranch))
 	if err != nil {
-		return false, false, errors.Wrapf(err, "Failed resolving revision %s", localBranch)
+		return 0, 0, errors.Wrapf(err, "Failed resolving revision %s", localBranch)
 	}
 
 	upstreamHash, err := r.ResolveRevision(plumbing.Revision(upstreamBranch))
 	if err != nil {
-		return false, false, errors.Wrapf(err, "Failed resolving revision %s", upstreamBranch)
+		return 0, 0, errors.Wrapf(err, "Failed resolving revision %s", upstreamBranch)
 	}
 
-	localCommit, err := r.CommitObject(*localHash)
+	behind, err = r.revlistCount(*localHash, *upstreamHash)
 	if err != nil {
-		return false, false, errors.Wrapf(err, "Failed finding a commit for hash %s", localHash.String())
+		return 0, 0, errors.Wrapf(err, "Failed counting commits behind %s", upstreamBranch)
 	}
 
-	upstreamCommit, err := r.CommitObject(*upstreamHash)
+	ahead, err = r.revlistCount(*upstreamHash, *localHash)
 	if err != nil {
-		return false, false, errors.Wrapf(err, "Failed finding a commit for hash %s", upstreamHash.String())
+		return 0, 0, errors.Wrapf(err, "Failed counting commits ahead of %s", upstreamBranch)
 	}
 
-	// If local branch hash is the same as upstream, it means there is no difference between local and upstream
-	if *localHash == *upstreamHash {
-		return false, false, nil
-	}
+	return ahead, behind, nil
+}
 
-	commons, err := localCommit.MergeBase(upstreamCommit)
+// revlistCount counts the number of commits between two hashes.
+// https://github.com/src-d/go-git/issues/757#issuecomment-452697701
+// TODO: See if this can be optimized. Running the loop twice feels wrong.
+func (r *Repo) revlistCount(hash1, hash2 plumbing.Hash) (int, error) {
+	ref1hist, err := revlist.Objects(r.Storer, []plumbing.Hash{hash1}, nil)
 	if err != nil {
-		return false, false, errors.Wrapf(err, "Failed finding common ancestors for branches %s & %s", localBranch, upstreamBranch)
+		return 0, err
 	}
 
-	if len(commons) == 0 {
-		// TODO: No common ancestors. This should be an error
-		return false, false, nil
+	ref2hist, err := revlist.Objects(r.Storer, []plumbing.Hash{hash2}, ref1hist)
+	if err != nil {
+		return 0, err
 	}
 
-	if len(commons) > 1 {
-		// TODO: multiple best ancestors. How to handle this?
-		return false, false, nil
+	count := 0
+	for _, h := range ref2hist {
+		if _, err = r.CommitObject(h); err == nil {
+			count++
+		}
 	}
 
-	mergeBase := commons[0]
-
-	// If merge base is the same as upstream branch, local branch is ahead and push is needed
-	// If merge base is the same as local branch, local branch is behind and pull is needed
-	// If merge base is something else, branches have diverged and merge is needed (both pull and push)
-	// ref: https://stackoverflow.com/a/17723781/1085632
-
-	if mergeBase.Hash == *upstreamHash {
-		return false, true, nil
-	}
-
-	if mergeBase.Hash == *localHash {
-		return true, false, nil
-	}
-
-	return true, true, nil
+	return count, nil
 }
