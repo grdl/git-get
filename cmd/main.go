@@ -28,13 +28,15 @@ var cmd = &cobra.Command{
 	Version: fmt.Sprintf("%s - %s, build at %s", version, commit, date),
 }
 
-var list bool
-
 func init() {
-	cmd.PersistentFlags().BoolVarP(&list, "list", "l", false, "Lists all repositories inside git-get root")
+	cmd.PersistentFlags().BoolP(cfg.KeyList, "l", false, "Lists all repositories inside git-get root")
+	cmd.PersistentFlags().BoolP(cfg.KeyFetch, "f", false, "Fetch from remotes when listing repositories")
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "repos root")
 	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "SSH private key path")
 	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.DefOutput, "output format.")
+
+	viper.BindPFlag(cfg.KeyList, cmd.PersistentFlags().Lookup(cfg.KeyList))
+	viper.BindPFlag(cfg.KeyFetch, cmd.PersistentFlags().Lookup(cfg.KeyFetch))
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyPrivateKey, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyOutput, cmd.PersistentFlags().Lookup(cfg.KeyOutput))
@@ -44,7 +46,7 @@ func Run(cmd *cobra.Command, args []string) {
 	cfg.InitConfig()
 
 	root := viper.GetString(cfg.KeyReposRoot)
-	if list {
+	if viper.GetBool(cfg.KeyList) {
 		// TODO: move it to OpenAll and don't export
 		paths, err := path.FindRepos()
 		exitIfError(err)
@@ -61,7 +63,7 @@ func Run(cmd *cobra.Command, args []string) {
 		case cfg.OutSmart:
 			printer = &print.SmartTreePrinter{}
 		default:
-			err = fmt.Errorf("invalid --output flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutSimple, cfg.OutSmart})
+			err = fmt.Errorf("invalid --out flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutSimple, cfg.OutSmart})
 		}
 		exitIfError(err)
 

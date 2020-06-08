@@ -1,8 +1,11 @@
 package git
 
 import (
+	"git-get/cfg"
 	"sort"
 	"strings"
+
+	"github.com/spf13/viper"
 
 	"github.com/go-git/go-billy/v5/osfs"
 
@@ -39,12 +42,20 @@ type BranchStatus struct {
 }
 
 func (r *Repo) LoadStatus() error {
+	// Fetch from remotes if executed with --fetch flag. Ignore the "already up-to-date" errors.
+	if viper.GetBool(cfg.KeyFetch) {
+		err := r.Fetch()
+		if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+			return errors.Wrap(err, "Failed fetching from remotes")
+		}
+	}
+
 	wt, err := r.Worktree()
 	if err != nil {
 		return errors.Wrap(err, "Failed getting worktree")
 	}
 
-	// worktree.Status doesn't load gitignore patterns that may be defined outside of .gitignore file using excludesfile
+	// worktree.Status doesn't load gitignore patterns that are defined outside of .gitignore file using excludesfile.
 	// We need to load them explicitly here
 	// TODO: variables are not expanded so if excludesfile is declared like "~/gitignore_global" or "$HOME/gitignore_global", this will fail to open it
 	globalPatterns, err := gitignore.LoadGlobalPatterns(osfs.New(""))

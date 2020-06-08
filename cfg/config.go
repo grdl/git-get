@@ -10,8 +10,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Gitconfig section name and env var prefix
+const GitgetPrefix = "gitget"
+
+// Flag keys and default values
 const (
-	GitgetPrefix   = "gitget"
 	KeyReposRoot   = "reposRoot"
 	DefReposRoot   = "repositories"
 	KeyDefaultHost = "defaultHost"
@@ -20,8 +23,11 @@ const (
 	DefPrivateKey  = "id_rsa"
 	KeyOutput      = "out"
 	DefOutput      = OutFlat
+	KeyFetch       = "fetch"
+	KeyList        = "list"
 )
 
+// Allowed values for the --out flag
 const (
 	OutFlat   = "flat"
 	OutSmart  = "smart"
