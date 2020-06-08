@@ -155,16 +155,36 @@ func TestStatus(t *testing.T) {
 				},
 			},
 		}},
+		{newRepoWithCheckedOutBranch, &RepoStatus{
+			HasUntrackedFiles:     false,
+			HasUncommittedChanges: false,
+			CurrentBranch:         "feature/branch1",
+			Branches: []*BranchStatus{
+				{
+					Name:     "feature/branch1",
+					Upstream: "origin/feature/branch1",
+					Behind:   0,
+					Ahead:    0,
+				},
+			},
+		}},
+		{newRepoWithCheckedOutTag, &RepoStatus{
+			HasUntrackedFiles:     false,
+			HasUncommittedChanges: false,
+			// TODO: is this correct? Can we show tag name instead of "detached HEAD"?
+			CurrentBranch: StatusDetached,
+			Branches:      nil,
+		}},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		repo := test.makeTestRepo(t)
 
 		err := repo.LoadStatus()
 		checkFatal(t, err)
 
 		if !reflect.DeepEqual(repo.Status, test.want) {
-			t.Errorf("Wrong repo status, got: %+v; want: %+v", repo.Status, test.want)
+			t.Errorf("Failed test case %d, got: %+v; want: %+v", i, repo.Status, test.want)
 		}
 	}
 }

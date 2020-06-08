@@ -83,7 +83,7 @@ func newRepoWithLocalBranch(t *testing.T) *Repo {
 func newRepoWithClonedBranch(t *testing.T) *Repo {
 	origin := newRepoWithCommit(t)
 
-	r := origin.clone(t)
+	r := origin.clone(t, "master")
 	r.newBranch(t, "local")
 	r.checkoutBranch(t, "local")
 
@@ -105,7 +105,7 @@ func newRepoWithDetachedHead(t *testing.T) *Repo {
 func newRepoWithBranchAhead(t *testing.T) *Repo {
 	origin := newRepoWithCommit(t)
 
-	r := origin.clone(t)
+	r := origin.clone(t, "master")
 	r.writeFile(t, "new", "I'm a new file")
 	r.addFile(t, "new")
 	r.newCommit(t, "new commit")
@@ -116,7 +116,7 @@ func newRepoWithBranchAhead(t *testing.T) *Repo {
 func newRepoWithBranchBehind(t *testing.T) *Repo {
 	origin := newRepoWithCommit(t)
 
-	r := origin.clone(t)
+	r := origin.clone(t, "master")
 
 	origin.writeFile(t, "origin.new", "I'm a new file on origin")
 	origin.addFile(t, "origin.new")
@@ -130,7 +130,7 @@ func newRepoWithBranchBehind(t *testing.T) *Repo {
 func newRepoWithBranchAheadAndBehind(t *testing.T) *Repo {
 	origin := newRepoWithCommit(t)
 
-	r := origin.clone(t)
+	r := origin.clone(t, "master")
 	r.writeFile(t, "local.new", "local 1")
 	r.addFile(t, "local.new")
 	r.newCommit(t, "1st local commit")
@@ -152,6 +152,22 @@ func newRepoWithBranchAheadAndBehind(t *testing.T) *Repo {
 	origin.newCommit(t, "3rd origin commit")
 
 	r.fetch(t)
+	return r
+}
+
+func newRepoWithCheckedOutBranch(t *testing.T) *Repo {
+	origin := newRepoWithCommit(t)
+	origin.newBranch(t, "feature/branch1")
+
+	r := origin.clone(t, "feature/branch1")
+	return r
+}
+
+func newRepoWithCheckedOutTag(t *testing.T) *Repo {
+	origin := newRepoWithCommit(t)
+	origin.newTag(t, "v1.0.0")
+
+	r := origin.clone(t, "refs/tags/v1.0.0")
 	return r
 }
 
@@ -216,12 +232,22 @@ func (r *Repo) newBranch(t *testing.T, name string) {
 	checkFatal(t, err)
 }
 
-func (r *Repo) clone(t *testing.T) *Repo {
+func (r *Repo) newTag(t *testing.T, name string) {
+	head, err := r.Head()
+	checkFatal(t, err)
+
+	ref := plumbing.NewHashReference(plumbing.NewTagReferenceName(name), head.Hash())
+
+	err = r.Storer.SetReference(ref)
+	checkFatal(t, err)
+}
+
+func (r *Repo) clone(t *testing.T, branch string) *Repo {
 	dir := newTempDir(t)
 	repoURL, err := url.Parse("file://" + r.Path)
 	checkFatal(t, err)
 
-	repo, err := CloneRepo(repoURL, dir, true)
+	repo, err := CloneRepo(repoURL, dir, branch, true)
 	checkFatal(t, err)
 
 	return repo

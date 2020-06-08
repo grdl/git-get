@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"git-get/cfg"
 
+	"github.com/go-git/go-git/v5/plumbing"
+
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -24,7 +26,7 @@ type Repo struct {
 	Status *RepoStatus
 }
 
-func CloneRepo(url *url.URL, path string, quiet bool) (*Repo, error) {
+func CloneRepo(url *url.URL, path string, branch string, quiet bool) (*Repo, error) {
 	var progress io.Writer
 	if !quiet {
 		progress = os.Stdout
@@ -40,11 +42,18 @@ func CloneRepo(url *url.URL, path string, quiet bool) (*Repo, error) {
 		}
 	}
 
+	// If branch name is actually a tag (ie. is prefixed with refs/tags) - check out that tag.
+	// Otherwise, assume it's a branch name and check it out.
+	refName := plumbing.ReferenceName(branch)
+	if !refName.IsTag() {
+		refName = plumbing.NewBranchReferenceName(branch)
+	}
+
 	opts := &git.CloneOptions{
 		URL:               url.String(),
 		Auth:              auth,
 		RemoteName:        git.DefaultRemoteName,
-		ReferenceName:     "",
+		ReferenceName:     refName,
 		SingleBranch:      false,
 		NoCheckout:        false,
 		Depth:             0,

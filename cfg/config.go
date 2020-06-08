@@ -23,6 +23,8 @@ const (
 	DefPrivateKey  = "id_rsa"
 	KeyOutput      = "out"
 	DefOutput      = OutFlat
+	KeyBranch      = "branch"
+	DefBranch      = "master"
 	KeyFetch       = "fetch"
 	KeyList        = "list"
 )
