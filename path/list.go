@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"syscall"
 
 	"github.com/karrick/godirwalk"
 	"github.com/pkg/errors"
@@ -56,7 +57,9 @@ func WalkCb(path string, ent *godirwalk.Dirent) error {
 }
 
 func ErrorCb(_ string, err error) godirwalk.ErrorAction {
-	if errors.Is(err, skipNode) {
+	// Skip .git directory and directories we don't have permissions to access
+	// TODO: Will syscall.EACCES work on windows?
+	if errors.Is(err, skipNode) || errors.Is(err, syscall.EACCES) {
 		return godirwalk.SkipNode
 	}
 	return godirwalk.Halt
