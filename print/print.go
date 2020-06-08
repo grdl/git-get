@@ -3,41 +3,11 @@ package print
 import (
 	"fmt"
 	"git-get/git"
-	"path/filepath"
 	"strings"
 )
 
 type Printer interface {
 	Print(root string, repos []*git.Repo) string
-}
-
-type FlatPrinter struct{}
-
-func NewFlatPrinter() *FlatPrinter {
-	return &FlatPrinter{}
-}
-
-func (p *FlatPrinter) Print(root string, repos []*git.Repo) string {
-	val := root
-
-	for _, repo := range repos {
-		path := strings.TrimPrefix(repo.Path, root)
-		path = strings.Trim(path, string(filepath.Separator))
-
-		val += fmt.Sprintf("\n%s %s", path, renderWorktreeStatus(repo))
-
-		for _, branch := range repo.Status.Branches {
-			// Don't print the status of the current branch. It was already printed above.
-			if branch.Name == repo.Status.CurrentBranch {
-				continue
-			}
-
-			indent := strings.Repeat(" ", len(path))
-			val += fmt.Sprintf("\n%s %s", indent, renderBranchStatus(branch))
-		}
-	}
-
-	return val
 }
 
 const (
@@ -47,7 +17,7 @@ const (
 	ColorYellow = "\033[1;33m%s\033[0m"
 )
 
-func renderWorktreeStatus(repo *git.Repo) string {
+func printWorktreeStatus(repo *git.Repo) string {
 	clean := true
 	var status []string
 
@@ -56,7 +26,7 @@ func renderWorktreeStatus(repo *git.Repo) string {
 	if current := repo.CurrentBranchStatus(); current == nil {
 		status = append(status, fmt.Sprintf(ColorYellow, repo.Status.CurrentBranch))
 	} else {
-		status = append(status, renderBranchStatus(current))
+		status = append(status, printBranchStatus(current))
 	}
 
 	// TODO: this is ugly
@@ -85,7 +55,7 @@ func renderWorktreeStatus(repo *git.Repo) string {
 	return strings.Join(status, " ")
 }
 
-func renderBranchStatus(branch *git.BranchStatus) string {
+func printBranchStatus(branch *git.BranchStatus) string {
 	// ok indicates that the branch has upstream and is not ahead or behind it
 	ok := true
 	var status []string

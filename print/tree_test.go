@@ -96,9 +96,9 @@ gitlab.com/
 			repos = append(repos, git.NewRepo(nil, path)) //&Repo{path: path})
 		}
 
-		tree := BuildTree("root", repos)
+		printer := SmartTreePrinter{}
 		// Leading and trailing newlines are added to test cases for readability. We also need to add them to the rendering result.
-		got := fmt.Sprintf("\n%s\n", RenderSmartTree(tree))
+		got := fmt.Sprintf("\n%s\n", printer.Print("root", repos))
 
 		// Rendered tree uses spaces for indentation but the test cases use tabs.
 		if got != strings.ReplaceAll(test.want, "\t", "    ") {

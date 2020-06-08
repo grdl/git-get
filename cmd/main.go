@@ -24,7 +24,7 @@ var cmd = &cobra.Command{
 	Use:     "git-get <repo>",
 	Short:   "git get",
 	Run:     Run,
-	Args:    cobra.MaximumNArgs(1),
+	Args:    cobra.MaximumNArgs(1), // TODO: add custom validator
 	Version: fmt.Sprintf("%s - %s, build at %s", version, commit, date),
 }
 
@@ -34,8 +34,10 @@ func init() {
 	cmd.PersistentFlags().BoolVarP(&list, "list", "l", false, "Lists all repositories inside git-get root")
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "repos root")
 	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "SSH private key path")
+	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.DefOutput, "output format.")
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyPrivateKey, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
+	viper.BindPFlag(cfg.KeyOutput, cmd.PersistentFlags().Lookup(cfg.KeyOutput))
 }
 
 func Run(cmd *cobra.Command, args []string) {
@@ -43,16 +45,26 @@ func Run(cmd *cobra.Command, args []string) {
 
 	root := viper.GetString(cfg.KeyReposRoot)
 	if list {
+		// TODO: move it to OpenAll and don't export
 		paths, err := path.FindRepos()
 		exitIfError(err)
 
 		repos, err := path.OpenAll(paths)
 		exitIfError(err)
 
-		//tree := BuildTree(root, repos)
-		//fmt.Println(RenderSmartTree(tree))
+		var printer print.Printer
+		switch viper.GetString(cfg.KeyOutput) {
+		case cfg.OutFlat:
+			printer = &print.FlatPrinter{}
+		case cfg.OutSimple:
+			printer = &print.SimpleTreePrinter{}
+		case cfg.OutSmart:
+			printer = &print.SmartTreePrinter{}
+		default:
+			err = fmt.Errorf("invalid --output flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutSimple, cfg.OutSmart})
+		}
+		exitIfError(err)
 
-		printer := print.NewFlatPrinter()
 		fmt.Println(printer.Print(root, repos))
 
 		os.Exit(0)

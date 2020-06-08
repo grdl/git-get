@@ -4,12 +4,39 @@ import (
 	"git-get/git"
 	"path/filepath"
 	"strings"
+
+	"github.com/xlab/treeprint"
 )
 
-// Node represents a node in a repos tree
+type SimpleTreePrinter struct{}
+
+type SmartTreePrinter struct {
+	// length is the size (number of chars) of the currently processed line.
+	// It's used to correctly indent the lines with branches status.
+	length int
+}
+
+func (p *SmartTreePrinter) Print(root string, repos []*git.Repo) string {
+	tree := BuildTree(root, repos)
+
+	return p.PrintSmartTree(tree)
+}
+
+func (p *SimpleTreePrinter) Print(root string, repos []*git.Repo) string {
+	tree := BuildTree(root, repos)
+
+	tp := treeprint.New()
+	tp.SetValue(root)
+
+	p.PrintSimpleTree(tree, tp)
+
+	return tp.String()
+}
+
+// Node represents a node (ie. path fragment) in a repos tree.
 type Node struct {
 	val      string
-	depth    int // depth is a nesting depth used when rendering a tree, not an depth level of a node inside the tree
+	depth    int // depth is a nesting depth used when rendering a smart tree, not a depth level of a tree node.
 	parent   *Node
 	children []*Node
 	repo     *git.Repo
@@ -87,7 +114,7 @@ func BuildTree(root string, repos []*git.Repo) *Node {
 	return tree
 }
 
-// RenderSmartTree returns a string representation of repos tree.
+// PrintSmartTree returns a string representation of repos tree.
 // It's "smart" because it automatically folds branches which only have a single child and indents branches with many children.
 //
 // It recursively traverses the tree and prints its nodes.
@@ -109,7 +136,7 @@ func BuildTree(root string, repos []*git.Repo) *Node {
 //           repo2
 //       another/repo
 //
-func RenderSmartTree(node *Node) string {
+func (p *SmartTreePrinter) PrintSmartTree(node *Node) string {
 	if node.children == nil {
 		// If node is a leaf, print repo name and its status and finish processing this node.
 		value := node.val
@@ -120,17 +147,17 @@ func RenderSmartTree(node *Node) string {
 			return value
 		}
 
-		value += " " + renderWorktreeStatus(node.repo)
+		value += " " + printWorktreeStatus(node.repo)
 
 		// Print the status of each branch on a new line, indented to match the position of the current branch name.
-		indent := "\n" + strings.Repeat(" ", length+len(node.val))
+		indent := "\n" + strings.Repeat(" ", p.length+len(node.val))
 		for _, branch := range node.repo.Status.Branches {
 			// Don't print the status of the current branch. It was already printed above.
 			if branch.Name == node.repo.Status.CurrentBranch {
 				continue
 			}
 
-			value += indent + renderBranchStatus(branch)
+			value += indent + printBranchStatus(branch)
 		}
 
 		return value
@@ -148,24 +175,40 @@ func RenderSmartTree(node *Node) string {
 		// node's path has multiple levels above.
 		node.depth = node.parent.depth
 
-		length += len(val)
+		p.length += len(val)
 	} else {
 		// If node has multiple children, print each of them on a new line
 		// and indent them once relative to the parent
 		node.depth = node.parent.depth + 1
 		shift = "\n" + strings.Repeat("    ", node.depth)
-		length = 0
+		p.length = 0
 	}
 
 	for _, child := range node.children {
-		length += len(shift)
-		val += shift + RenderSmartTree(child)
-		length = 0
+		p.length += len(shift)
+		val += shift + p.PrintSmartTree(child)
+		p.length = 0
 	}
 
 	return val
 }
 
-// lenght is the size (number of chars) of the currently processed line.
-// It's used to correctly indent the lines with branches status.
-var length int
+func (p *SimpleTreePrinter) PrintSimpleTree(node *Node, tp treeprint.Tree) {
+	if node.children == nil {
+		tp.SetValue(node.val + " " + printWorktreeStatus(node.repo))
+
+		for _, branch := range node.repo.Status.Branches {
+			// Don't print the status of the current branch. It was already printed above.
+			if branch.Name == node.repo.Status.CurrentBranch {
+				continue
+			}
+			tp.AddNode(printBranchStatus(branch))
+		}
+
+	}
+
+	for _, child := range node.children {
+		branch := tp.AddBranch(child.val)
+		p.PrintSimpleTree(child, branch)
+	}
+}

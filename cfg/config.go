@@ -18,6 +18,14 @@ const (
 	DefDefaultHost = "github.com"
 	KeyPrivateKey  = "privateKey"
 	DefPrivateKey  = "id_rsa"
+	KeyOutput      = "out"
+	DefOutput      = OutFlat
+)
+
+const (
+	OutFlat   = "flat"
+	OutSmart  = "smart"
+	OutSimple = "simple"
 )
 
 // gitconfig provides methods for looking up configiration values inside .gitconfig file
