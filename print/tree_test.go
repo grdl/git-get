@@ -1,7 +1,8 @@
-package pkg
+package print
 
 import (
 	"fmt"
+	"git-get/git"
 	"strings"
 	"testing"
 )
@@ -90,9 +91,9 @@ gitlab.com/
 	}
 
 	for i, test := range tests {
-		var repos []*Repo
+		var repos []*git.Repo
 		for _, path := range test.paths {
-			repos = append(repos, newRepo(nil, path)) //&Repo{path: path})
+			repos = append(repos, git.NewRepo(nil, path)) //&Repo{path: path})
 		}
 
 		tree := BuildTree("root", repos)

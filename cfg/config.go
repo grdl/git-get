@@ -1,4 +1,4 @@
-package pkg
+package cfg
 
 import (
 	"path"

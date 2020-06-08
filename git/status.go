@@ -1,4 +1,4 @@
-package pkg
+package git
 
 import (
 	"sort"
@@ -39,7 +39,7 @@ type BranchStatus struct {
 }
 
 func (r *Repo) LoadStatus() error {
-	wt, err := r.repo.Worktree()
+	wt, err := r.Worktree()
 	if err != nil {
 		return errors.Wrap(err, "Failed getting worktree")
 	}
@@ -105,7 +105,7 @@ func hasUncommitted(status git.Status) bool {
 }
 
 func currentBranch(r *Repo) string {
-	head, err := r.repo.Head()
+	head, err := r.Head()
 	if err != nil {
 		return StatusUnknown
 	}
@@ -118,7 +118,7 @@ func currentBranch(r *Repo) string {
 }
 
 func (r *Repo) loadBranchesStatus() error {
-	iter, err := r.repo.Branches()
+	iter, err := r.Branches()
 	if err != nil {
 		return errors.Wrap(err, "Failed getting branches iterator")
 	}
@@ -181,7 +181,7 @@ func (r *Repo) newBranchStatus(branch string) (*BranchStatus, error) {
 // "remote" - name of the remote containing upstream branch (or "." if upstream is a local branch)
 // "merge" - full ref name of the upstream branch (eg, ref/heads/master)
 func (r *Repo) upstream(branch string) (string, error) {
-	cfg, err := r.repo.Config()
+	cfg, err := r.Config()
 	if err != nil {
 		return "", errors.Wrap(err, "Failed getting repo config")
 	}
@@ -205,22 +205,22 @@ func (r *Repo) upstream(branch string) (string, error) {
 }
 
 func (r *Repo) needsPullOrPush(localBranch string, upstreamBranch string) (needsPull bool, needsPush bool, err error) {
-	localHash, err := r.repo.ResolveRevision(plumbing.Revision(localBranch))
+	localHash, err := r.ResolveRevision(plumbing.Revision(localBranch))
 	if err != nil {
 		return false, false, errors.Wrapf(err, "Failed resolving revision %s", localBranch)
 	}
 
-	upstreamHash, err := r.repo.ResolveRevision(plumbing.Revision(upstreamBranch))
+	upstreamHash, err := r.ResolveRevision(plumbing.Revision(upstreamBranch))
 	if err != nil {
 		return false, false, errors.Wrapf(err, "Failed resolving revision %s", upstreamBranch)
 	}
 
-	localCommit, err := r.repo.CommitObject(*localHash)
+	localCommit, err := r.CommitObject(*localHash)
 	if err != nil {
 		return false, false, errors.Wrapf(err, "Failed finding a commit for hash %s", localHash.String())
 	}
 
-	upstreamCommit, err := r.repo.CommitObject(*upstreamHash)
+	upstreamCommit, err := r.CommitObject(*upstreamHash)
 	if err != nil {
 		return false, false, errors.Wrapf(err, "Failed finding a commit for hash %s", upstreamHash.String())
 	}

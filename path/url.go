@@ -1,6 +1,7 @@
-package pkg
+package path
 
 import (
+	"git-get/cfg"
 	urlpkg "net/url"
 	"path"
 	"regexp"
@@ -46,7 +47,7 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 
 	// Default to configured defaultHost when host is empty
 	if url.Host == "" {
-		url.Host = viper.GetString(KeyDefaultHost)
+		url.Host = viper.GetString(cfg.KeyDefaultHost)
 	}
 
 	// Default to https when scheme is empty

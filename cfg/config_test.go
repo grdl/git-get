@@ -1,4 +1,4 @@
-package pkg
+package cfg
 
 import (
 	"os"
@@ -154,5 +154,11 @@ func TestConfig(t *testing.T) {
 		checkFatal(t, err)
 		err = os.Unsetenv(EnvReposRoot)
 		checkFatal(t, err)
+	}
+}
+
+func checkFatal(t *testing.T, err error) {
+	if err != nil {
+		t.Fatalf("%+v", err)
 	}
 }

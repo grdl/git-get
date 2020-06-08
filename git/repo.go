@@ -1,12 +1,13 @@
-package pkg
+package git
 
 import (
 	"fmt"
+	"git-get/cfg"
+
 	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
-	"path"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -18,18 +19,16 @@ import (
 )
 
 type Repo struct {
-	repo   *git.Repository
-	path   string
+	*git.Repository
+	Path   string
 	Status *RepoStatus
 }
 
-func CloneRepo(url *url.URL, reposRoot string, quiet bool) (*Repo, error) {
-	repoPath := path.Join(reposRoot, URLToPath(url))
-
+func CloneRepo(url *url.URL, path string, quiet bool) (*Repo, error) {
 	var progress io.Writer
 	if !quiet {
 		progress = os.Stdout
-		fmt.Printf("Cloning into '%s'...\n", repoPath)
+		fmt.Printf("Cloning into '%s'...\n", path)
 	}
 
 	// TODO: can this be cleaner?
@@ -54,12 +53,12 @@ func CloneRepo(url *url.URL, reposRoot string, quiet bool) (*Repo, error) {
 		Tags:              git.AllTags,
 	}
 
-	repo, err := git.PlainClone(repoPath, false, opts)
+	repo, err := git.PlainClone(path, false, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed cloning repo")
 	}
 
-	return newRepo(repo, repoPath), nil
+	return NewRepo(repo, path), nil
 }
 
 func OpenRepo(repoPath string) (*Repo, error) {
@@ -68,20 +67,20 @@ func OpenRepo(repoPath string) (*Repo, error) {
 		return nil, errors.Wrap(err, "Failed opening repo")
 	}
 
-	return newRepo(repo, repoPath), nil
+	return NewRepo(repo, repoPath), nil
 }
 
-func newRepo(repo *git.Repository, repoPath string) *Repo {
+func NewRepo(repo *git.Repository, repoPath string) *Repo {
 	return &Repo{
-		repo:   repo,
-		path:   repoPath,
-		Status: &RepoStatus{},
+		Repository: repo,
+		Path:       repoPath,
+		Status:     &RepoStatus{},
 	}
 }
 
 // Fetch performs a git fetch on all remotes
 func (r *Repo) Fetch() error {
-	remotes, err := r.repo.Remotes()
+	remotes, err := r.Remotes()
 	if err != nil {
 		return errors.Wrap(err, "Failed getting remotes")
 	}
@@ -97,7 +96,7 @@ func (r *Repo) Fetch() error {
 }
 
 func sshKeyAuth() (transport.AuthMethod, error) {
-	privateKey := viper.GetString(KeyPrivateKey)
+	privateKey := viper.GetString(cfg.KeyPrivateKey)
 	sshKey, err := ioutil.ReadFile(privateKey)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to open ssh private key %s", privateKey)
@@ -111,4 +110,18 @@ func sshKeyAuth() (transport.AuthMethod, error) {
 	// TODO: can it ba a different user
 	auth := &go_git_ssh.PublicKeys{User: "git", Signer: signer}
 	return auth, nil
+}
+
+func (r *Repo) CurrentBranchStatus() *BranchStatus {
+	if r.Status.CurrentBranch == StatusDetached || r.Status.CurrentBranch == StatusUnknown {
+		return nil
+	}
+
+	for _, b := range r.Status.Branches {
+		if b.Name == r.Status.CurrentBranch {
+			return b
+		}
+	}
+
+	return nil
 }

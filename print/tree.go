@@ -1,6 +1,7 @@
-package pkg
+package print
 
 import (
+	"git-get/git"
 	"path/filepath"
 	"strings"
 )
@@ -11,7 +12,7 @@ type Node struct {
 	depth    int // depth is a nesting depth used when rendering a tree, not an depth level of a node inside the tree
 	parent   *Node
 	children []*Node
-	repo     *Repo
+	repo     *git.Repo
 }
 
 // Root creates a new root of a tree
@@ -55,11 +56,11 @@ func (n *Node) GetChild(val string) *Node {
 // BuildTree builds a directory tree of paths to repositories.
 // Each node represents a directory in the repo path.
 // Each leaf (final node) contains a pointer to the repo.
-func BuildTree(root string, repos []*Repo) *Node {
+func BuildTree(root string, repos []*git.Repo) *Node {
 	tree := Root(root)
 
 	for _, repo := range repos {
-		path := strings.TrimPrefix(repo.path, root)
+		path := strings.TrimPrefix(repo.Path, root)
 		path = strings.Trim(path, string(filepath.Separator))
 		subs := strings.Split(path, string(filepath.Separator))
 
@@ -115,7 +116,7 @@ func RenderSmartTree(node *Node) string {
 
 		// TODO: Ugly
 		// If this is called from tests the repo will be nil and we should return just the name without the status.
-		if node.repo.repo == nil {
+		if node.repo.Repository == nil {
 			return value
 		}
 
