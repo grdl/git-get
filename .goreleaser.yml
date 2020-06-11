@@ -40,7 +40,7 @@ brews:
       email: git-get@grdl.dev
     folder: Formula
     homepage: "https://github.com/grdl/git-get/"
-    description: "A better way to clone, organize and manage git repositories."
+    description: "Better way to clone, organize and manage git repositories"
     test: |
       system "git-get --version"
     install: |
