@@ -1,4 +1,6 @@
+
 # git-get
 
-`git get` - a better way to clone, organize and manage git repositories.
+![](https://github.com/grdl/git-get/workflows/build/badge.svg)
 
+`git-get` is better way to clone, organize and manage git repositories.
