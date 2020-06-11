@@ -32,29 +32,16 @@ release:
 
 brews:
   - name: git-get
-
     github:
       owner: grdl
       name: homebrew-tap
-
-    url_template: "https://github.com/grdl/git-get/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-
-    download_strategy: CurlDownloadStrategy.
-
     commit_author:
       name: Grzegorz Dlugoszewski
       email: git-get@grdl.dev
-
     folder: Formula
-
     homepage: "https://github.com/grdl/git-get/"
-
     description: "A better way to clone, organize and manage git repositories."
-
-    skip_upload: auto
-
     test: |
       system "git-get --version"
-
     install: |
       bin.install "git-get"
