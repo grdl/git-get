@@ -26,17 +26,26 @@ type Repo struct {
 	Status *RepoStatus
 }
 
-func CloneRepo(url *url.URL, path string, branch string, quiet bool) (*Repo, error) {
+// CloneOpts specify details about repository to clone.
+type CloneOpts struct {
+	URL            *url.URL
+	Path           string // TODO: should Path be a part of clone opts?
+	Branch         string
+	Quiet          bool
+	IgnoreExisting bool // TODO: implement!
+}
+
+func CloneRepo(opts *CloneOpts) (*Repo, error) {
 	var progress io.Writer
-	if !quiet {
+	if !opts.Quiet {
 		progress = os.Stdout
-		fmt.Printf("Cloning into '%s'...\n", path)
+		fmt.Printf("Cloning into '%s'...\n", opts.Path)
 	}
 
 	// TODO: can this be cleaner?
 	var auth transport.AuthMethod
 	var err error
-	if url.Scheme == "ssh" {
+	if opts.URL.Scheme == "ssh" {
 		if auth, err = sshKeyAuth(); err != nil {
 			return nil, err
 		}
@@ -44,13 +53,13 @@ func CloneRepo(url *url.URL, path string, branch string, quiet bool) (*Repo, err
 
 	// If branch name is actually a tag (ie. is prefixed with refs/tags) - check out that tag.
 	// Otherwise, assume it's a branch name and check it out.
-	refName := plumbing.ReferenceName(branch)
+	refName := plumbing.ReferenceName(opts.Branch)
 	if !refName.IsTag() {
-		refName = plumbing.NewBranchReferenceName(branch)
+		refName = plumbing.NewBranchReferenceName(opts.Branch)
 	}
 
-	opts := &git.CloneOptions{
-		URL:               url.String(),
+	gitOpts := &git.CloneOptions{
+		URL:               opts.URL.String(),
 		Auth:              auth,
 		RemoteName:        git.DefaultRemoteName,
 		ReferenceName:     refName,
@@ -62,12 +71,12 @@ func CloneRepo(url *url.URL, path string, branch string, quiet bool) (*Repo, err
 		Tags:              git.AllTags,
 	}
 
-	repo, err := git.PlainClone(path, false, opts)
+	repo, err := git.PlainClone(opts.Path, false, gitOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed cloning repo")
 	}
 
-	return NewRepo(repo, path), nil
+	return NewRepo(repo, opts.Path), nil
 }
 
 func OpenRepo(repoPath string) (*Repo, error) {

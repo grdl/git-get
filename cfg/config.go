@@ -13,20 +13,21 @@ import (
 // Gitconfig section name and env var prefix
 const GitgetPrefix = "gitget"
 
-// Flag keys and default values
+// Flag keys and their default values
 const (
-	KeyReposRoot   = "reposRoot"
-	DefReposRoot   = "repositories"
-	KeyDefaultHost = "defaultHost"
-	DefDefaultHost = "github.com"
-	KeyPrivateKey  = "privateKey"
-	DefPrivateKey  = "id_rsa"
-	KeyOutput      = "out"
-	DefOutput      = OutFlat
 	KeyBranch      = "branch"
 	DefBranch      = "master"
+	KeyBundle      = "bundle"
+	KeyDefaultHost = "defaultHost"
+	DefDefaultHost = "github.com"
 	KeyFetch       = "fetch"
 	KeyList        = "list"
+	KeyOutput      = "out"
+	DefOutput      = OutFlat
+	KeyPrivateKey  = "privateKey"
+	DefPrivateKey  = "id_rsa"
+	KeyReposRoot   = "reposRoot"
+	DefReposRoot   = "repositories"
 )
 
 // Allowed values for the --out flag

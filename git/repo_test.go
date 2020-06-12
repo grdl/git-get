@@ -247,7 +247,14 @@ func (r *Repo) clone(t *testing.T, branch string) *Repo {
 	repoURL, err := url.Parse("file://" + r.Path)
 	checkFatal(t, err)
 
-	repo, err := CloneRepo(repoURL, dir, branch, true)
+	cloneOpts := &CloneOpts{
+		URL:    repoURL,
+		Path:   dir,
+		Branch: branch,
+		Quiet:  true,
+	}
+
+	repo, err := CloneRepo(cloneOpts)
 	checkFatal(t, err)
 
 	return repo

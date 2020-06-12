@@ -11,6 +11,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	ErrEmptyURLPath = errors.New("Parsed URL path is empty")
+)
+
 // scpSyntax matches the SCP-like addresses used by the ssh protocol (eg, [user@]host.xz:path/to/repo.git/).
 // See: https://golang.org/src/cmd/go/internal/get/vcs.go
 var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+)@([a-zA-Z0-9._-]+):(.*)$`)
@@ -28,12 +32,12 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 	} else {
 		url, err = urlpkg.Parse(rawURL)
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed parsing Path")
+			return nil, errors.Wrap(err, "Failed parsing URL")
 		}
 	}
 
 	if url.Host == "" && url.Path == "" {
-		return nil, errors.New("Parsed Path is empty")
+		return nil, ErrEmptyURLPath
 	}
 
 	if url.Scheme == "git+ssh" {

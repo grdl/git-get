@@ -61,7 +61,7 @@ func TestURLParse(t *testing.T) {
 		got := URLToPath(url)
 
 		if got != test.want {
-			t.Errorf("Wrong result of parsing Path: %s, got: %s; want: %s", test.in, got, test.want)
+			t.Errorf("Wrong result of parsing Path: %s, got: %s; wantBranch: %s", test.in, got, test.want)
 		}
 	}
 }
@@ -79,7 +79,7 @@ func TestInvalidURLParse(t *testing.T) {
 	for _, in := range invalidURLs {
 		got, err := ParseURL(in)
 		if err == nil {
-			t.Errorf("Wrong result of parsing invalid Path: %s, got: %s, want: error", in, got)
+			t.Errorf("Wrong result of parsing invalid Path: %s, got: %s, wantBranch: error", in, got)
 		}
 	}
 }

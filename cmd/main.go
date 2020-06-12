@@ -35,6 +35,7 @@ func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "SSH private key path")
 	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.DefOutput, "output format.")
 	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", cfg.DefBranch, "Branch (or tag) to checkout after cloning")
+	cmd.PersistentFlags().StringP(cfg.KeyBundle, "u", "", "Bundle file path")
 
 	viper.BindPFlag(cfg.KeyList, cmd.PersistentFlags().Lookup(cfg.KeyList))
 	viper.BindPFlag(cfg.KeyFetch, cmd.PersistentFlags().Lookup(cfg.KeyFetch))
@@ -42,6 +43,7 @@ func init() {
 	viper.BindPFlag(cfg.KeyPrivateKey, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyOutput, cmd.PersistentFlags().Lookup(cfg.KeyOutput))
 	viper.BindPFlag(cfg.KeyBranch, cmd.PersistentFlags().Lookup(cfg.KeyBranch))
+	viper.BindPFlag(cfg.KeyBundle, cmd.PersistentFlags().Lookup(cfg.KeyBundle))
 }
 
 func Run(cmd *cobra.Command, args []string) {
@@ -74,12 +76,32 @@ func Run(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
+	bundle := viper.GetString(cfg.KeyBundle)
+	if bundle != "" {
+		opts, err := path.ParseBundleFile(bundle)
+		exitIfError(err)
+
+		for _, opt := range opts {
+			path := pathpkg.Join(root, path.URLToPath(opt.URL))
+			opt.Path = path
+			_, _ = git.CloneRepo(opt)
+		}
+		os.Exit(0)
+	}
+
 	url, err := path.ParseURL(args[0])
 	exitIfError(err)
 
 	branch := viper.GetString(cfg.KeyBranch)
-	repoPath := pathpkg.Join(root, path.URLToPath(url))
-	_, err = git.CloneRepo(url, repoPath, branch, false)
+	path := pathpkg.Join(root, path.URLToPath(url))
+
+	cloneOpts := &git.CloneOpts{
+		URL:    url,
+		Path:   path,
+		Branch: branch,
+	}
+
+	_, err = git.CloneRepo(cloneOpts)
 	exitIfError(err)
 }
 
