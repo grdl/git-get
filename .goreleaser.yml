@@ -39,6 +39,12 @@ archives:
       windows: Windows
       386: i386
       amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+    # Don't include any additional files into the archive (such as README, CHANGELOG etc). 
+    files:
+      - none* 
 
 checksum:
   name_template: 'checksums.txt'
