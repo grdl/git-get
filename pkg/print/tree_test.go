@@ -2,7 +2,7 @@ package print
 
 import (
 	"fmt"
-	"git-get/git"
+	"git-get/pkg/git"
 	"strings"
 	"testing"
 )

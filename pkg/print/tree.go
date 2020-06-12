@@ -1,7 +1,7 @@
 package print
 
 import (
-	"git-get/git"
+	"git-get/pkg/git"
 	"path/filepath"
 	"strings"
 

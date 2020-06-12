@@ -2,7 +2,7 @@ package path
 
 import (
 	"bufio"
-	"git-get/git"
+	"git-get/pkg/git"
 	"os"
 	"strings"
 

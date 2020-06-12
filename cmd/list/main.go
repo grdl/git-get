@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"git-get/cfg"
-	"git-get/git"
-	"git-get/path"
-	"git-get/print"
+	"git-get/pkg/cfg"
+	"git-get/pkg/git"
+	"git-get/pkg/path"
+	"git-get/pkg/print"
 	"os"
-
 	pathpkg "path"
 
 	"github.com/spf13/cobra"

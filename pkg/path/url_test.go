@@ -1,7 +1,7 @@
 package path
 
 import (
-	"git-get/cfg"
+	"git-get/pkg/cfg"
 	"testing"
 )
 

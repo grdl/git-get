@@ -2,8 +2,8 @@ package path
 
 import (
 	"fmt"
-	"git-get/cfg"
-	"git-get/git"
+	"git-get/pkg/cfg"
+	"git-get/pkg/git"
 	"os"
 	"sort"
 	"strings"

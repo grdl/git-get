@@ -2,7 +2,7 @@ package git
 
 import (
 	"fmt"
-	"git-get/cfg"
+	"git-get/pkg/cfg"
 
 	"github.com/go-git/go-git/v5/plumbing"
 

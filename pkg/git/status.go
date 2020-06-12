@@ -1,7 +1,7 @@
 package git
 
 import (
-	"git-get/cfg"
+	"git-get/pkg/cfg"
 	"sort"
 	"strings"
 
