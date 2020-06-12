@@ -13,18 +13,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	version = "dev"
-	commit  = "unknown"
-	date    = "unknown"
-)
-
 var cmd = &cobra.Command{
 	Use:     "git-get <repo>",
 	Short:   "git get",
 	Run:     Run,
 	Args:    cobra.MaximumNArgs(1), // TODO: add custom validator
-	Version: fmt.Sprintf("%s - %s, build at %s", version, commit, date),
+	Version: cfg.Version(),
 }
 
 func init() {

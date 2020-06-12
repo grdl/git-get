@@ -3,20 +3,29 @@ before:
     - go mod download
 
 builds:
-  - main: ./cmd/main.go
-    binary: "git-get"
+  - id: git-list
+    main: ./cmd/list/main.go
+    binary: git-list
+    ldflags:
+      - -s -w 
+      - -X git-get/pkg/cfg.version={{.Version}} 
+      - -X git-get/pkg/cfg.commit={{.Commit}} 
+      - -X git-get/pkg/cfg.date={{.Date}}
     goos:
       - linux
       - darwin
       - windows
 
 archives:
-- replacements:
-    darwin: macOS
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
+  - id: archive
+    builds:
+      - git-list
+    replacements:
+      darwin: macOS
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
 
 checksum:
   name_template: 'checksums.txt'
