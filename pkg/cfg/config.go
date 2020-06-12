@@ -22,9 +22,8 @@ const (
 	KeyDefaultHost = "defaultHost"
 	DefDefaultHost = "github.com"
 	KeyFetch       = "fetch"
-	KeyList        = "list"
 	KeyOutput      = "out"
-	DefOutput      = OutFlat
+	DefOutput      = OutSimple
 	KeyPrivateKey  = "privateKey"
 	DefPrivateKey  = "id_rsa"
 	KeyReposRoot   = "reposRoot"

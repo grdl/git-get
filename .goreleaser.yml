@@ -3,6 +3,18 @@ before:
     - go mod download
 
 builds:
+  - id: git-get
+    main: ./cmd/get/main.go
+    binary: git-get
+    ldflags:
+      - -s -w 
+      - -X git-get/pkg/cfg.version={{.Version}} 
+      - -X git-get/pkg/cfg.commit={{.Commit}} 
+      - -X git-get/pkg/cfg.date={{.Date}}
+    goos:
+      - linux
+      - darwin
+      - windows
   - id: git-list
     main: ./cmd/list/main.go
     binary: git-list
@@ -19,6 +31,7 @@ builds:
 archives:
   - id: archive
     builds:
+      - git-get
       - git-list
     replacements:
       darwin: macOS

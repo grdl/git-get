@@ -3,19 +3,20 @@ package main
 import (
 	"fmt"
 	"git-get/pkg/cfg"
+	"git-get/pkg/git"
 	"git-get/pkg/path"
-	"git-get/pkg/print"
 	"os"
+	pathpkg "path"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cmd = &cobra.Command{
-	Use:     "git-list",
-	Short:   "git list",
+	Use:     "git-get <repo>",
+	Short:   "git get",
 	Run:     Run,
-	Args:    cobra.NoArgs,
+	Args:    cobra.MaximumNArgs(1), // TODO: add custom validator
 	Version: cfg.Version(),
 }
 
@@ -24,14 +25,12 @@ func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "SSH private key path")
 	cmd.PersistentFlags().StringP(cfg.KeyBundle, "u", "", "Bundle file path")
 
-	cmd.PersistentFlags().BoolP(cfg.KeyFetch, "f", false, "Fetch from remotes when listing repositories")
-	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.DefOutput, "output format.")
+	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", cfg.DefBranch, "Branch (or tag) to checkout after cloning")
 
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyPrivateKey, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyBundle, cmd.PersistentFlags().Lookup(cfg.KeyBundle))
-	viper.BindPFlag(cfg.KeyFetch, cmd.PersistentFlags().Lookup(cfg.KeyFetch))
-	viper.BindPFlag(cfg.KeyOutput, cmd.PersistentFlags().Lookup(cfg.KeyOutput))
+	viper.BindPFlag(cfg.KeyBranch, cmd.PersistentFlags().Lookup(cfg.KeyBranch))
 }
 
 func Run(cmd *cobra.Command, args []string) {
@@ -39,27 +38,32 @@ func Run(cmd *cobra.Command, args []string) {
 
 	root := viper.GetString(cfg.KeyReposRoot)
 
-	// TODO: move it to OpenAll and don't export
-	paths, err := path.FindRepos()
-	exitIfError(err)
+	if bundle := viper.GetString(cfg.KeyBundle); bundle != "" {
+		opts, err := path.ParseBundleFile(bundle)
+		exitIfError(err)
 
-	repos, err := path.OpenAll(paths)
-	exitIfError(err)
-
-	var printer print.Printer
-	switch viper.GetString(cfg.KeyOutput) {
-	case cfg.OutFlat:
-		printer = &print.FlatPrinter{}
-	case cfg.OutSimple:
-		printer = &print.SimpleTreePrinter{}
-	case cfg.OutSmart:
-		printer = &print.SmartTreePrinter{}
-	default:
-		err = fmt.Errorf("invalid --out flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutSimple, cfg.OutSmart})
+		for _, opt := range opts {
+			path := pathpkg.Join(root, path.URLToPath(opt.URL))
+			opt.Path = path
+			_, _ = git.CloneRepo(opt)
+		}
+		os.Exit(0)
 	}
+
+	url, err := path.ParseURL(args[0])
 	exitIfError(err)
 
-	fmt.Println(printer.Print(root, repos))
+	branch := viper.GetString(cfg.KeyBranch)
+	path := pathpkg.Join(root, path.URLToPath(url))
+
+	cloneOpts := &git.CloneOpts{
+		URL:    url,
+		Path:   path,
+		Branch: branch,
+	}
+
+	_, err = git.CloneRepo(cloneOpts)
+	exitIfError(err)
 }
 
 func main() {
