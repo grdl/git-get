@@ -49,11 +49,8 @@ func TestURLParse(t *testing.T) {
 		{"file://local/grdl/git-get", "local/grdl/git-get"},
 	}
 
-	// We need to init config first so the default values are correctly loaded
-	cfg.Init()
-
 	for _, test := range tests {
-		url, err := ParseURL(test.in)
+		url, err := ParseURL(test.in, cfg.DefDefaultHost)
 		if err != nil {
 			t.Errorf("Error parsing Path: %+v", err)
 		}
@@ -77,7 +74,7 @@ func TestInvalidURLParse(t *testing.T) {
 	}
 
 	for _, in := range invalidURLs {
-		got, err := ParseURL(in)
+		got, err := ParseURL(in, cfg.DefDefaultHost)
 		if err == nil {
 			t.Errorf("Wrong result of parsing invalid Path: %s, got: %s, wantBranch: error", in, got)
 		}

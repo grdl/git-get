@@ -38,10 +38,11 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	config := &pkg.GetCfg{
-		Branch: viper.GetString(cfg.KeyBranch),
-		Dump:   viper.GetString(cfg.KeyDump),
-		Root:   viper.GetString(cfg.KeyReposRoot),
-		URL:    url,
+		Branch:  viper.GetString(cfg.KeyBranch),
+		DefHost: viper.GetString(cfg.KeyDefaultHost),
+		Dump:    viper.GetString(cfg.KeyDump),
+		Root:    viper.GetString(cfg.KeyReposRoot),
+		URL:     url,
 	}
 	return pkg.Get(config)
 }

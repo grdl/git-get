@@ -2,17 +2,24 @@ package pkg
 
 import (
 	"bufio"
-	"git-get/pkg/repo"
 	"os"
 	"strings"
 
 	"github.com/pkg/errors"
 )
 
-var errInvalidNumberOfElements = errors.New("More than two space-separated 2 elements on the line")
+var (
+	errInvalidNumberOfElements = errors.New("More than two space-separated 2 elements on the line")
+	errEmptyLine               = errors.New("Empty line")
+)
+
+type parsedLine struct {
+	rawurl string
+	branch string
+}
 
 // ParseDumpFile opens a given gitgetfile and parses its content into a slice of CloneOpts.
-func ParseDumpFile(path string) ([]*repo.CloneOpts, error) {
+func parseDumpFile(path string) ([]parsedLine, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed opening dump file %s", path)
@@ -21,44 +28,39 @@ func ParseDumpFile(path string) ([]*repo.CloneOpts, error) {
 
 	scanner := bufio.NewScanner(file)
 
-	var opts []*repo.CloneOpts
+	var parsedLines []parsedLine
 	var line int
 	for scanner.Scan() {
 		line++
-		opt, err := parseLine(scanner.Text())
-		if err != nil {
+		parsed, err := parseLine(scanner.Text())
+		if err != nil && !errors.Is(errEmptyLine, err) {
 			return nil, errors.Wrapf(err, "Failed parsing line %d", line)
 		}
 
-		opts = append(opts, opt)
+		parsedLines = append(parsedLines, parsed)
 	}
 
-	return opts, nil
+	return parsedLines, nil
 }
 
 // parseLine splits a dump file line into space-separated segments.
 // First part is the URL to clone. Second, optional, is the branch (or tag) to checkout after cloning
-func parseLine(line string) (*repo.CloneOpts, error) {
-	parts := strings.Split(line, " ")
+func parseLine(line string) (parsedLine, error) {
+	var parsed parsedLine
 
+	if len(strings.TrimSpace(line)) == 0 {
+		return parsed, errEmptyLine
+	}
+
+	parts := strings.Split(strings.TrimSpace(line), " ")
 	if len(parts) > 2 {
-		return nil, errInvalidNumberOfElements
+		return parsed, errInvalidNumberOfElements
 	}
 
-	url, err := ParseURL(parts[0])
-	if err != nil {
-		return nil, err
-	}
-
-	branch := ""
+	parsed.rawurl = parts[0]
 	if len(parts) == 2 {
-		branch = parts[1]
+		parsed.branch = parts[1]
 	}
 
-	return &repo.CloneOpts{
-		URL:    url,
-		Branch: branch,
-		// When cloning a bundle we ignore errors about already cloned repos.
-		IgnoreExisting: true,
-	}, nil
+	return parsed, nil
 }

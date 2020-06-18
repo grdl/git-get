@@ -47,8 +47,8 @@ func TestParsingRefs(t *testing.T) {
 			continue
 		}
 
-		if got.Branch != test.wantBranch {
-			t.Errorf("Failed test case %d, got: %s; wantBranch: %s", i, got.Branch, test.wantBranch)
+		if got.branch != test.wantBranch {
+			t.Errorf("Failed test case %d, got: %s; wantBranch: %s", i, got.branch, test.wantBranch)
 		}
 	}
 

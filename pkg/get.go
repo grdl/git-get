@@ -7,27 +7,27 @@ import (
 
 // GetCfg provides configuration for the Get command.
 type GetCfg struct {
-	Branch string
-	Dump   string
-	Root   string
-	URL    string
+	Branch  string
+	DefHost string
+	Dump    string
+	Root    string
+	URL     string
 }
 
 // Get executes the "git get" command.
 func Get(c *GetCfg) error {
-	if c.Dump != "" {
-		return cloneDumpFile(c)
-	}
-
 	if c.URL != "" {
 		return cloneSingleRepo(c)
 	}
 
+	if c.Dump != "" {
+		return cloneDumpFile(c)
+	}
 	return nil
 }
 
 func cloneSingleRepo(c *GetCfg) error {
-	url, err := ParseURL(c.URL)
+	url, err := ParseURL(c.URL, c.DefHost)
 	if err != nil {
 		return err
 	}
@@ -44,15 +44,28 @@ func cloneSingleRepo(c *GetCfg) error {
 }
 
 func cloneDumpFile(c *GetCfg) error {
-	opts, err := ParseDumpFile(c.Dump)
+	parsedLines, err := parseDumpFile(c.Dump)
 	if err != nil {
 		return err
 	}
 
-	for _, opt := range opts {
-		path := path.Join(c.Root, URLToPath(opt.URL))
-		opt.Path = path
-		_, _ = repo.Clone(opt)
+	for _, line := range parsedLines {
+		url, err := ParseURL(line.rawurl, c.DefHost)
+		if err != nil {
+			return err
+		}
+
+		cloneOpts := &repo.CloneOpts{
+			URL:            url,
+			Path:           path.Join(c.Root, URLToPath(url)),
+			Branch:         line.branch,
+			IgnoreExisting: true,
+		}
+
+		_, err = repo.Clone(cloneOpts)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

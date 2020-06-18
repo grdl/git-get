@@ -1,14 +1,12 @@
 package pkg
 
 import (
-	"git-get/pkg/cfg"
 	urlpkg "net/url"
 	"path"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 )
 
 var errEmptyURLPath = errors.New("Parsed URL path is empty")
@@ -17,7 +15,9 @@ var errEmptyURLPath = errors.New("Parsed URL path is empty")
 // See: https://golang.org/src/cmd/go/internal/get/vcs.go
 var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+)@([a-zA-Z0-9._-]+):(.*)$`)
 
-func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
+// ParseURL parses given rawURL string into a URL.
+// The defaultHost argument defines the host to use (eg, github.com) in case parsed URL has an empty host.
+func ParseURL(rawURL string, defaultHost string) (url *urlpkg.URL, err error) {
 	// If rawURL matches the SCP-like syntax, convert it into a standard ssh Path.
 	// eg, git@github.com:user/repo => ssh://git@github.com/user/repo
 	if m := scpSyntax.FindStringSubmatch(rawURL); m != nil {
@@ -49,7 +49,7 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 
 	// Default to configured defaultHost when host is empty
 	if url.Host == "" {
-		url.Host = viper.GetString(cfg.KeyDefaultHost)
+		url.Host = defaultHost
 	}
 
 	// Default to https when scheme is empty
@@ -60,6 +60,8 @@ func ParseURL(rawURL string) (url *urlpkg.URL, err error) {
 	return url, nil
 }
 
+// URLToPath cleans up the URL and converts it into a path string.
+// Eg, ssh://git@github.com:22/~user/repo.git => github.com/user/repo
 func URLToPath(url *urlpkg.URL) (repoPath string) {
 	// Remove port numbers from host
 	repoHost := strings.Split(url.Host, ":")[0]
