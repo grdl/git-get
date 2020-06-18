@@ -73,6 +73,11 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 
 	repo, err := git.PlainClone(opts.Path, false, gitOpts)
 	if err != nil {
+
+		if opts.IgnoreExisting && errors.Is(err, git.ErrRepositoryAlreadyExists) {
+			return nil, nil
+		}
+
 		return nil, errors.Wrap(err, "Failed cloning repo")
 	}
 
