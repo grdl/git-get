@@ -23,13 +23,13 @@ var cmd = &cobra.Command{
 func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "repos root")
 	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "SSH private key path")
-	cmd.PersistentFlags().StringP(cfg.KeyBundle, "u", "", "Bundle file path")
+	cmd.PersistentFlags().StringP(cfg.KeyDump, "d", "", "Dump file path")
 
 	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", cfg.DefBranch, "Branch (or tag) to checkout after cloning")
 
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyPrivateKey, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
-	viper.BindPFlag(cfg.KeyBundle, cmd.PersistentFlags().Lookup(cfg.KeyBundle))
+	viper.BindPFlag(cfg.KeyDump, cmd.PersistentFlags().Lookup(cfg.KeyDump))
 	viper.BindPFlag(cfg.KeyBranch, cmd.PersistentFlags().Lookup(cfg.KeyBranch))
 }
 
@@ -38,7 +38,7 @@ func Run(cmd *cobra.Command, args []string) {
 
 	root := viper.GetString(cfg.KeyReposRoot)
 
-	if bundle := viper.GetString(cfg.KeyBundle); bundle != "" {
+	if bundle := viper.GetString(cfg.KeyDump); bundle != "" {
 		opts, err := path.ParseBundleFile(bundle)
 		exitIfError(err)
 

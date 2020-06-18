@@ -22,14 +22,12 @@ var cmd = &cobra.Command{
 func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "repos root")
 	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "SSH private key path")
-	cmd.PersistentFlags().StringP(cfg.KeyBundle, "u", "", "Bundle file path")
 
 	cmd.PersistentFlags().BoolP(cfg.KeyFetch, "f", false, "Fetch from remotes when listing repositories")
 	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.DefOutput, "output format.")
 
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyPrivateKey, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
-	viper.BindPFlag(cfg.KeyBundle, cmd.PersistentFlags().Lookup(cfg.KeyBundle))
 	viper.BindPFlag(cfg.KeyFetch, cmd.PersistentFlags().Lookup(cfg.KeyFetch))
 	viper.BindPFlag(cfg.KeyOutput, cmd.PersistentFlags().Lookup(cfg.KeyOutput))
 }
@@ -50,12 +48,14 @@ func Run(cmd *cobra.Command, args []string) {
 	switch viper.GetString(cfg.KeyOutput) {
 	case cfg.OutFlat:
 		printer = &print.FlatPrinter{}
-	case cfg.OutSimple:
+	case cfg.OutTree:
 		printer = &print.SimpleTreePrinter{}
 	case cfg.OutSmart:
 		printer = &print.SmartTreePrinter{}
+	case cfg.OutDump:
+		printer = &print.DumpPrinter{}
 	default:
-		err = fmt.Errorf("invalid --out flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutSimple, cfg.OutSmart})
+		err = fmt.Errorf("invalid --out flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutTree, cfg.OutSmart})
 	}
 	exitIfError(err)
 

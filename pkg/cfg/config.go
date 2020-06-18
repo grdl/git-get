@@ -18,12 +18,12 @@ const GitgetPrefix = "gitget"
 const (
 	KeyBranch      = "branch"
 	DefBranch      = "master"
-	KeyBundle      = "bundle"
+	KeyDump        = "dump"
 	KeyDefaultHost = "defaultHost"
 	DefDefaultHost = "github.com"
 	KeyFetch       = "fetch"
 	KeyOutput      = "out"
-	DefOutput      = OutSimple
+	DefOutput      = OutTree
 	KeyPrivateKey  = "privateKey"
 	DefPrivateKey  = "id_rsa"
 	KeyReposRoot   = "reposRoot"
@@ -32,9 +32,10 @@ const (
 
 // Allowed values for the --out flag
 const (
-	OutFlat   = "flat"
-	OutSmart  = "smart"
-	OutSimple = "simple"
+	OutDump  = "dump"
+	OutFlat  = "flat"
+	OutTree  = "tree"
+	OutSmart = "smart"
 )
 
 // Version metadata set by ldflags during the build.
