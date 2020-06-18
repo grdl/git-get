@@ -96,7 +96,7 @@ gitlab.com/
 			repos = append(repos, repo.New(nil, path)) //&Repo{path: path})
 		}
 
-		printer := SmartTreePrinter{}
+		printer := SmartPrinter{}
 		// Leading and trailing newlines are added to test cases for readability. We also need to add them to the rendering result.
 		got := fmt.Sprintf("\n%s\n", printer.Print("root", repos))
 

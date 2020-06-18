@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Printer prints list of repos and their statuses
 type Printer interface {
 	Print(root string, repos []*repo.Repo) string
 }

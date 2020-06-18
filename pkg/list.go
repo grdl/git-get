@@ -45,9 +45,9 @@ func List(c *ListCfg) error {
 	case cfg.OutFlat:
 		printer = &print.FlatPrinter{}
 	case cfg.OutTree:
-		printer = &print.SimpleTreePrinter{}
+		printer = &print.TreePrinter{}
 	case cfg.OutSmart:
-		printer = &print.SmartTreePrinter{}
+		printer = &print.SmartPrinter{}
 	case cfg.OutDump:
 		printer = &print.DumpPrinter{}
 	default:

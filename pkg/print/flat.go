@@ -7,16 +7,18 @@ import (
 	"strings"
 )
 
+// FlatPrinter implements Printer interface and provides method for printing list of repos in flat format.
 type FlatPrinter struct{}
 
+// Print generates a flat list of repositories and their statuses - each repo in new line with full path.
 func (p *FlatPrinter) Print(root string, repos []*repo.Repo) string {
-	val := root
+	var str strings.Builder
 
 	for _, r := range repos {
 		path := strings.TrimPrefix(r.Path, root)
 		path = strings.Trim(path, string(filepath.Separator))
 
-		val += fmt.Sprintf("\n%s %s", path, printWorktreeStatus(r))
+		str.WriteString(fmt.Sprintf("\n%s %s", path, printWorktreeStatus(r)))
 
 		for _, branch := range r.Status.Branches {
 			// Don't print the status of the current branch. It was already printed above.
@@ -25,9 +27,9 @@ func (p *FlatPrinter) Print(root string, repos []*repo.Repo) string {
 			}
 
 			indent := strings.Repeat(" ", len(path))
-			val += fmt.Sprintf("\n%s %s", indent, printBranchStatus(branch))
+			str.WriteString(fmt.Sprintf("\n%s %s", indent, printBranchStatus(branch)))
 		}
 	}
 
-	return val
+	return str.String()
 }

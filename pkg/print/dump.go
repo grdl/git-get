@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// DumpPrinter implements Printer interface and provides method for printing list of repos in dump file format.
 type DumpPrinter struct{}
 
 // Print generates a list of repos URLs. Each line contains a URL and, if applicable, a currently checked out branch name.
