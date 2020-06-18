@@ -9,15 +9,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	ErrInvalidNumberOfElements = errors.New("More than two space-separated 2 elements on the line")
-)
+var errInvalidNumberOfElements = errors.New("More than two space-separated 2 elements on the line")
 
-// ParseBundleFile opens a given gitgetfile and parses its content into a slice of CloneOpts.
-func ParseBundleFile(path string) ([]*repo.CloneOpts, error) {
+// ParseDumpFile opens a given gitgetfile and parses its content into a slice of CloneOpts.
+func ParseDumpFile(path string) ([]*repo.CloneOpts, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed opening gitgetfile %s", path)
+		return nil, errors.Wrapf(err, "Failed opening dump file %s", path)
 	}
 	defer file.Close()
 
@@ -38,13 +36,13 @@ func ParseBundleFile(path string) ([]*repo.CloneOpts, error) {
 	return opts, nil
 }
 
-// parseLine splits a gitgetfile line into space-separated segments.
+// parseLine splits a dump file line into space-separated segments.
 // First part is the URL to clone. Second, optional, is the branch (or tag) to checkout after cloning
 func parseLine(line string) (*repo.CloneOpts, error) {
 	parts := strings.Split(line, " ")
 
 	if len(parts) > 2 {
-		return nil, ErrInvalidNumberOfElements
+		return nil, errInvalidNumberOfElements
 	}
 
 	url, err := ParseURL(parts[0])
@@ -60,7 +58,7 @@ func parseLine(line string) (*repo.CloneOpts, error) {
 	return &repo.CloneOpts{
 		URL:    url,
 		Branch: branch,
-		// When cloning a bundle we ignore errors about already cloned repos
+		// When cloning a bundle we ignore errors about already cloned repos.
 		IgnoreExisting: true,
 	}, nil
 }

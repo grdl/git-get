@@ -44,7 +44,7 @@ func cloneSingleRepo(c *GetCfg) error {
 }
 
 func cloneDumpFile(c *GetCfg) error {
-	opts, err := ParseBundleFile(c.Dump)
+	opts, err := ParseDumpFile(c.Dump)
 	if err != nil {
 		return err
 	}

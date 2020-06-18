@@ -28,12 +28,12 @@ func TestParsingRefs(t *testing.T) {
 		{
 			line:       "https://github.com/grdl/git-get master branch",
 			wantBranch: "",
-			wantErr:    ErrInvalidNumberOfElements,
+			wantErr:    errInvalidNumberOfElements,
 		},
 		{
 			line:       "https://github.com",
 			wantBranch: "",
-			wantErr:    ErrEmptyURLPath,
+			wantErr:    errEmptyURLPath,
 		},
 	}
 
