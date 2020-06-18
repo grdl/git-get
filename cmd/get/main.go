@@ -1,30 +1,26 @@
 package main
 
 import (
-	"fmt"
+	"git-get/pkg"
 	"git-get/pkg/cfg"
-	"git-get/pkg/path"
-	"git-get/pkg/repo"
-	"os"
-	pathpkg "path"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cmd = &cobra.Command{
-	Use:     "git-get <repo>",
-	Short:   "git get",
-	Run:     Run,
-	Args:    cobra.MaximumNArgs(1), // TODO: add custom validator
-	Version: cfg.Version(),
+	Use:          "git-get <repo>",
+	Short:        "git get",
+	RunE:         run,
+	Args:         cobra.MaximumNArgs(1), // TODO: add custom validator
+	Version:      cfg.Version(),
+	SilenceUsage: true,
 }
 
 func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "repos root")
 	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "SSH private key path")
 	cmd.PersistentFlags().StringP(cfg.KeyDump, "d", "", "Dump file path")
-
 	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", cfg.DefBranch, "Branch (or tag) to checkout after cloning")
 
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
@@ -33,49 +29,23 @@ func init() {
 	viper.BindPFlag(cfg.KeyBranch, cmd.PersistentFlags().Lookup(cfg.KeyBranch))
 }
 
-func Run(cmd *cobra.Command, args []string) {
-	cfg.InitConfig()
+func run(cmd *cobra.Command, args []string) error {
+	cfg.Init()
 
-	root := viper.GetString(cfg.KeyReposRoot)
-
-	if bundle := viper.GetString(cfg.KeyDump); bundle != "" {
-		opts, err := path.ParseBundleFile(bundle)
-		exitIfError(err)
-
-		for _, opt := range opts {
-			path := pathpkg.Join(root, path.URLToPath(opt.URL))
-			opt.Path = path
-			_, _ = repo.Clone(opt)
-		}
-		os.Exit(0)
+	var url string
+	if len(args) > 0 {
+		url = args[0]
 	}
 
-	url, err := path.ParseURL(args[0])
-	exitIfError(err)
-
-	branch := viper.GetString(cfg.KeyBranch)
-	path := pathpkg.Join(root, path.URLToPath(url))
-
-	cloneOpts := &repo.CloneOpts{
+	config := &pkg.GetCfg{
+		Branch: viper.GetString(cfg.KeyBranch),
+		Dump:   viper.GetString(cfg.KeyDump),
+		Root:   viper.GetString(cfg.KeyReposRoot),
 		URL:    url,
-		Path:   path,
-		Branch: branch,
 	}
-
-	_, err = repo.Clone(cloneOpts)
-	exitIfError(err)
+	return pkg.Get(config)
 }
 
 func main() {
-	if err := cmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func exitIfError(err error) {
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	cmd.Execute()
 }

@@ -1,4 +1,4 @@
-package path
+package pkg
 
 import (
 	"git-get/pkg/cfg"
@@ -11,9 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	ErrEmptyURLPath = errors.New("Parsed URL path is empty")
-)
+// ErrEmptyURLPath is an error indicating that the path part of URL is empty.
+var ErrEmptyURLPath = errors.New("Parsed URL path is empty")
 
 // scpSyntax matches the SCP-like addresses used by the ssh protocol (eg, [user@]host.xz:path/to/repo.git/).
 // See: https://golang.org/src/cmd/go/internal/get/vcs.go

@@ -60,11 +60,11 @@ type gitconfig struct {
 	*config.Config
 }
 
-// InitConfig initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value
+// Init initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value
 // Viper doesn't support gitconfig file format so it can't find missing values there automatically. They need to be specified in setMissingValues func.
 //
 // Because it reads the cli flags it needs to be called after the cmd.Execute().
-func InitConfig() {
+func Init() {
 	viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
 	viper.AutomaticEnv()
 

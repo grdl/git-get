@@ -1,4 +1,4 @@
-package path
+package pkg
 
 import (
 	"git-get/pkg/cfg"
@@ -50,7 +50,7 @@ func TestURLParse(t *testing.T) {
 	}
 
 	// We need to init config first so the default values are correctly loaded
-	cfg.InitConfig()
+	cfg.Init()
 
 	for _, test := range tests {
 		url, err := ParseURL(test.in)
