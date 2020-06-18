@@ -2,25 +2,25 @@ package print
 
 import (
 	"fmt"
-	"git-get/pkg/git"
+	"git-get/pkg/repo"
 	"path/filepath"
 	"strings"
 )
 
 type FlatPrinter struct{}
 
-func (p *FlatPrinter) Print(root string, repos []*git.Repo) string {
+func (p *FlatPrinter) Print(root string, repos []*repo.Repo) string {
 	val := root
 
-	for _, repo := range repos {
-		path := strings.TrimPrefix(repo.Path, root)
+	for _, r := range repos {
+		path := strings.TrimPrefix(r.Path, root)
 		path = strings.Trim(path, string(filepath.Separator))
 
-		val += fmt.Sprintf("\n%s %s", path, printWorktreeStatus(repo))
+		val += fmt.Sprintf("\n%s %s", path, printWorktreeStatus(r))
 
-		for _, branch := range repo.Status.Branches {
+		for _, branch := range r.Status.Branches {
 			// Don't print the status of the current branch. It was already printed above.
-			if branch.Name == repo.Status.CurrentBranch {
+			if branch.Name == r.Status.CurrentBranch {
 				continue
 			}
 

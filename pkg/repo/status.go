@@ -1,4 +1,4 @@
-package git
+package repo
 
 import (
 	"git-get/pkg/cfg"

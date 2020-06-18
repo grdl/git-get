@@ -1,4 +1,4 @@
-package git
+package repo
 
 import (
 	"net/url"
@@ -27,7 +27,7 @@ func newRepoEmpty(t *testing.T) *Repo {
 	repo, err := git.PlainInit(dir, false)
 	checkFatal(t, err)
 
-	return NewRepo(repo, dir)
+	return New(repo, dir)
 }
 
 func newRepoWithUntracked(t *testing.T) *Repo {
@@ -254,7 +254,7 @@ func (r *Repo) clone(t *testing.T, branch string) *Repo {
 		Quiet:  true,
 	}
 
-	repo, err := CloneRepo(cloneOpts)
+	repo, err := Clone(cloneOpts)
 	checkFatal(t, err)
 
 	return repo

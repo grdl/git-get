@@ -2,7 +2,7 @@ package print
 
 import (
 	"fmt"
-	"git-get/pkg/git"
+	"git-get/pkg/repo"
 	"strings"
 	"testing"
 )
@@ -91,9 +91,9 @@ gitlab.com/
 	}
 
 	for i, test := range tests {
-		var repos []*git.Repo
+		var repos []*repo.Repo
 		for _, path := range test.paths {
-			repos = append(repos, git.NewRepo(nil, path)) //&Repo{path: path})
+			repos = append(repos, repo.New(nil, path)) //&Repo{path: path})
 		}
 
 		printer := SmartTreePrinter{}

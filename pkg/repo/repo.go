@@ -1,4 +1,4 @@
-package git
+package repo
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ type CloneOpts struct {
 	IgnoreExisting bool // TODO: implement!
 }
 
-func CloneRepo(opts *CloneOpts) (*Repo, error) {
+func Clone(opts *CloneOpts) (*Repo, error) {
 	var progress io.Writer
 	if !opts.Quiet {
 		progress = os.Stdout
@@ -76,19 +76,19 @@ func CloneRepo(opts *CloneOpts) (*Repo, error) {
 		return nil, errors.Wrap(err, "Failed cloning repo")
 	}
 
-	return NewRepo(repo, opts.Path), nil
+	return New(repo, opts.Path), nil
 }
 
-func OpenRepo(repoPath string) (*Repo, error) {
+func Open(repoPath string) (*Repo, error) {
 	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed opening repo")
 	}
 
-	return NewRepo(repo, repoPath), nil
+	return New(repo, repoPath), nil
 }
 
-func NewRepo(repo *git.Repository, repoPath string) *Repo {
+func New(repo *git.Repository, repoPath string) *Repo {
 	return &Repo{
 		Repository: repo,
 		Path:       repoPath,

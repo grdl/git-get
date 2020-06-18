@@ -1,7 +1,7 @@
 package print
 
 import (
-	"git-get/pkg/git"
+	"git-get/pkg/repo"
 	"path/filepath"
 	"strings"
 
@@ -16,13 +16,13 @@ type SmartTreePrinter struct {
 	length int
 }
 
-func (p *SmartTreePrinter) Print(root string, repos []*git.Repo) string {
+func (p *SmartTreePrinter) Print(root string, repos []*repo.Repo) string {
 	tree := BuildTree(root, repos)
 
 	return p.PrintSmartTree(tree)
 }
 
-func (p *SimpleTreePrinter) Print(root string, repos []*git.Repo) string {
+func (p *SimpleTreePrinter) Print(root string, repos []*repo.Repo) string {
 	tree := BuildTree(root, repos)
 
 	tp := treeprint.New()
@@ -39,7 +39,7 @@ type Node struct {
 	depth    int // depth is a nesting depth used when rendering a smart tree, not a depth level of a tree node.
 	parent   *Node
 	children []*Node
-	repo     *git.Repo
+	repo     *repo.Repo
 }
 
 // Root creates a new root of a tree
@@ -83,11 +83,11 @@ func (n *Node) GetChild(val string) *Node {
 // BuildTree builds a directory tree of paths to repositories.
 // Each node represents a directory in the repo path.
 // Each leaf (final node) contains a pointer to the repo.
-func BuildTree(root string, repos []*git.Repo) *Node {
+func BuildTree(root string, repos []*repo.Repo) *Node {
 	tree := Root(root)
 
-	for _, repo := range repos {
-		path := strings.TrimPrefix(repo.Path, root)
+	for _, r := range repos {
+		path := strings.TrimPrefix(r.Path, root)
 		path = strings.Trim(path, string(filepath.Separator))
 		subs := strings.Split(path, string(filepath.Separator))
 
@@ -103,7 +103,7 @@ func BuildTree(root string, repos []*git.Repo) *Node {
 
 				// If that's the last fragment, it's a tree leaf and needs a *Repo attached.
 				if i == len(subs)-1 {
-					node.repo = repo
+					node.repo = r
 				}
 
 				continue

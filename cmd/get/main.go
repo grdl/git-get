@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"git-get/pkg/cfg"
-	"git-get/pkg/git"
 	"git-get/pkg/path"
+	"git-get/pkg/repo"
 	"os"
 	pathpkg "path"
 
@@ -45,7 +45,7 @@ func Run(cmd *cobra.Command, args []string) {
 		for _, opt := range opts {
 			path := pathpkg.Join(root, path.URLToPath(opt.URL))
 			opt.Path = path
-			_, _ = git.CloneRepo(opt)
+			_, _ = repo.Clone(opt)
 		}
 		os.Exit(0)
 	}
@@ -56,13 +56,13 @@ func Run(cmd *cobra.Command, args []string) {
 	branch := viper.GetString(cfg.KeyBranch)
 	path := pathpkg.Join(root, path.URLToPath(url))
 
-	cloneOpts := &git.CloneOpts{
+	cloneOpts := &repo.CloneOpts{
 		URL:    url,
 		Path:   path,
 		Branch: branch,
 	}
 
-	_, err = git.CloneRepo(cloneOpts)
+	_, err = repo.Clone(cloneOpts)
 	exitIfError(err)
 }
 

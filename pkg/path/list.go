@@ -3,7 +3,7 @@ package path
 import (
 	"fmt"
 	"git-get/pkg/cfg"
-	"git-get/pkg/git"
+	"git-get/pkg/repo"
 	"os"
 	"sort"
 	"strings"
@@ -65,13 +65,13 @@ func ErrorCb(_ string, err error) godirwalk.ErrorAction {
 	return godirwalk.Halt
 }
 
-func OpenAll(paths []string) ([]*git.Repo, error) {
-	var repos []*git.Repo
-	reposChan := make(chan *git.Repo)
+func OpenAll(paths []string) ([]*repo.Repo, error) {
+	var repos []*repo.Repo
+	reposChan := make(chan *repo.Repo)
 
 	for _, path := range paths {
 		go func(path string) {
-			repo, err := git.OpenRepo(path)
+			repo, err := repo.Open(path)
 
 			if err != nil {
 				// TODO handle error
