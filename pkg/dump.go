@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"bufio"
-	"git-get/pkg/cfg"
 	"os"
 	"strings"
 
@@ -59,7 +58,6 @@ func parseLine(line string) (parsedLine, error) {
 	}
 
 	parsed.rawurl = parts[0]
-	parsed.branch = cfg.DefBranch
 	if len(parts) == 2 {
 		parsed.branch = parts[1]
 	}

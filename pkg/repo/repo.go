@@ -32,7 +32,7 @@ type CloneOpts struct {
 	Path           string // TODO: should Path be a part of clone opts?
 	Branch         string
 	Quiet          bool
-	IgnoreExisting bool // TODO: implement!
+	IgnoreExisting bool
 }
 
 func Clone(opts *CloneOpts) (*Repo, error) {
@@ -49,6 +49,10 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 		if auth, err = sshKeyAuth(); err != nil {
 			return nil, err
 		}
+	}
+
+	if opts.Branch == "" {
+		opts.Branch = cfg.DefBranch
 	}
 
 	// If branch name is actually a tag (ie. is prefixed with refs/tags) - check out that tag.
