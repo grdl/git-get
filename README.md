@@ -6,12 +6,24 @@
 
 `git-get` is a better way to clone, organize and manage multiple git repositories. 
 
-It gives you two new git commands:
+* [Description](#git-get)
+* [Installation](#installation)
+* [Usage](#usage)
+  * [git get](#git-get-1)
+    * [Dump file](#dump-file)
+  * [git-list](#git-list)
+* [Configuration](#configuration)
+  * [Env variables](#env-variables)
+  * [.gitconfig file](#.gitconfig-file)
+* [Contributing](#contributing)
+* [Acknowledgments](#acknowledgments)
+
+
+`git-get` gives you two new git commands:
 - **`git get`** clones repositories into an automatically created directory tree based on repo's URL (like golang's [`go get`](https://golang.org/cmd/go/)). It's dotfiles friendly, meaning you can also give it a file with a list of repositories and it will clone all of them.
 - **`git list`** shows status of all your git repositories and their branches.
 
 ![Example](./docs/example.svg)
-
 
 ## Installation
 
@@ -60,10 +72,10 @@ For example `git get grdl/git-get` will clone `https://github.com/grdl/git-get.g
 
 Dump file format is simply:
 - Each repo URL on a separate line.
-- Each URL can have a suffix with a branch or tag name to check out after cloning. If that suffix is missing, `master` will be used.
+- Each URL can have a suffix with a branch or tag name to check out after cloning. Without that suffix, `master` is used.
 - Tag name should be prefixed with `refs/tags/`.
 
-Example dump file contents:
+Example dump file content:
 ```
 https://github.com/grdl/git-get refs/tags/v1.0.0
 git@github.com:grdl/another-repository.git
@@ -91,7 +103,7 @@ Flags:
 
 `git list` provides different ways to view the list of the repositories and their statuses.
 
-- **tree** (default) - rendered as a directory tree.
+- **tree** (default) - repos rendered as a directory tree.
 ```
 ❯ git list
 /home/grdl/repositories
@@ -120,7 +132,7 @@ https://github.com/grdl/homebrew-tap master
 https://github.com/grdl/testsite master
 ```
 
-- **smart** (experimental) - similar to the tree view but saves space by automatically folding paths with only a single child.
+- **smart** (experimental) - similar to the tree view but saves space by automatically folding paths with only a single child. In theory it's supposed to be more readable but fails to prove it in practice so far :wink:
 ```
 ❯ git list -o smart
 /home/grdl/repositories
@@ -142,25 +154,21 @@ The order of precedence for configuration is as follows:
 - .gitconfig entry
 - default value
 
-> **IMPORTANT!**
+> :warning: **WARNING!** :warning:
 >
-> When changing repos root path using .gitconfig or an env variable use a full, absolute path. For example, use `/home/greg/my_repos` instead of `~/my_repos` or `$HOME/my_repos`. This is becase `git-get` can't expand shell variables.
+> When changing repos root path using .gitconfig or env variables, use a full path. For example, use `/home/greg/my_repos` instead of `~/my_repos` or `$HOME/my_repos`. This is becase `git-get` can't expand shell variables.
 
 
 ### Env variables
 
-Use the `GITGET_` prefix and the uppercase flag name to set the configuration using env variables.
-
-For example, to use a different repos root path run:
+Use the `GITGET_` prefix and the uppercase flag name to set the configuration using env variables. For example, to use a different repos root path run:
 ```
 export GITGET_ROOT=/path/to/my/repos
 ```
 
 ### .gitconfig file
 
-You can define a `[gitget]` section inside your `.gitconfig` file and set the configuration flags there. A common and recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults.
-
-Here's an example of a working snippet from `.gitconfig` file:
+You can define a `[gitget]` section inside your `.gitconfig` file and set the configuration flags there. A common and recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults. Here's an example of a working snippet from `.gitconfig` file:
 ```
 [gitget]
     root = /path/to/my/repos
@@ -168,7 +176,7 @@ Here's an example of a working snippet from `.gitconfig` file:
 ```
 
 `git-get` looks for the `.gitconfig` file in the following locations:
-- `XDG_CONFIG_HOME/git/config`
+- `$XDG_CONFIG_HOME/git/config`
 - `~/.gitconfig`
 - `~/.config/git/config`
 - `/etc/gitconfig`
