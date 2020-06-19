@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2020-06-19
+### Added
+- `--dump` flag that allows to clone multiple repos listed in a dump file.
+- New `dump` output option for `git list` to generate a dump file.
+- Readme with documentation.
+- Description of CLI flags and usage when running `--help`.
+
+### Changed
+- Split `git-get` and `git-list` into separate binaries.
+- Refactor code structure by bringing the `pkg` dir back.
+
+
 ## [0.0.3] - 2020-06-11
 ### Added
 - Homebrew release configuration in goreleaser.
@@ -27,5 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release using [goreleaser](https://github.com/goreleaser/goreleaser).
 
 
+[0.0.4]: https://github.com/grdl/git-get/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/grdl/git-get/compare/v0.0.1...v0.0.3
 [0.0.1]: https://github.com/grdl/git-get/releases/tag/v0.0.1
