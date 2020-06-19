@@ -6,11 +6,10 @@
 
 `git-get` is a better way to clone, organize and manage multiple git repositories. 
 
-* [Description](#git-get)
+* [Description](#description)
 * [Installation](#installation)
 * [Usage](#usage)
   * [git get](#git-get-1)
-    * [Dump file](#dump-file)
   * [git-list](#git-list)
 * [Configuration](#configuration)
   * [Env variables](#env-variables)
@@ -18,6 +17,7 @@
 * [Contributing](#contributing)
 * [Acknowledgments](#acknowledgments)
 
+## Description
 
 `git-get` gives you two new git commands:
 - **`git get`** clones repositories into an automatically created directory tree based on repo's URL (like golang's [`go get`](https://golang.org/cmd/go/)). It's dotfiles friendly, meaning you can also give it a file with a list of repositories and it will clone all of them.
