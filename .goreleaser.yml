@@ -34,7 +34,7 @@ archives:
       - git-get
       - git-list
     replacements:
-      darwin: macOS
+      darwin: MacOS
       linux: Linux
       windows: Windows
       386: i386
@@ -42,7 +42,7 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
-    # Don't include any additional files into the archive (such as README, CHANGELOG etc). 
+    # Don't include any additional files into the archives (such as README, CHANGELOG etc). 
     files:
       - none* 
 
@@ -68,7 +68,7 @@ brews:
       email: git-get@grdl.dev
     folder: Formula
     homepage: "https://github.com/grdl/git-get/"
-    description: "Better way to clone, organize and manage git repositories"
+    description: "Better way to clone, organize and manage multiple git repositories"
     test: |
       system "git-get --version"
     install: |

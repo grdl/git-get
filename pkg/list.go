@@ -51,6 +51,7 @@ func List(c *ListCfg) error {
 	case cfg.OutDump:
 		printer = &print.DumpPrinter{}
 	default:
+		// TODO: fix
 		return fmt.Errorf("invalid --out flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutTree, cfg.OutSmart})
 	}
 
