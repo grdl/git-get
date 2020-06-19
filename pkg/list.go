@@ -51,8 +51,7 @@ func List(c *ListCfg) error {
 	case cfg.OutDump:
 		printer = &print.DumpPrinter{}
 	default:
-		// TODO: fix
-		return fmt.Errorf("invalid --out flag; allowed values: %v", []string{cfg.OutFlat, cfg.OutTree, cfg.OutSmart})
+		return fmt.Errorf("invalid --out flag; allowed values: [%s]", strings.Join(cfg.AllowedOut, ", "))
 	}
 
 	fmt.Println(printer.Print(c.Root, repos))
@@ -63,7 +62,7 @@ func findRepos(root string) ([]string, error) {
 	repos = []string{}
 
 	if _, err := os.Stat(root); err != nil {
-		return nil, fmt.Errorf("Repos root %s does not exist or can't be accessed", root)
+		return nil, fmt.Errorf("repos root %s doesn't exist or can't be accessed", root)
 	}
 
 	walkOpts := &godirwalk.Options{
@@ -79,7 +78,7 @@ func findRepos(root string) ([]string, error) {
 	}
 
 	if len(repos) == 0 {
-		return nil, fmt.Errorf("No git repos found in repos root %s", root)
+		return nil, fmt.Errorf("no git repos found in root path %s", root)
 	}
 
 	return repos, nil

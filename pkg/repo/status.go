@@ -48,13 +48,13 @@ func (r *Repo) LoadStatus() error {
 	if viper.GetBool(cfg.KeyFetch) {
 		err := r.Fetch()
 		if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
-			return errors.Wrap(err, "Failed fetching from remotes")
+			return errors.Wrapf(err, "failed running git fetch on a repo %s", r.Path)
 		}
 	}
 
 	wt, err := r.Worktree()
 	if err != nil {
-		return errors.Wrap(err, "Failed getting worktree")
+		return errors.Wrapf(err, "failed getting worktree %s", r.Path)
 	}
 
 	// worktree.Status doesn't load gitignore patterns that are defined outside of .gitignore file using excludesfile.
@@ -62,19 +62,19 @@ func (r *Repo) LoadStatus() error {
 	// TODO: variables are not expanded so if excludesfile is declared like "~/gitignore_global" or "$HOME/gitignore_global", this will fail to open it
 	globalPatterns, err := gitignore.LoadGlobalPatterns(osfs.New(""))
 	if err != nil {
-		return errors.Wrap(err, "Failed loading global gitignore patterns")
+		return errors.Wrap(err, "failed loading global gitignore patterns")
 	}
 	wt.Excludes = append(wt.Excludes, globalPatterns...)
 
 	systemPatterns, err := gitignore.LoadSystemPatterns(osfs.New(""))
 	if err != nil {
-		return errors.Wrap(err, "Failed loading system gitignore patterns")
+		return errors.Wrap(err, "failed loading system gitignore patterns")
 	}
 	wt.Excludes = append(wt.Excludes, systemPatterns...)
 
 	status, err := wt.Status()
 	if err != nil {
-		return errors.Wrap(err, "Failed getting worktree status")
+		return errors.Wrapf(err, "failed getting status of worktree %s", r.Path)
 	}
 
 	r.Status.HasUncommittedChanges = hasUncommitted(status)
@@ -133,7 +133,7 @@ func currentBranch(r *Repo) string {
 func (r *Repo) loadBranchesStatus() error {
 	iter, err := r.Branches()
 	if err != nil {
-		return errors.Wrap(err, "Failed getting branches iterator")
+		return errors.Wrapf(err, "failed getting branches iterator for repo %s", r.Path)
 	}
 
 	err = iter.ForEach(func(reference *plumbing.Reference) error {
@@ -146,12 +146,12 @@ func (r *Repo) loadBranchesStatus() error {
 		return nil
 	})
 	if err != nil {
-		return errors.Wrap(err, "Failed iterating over branches")
+		return errors.Wrapf(err, "failed iterating over branches of repo %s", r.Path)
 	}
 
 	// Sort branches by name (but with "master" always at the top). It's useful to have them sorted for printing and testing.
 	sort.Slice(r.Status.Branches, func(i, j int) bool {
-		if r.Status.Branches[i].Name == "master" {
+		if r.Status.Branches[i].Name == cfg.DefBranch {
 			return true
 		}
 
@@ -196,7 +196,7 @@ func (r *Repo) newBranchStatus(branch string) (*BranchStatus, error) {
 func (r *Repo) upstream(branch string) (string, error) {
 	cfg, err := r.Config()
 	if err != nil {
-		return "", errors.Wrap(err, "Failed getting repo config")
+		return "", errors.Wrapf(err, "failed getting config of repo %s", r.Path)
 	}
 
 	// Check if our branch exists in "branch" config sections. If not, it doesn't have an upstream configured.
@@ -220,22 +220,22 @@ func (r *Repo) upstream(branch string) (string, error) {
 func (r *Repo) aheadBehind(localBranch string, upstreamBranch string) (ahead int, behind int, err error) {
 	localHash, err := r.ResolveRevision(plumbing.Revision(localBranch))
 	if err != nil {
-		return 0, 0, errors.Wrapf(err, "Failed resolving revision %s", localBranch)
+		return 0, 0, errors.Wrapf(err, "failed resolving revision %s", localBranch)
 	}
 
 	upstreamHash, err := r.ResolveRevision(plumbing.Revision(upstreamBranch))
 	if err != nil {
-		return 0, 0, errors.Wrapf(err, "Failed resolving revision %s", upstreamBranch)
+		return 0, 0, errors.Wrapf(err, "failed resolving revision %s", upstreamBranch)
 	}
 
 	behind, err = r.revlistCount(*localHash, *upstreamHash)
 	if err != nil {
-		return 0, 0, errors.Wrapf(err, "Failed counting commits behind %s", upstreamBranch)
+		return 0, 0, errors.Wrapf(err, "failed counting commits behind %s", upstreamBranch)
 	}
 
 	ahead, err = r.revlistCount(*upstreamHash, *localHash)
 	if err != nil {
-		return 0, 0, errors.Wrapf(err, "Failed counting commits ahead of %s", upstreamBranch)
+		return 0, 0, errors.Wrapf(err, "failed counting commits ahead of %s", upstreamBranch)
 	}
 
 	return ahead, behind, nil

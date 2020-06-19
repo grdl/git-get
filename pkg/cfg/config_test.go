@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -10,9 +11,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	EnvDefaultHost = "GITGET_DEFAULTHOST"
-	EnvReposRoot   = "GITGET_REPOSROOT"
+var (
+	envDefaultHost = strings.ToUpper(fmt.Sprintf("%s_%s", GitgetPrefix, KeyDefaultHost))
+	envReposRoot   = strings.ToUpper(fmt.Sprintf("%s_%s", GitgetPrefix, KeyReposRoot))
 )
 
 func newConfigWithFullGitconfig() *gitconfig {
@@ -64,8 +65,8 @@ func newConfigWithEmptyGitconfig() *gitconfig {
 }
 
 func newConfigWithEnvVars() *gitconfig {
-	_ = os.Setenv(EnvDefaultHost, "env.host")
-	_ = os.Setenv(EnvReposRoot, "env.root")
+	_ = os.Setenv(envDefaultHost, "env.host")
+	_ = os.Setenv(envReposRoot, "env.root")
 
 	return &gitconfig{
 		Config: nil,
@@ -79,8 +80,8 @@ func newConfigWithGitconfigAndEnvVars() *gitconfig {
 	gitget.AddOption(KeyReposRoot, "file.root")
 	gitget.AddOption(KeyDefaultHost, "file.host")
 
-	_ = os.Setenv(EnvDefaultHost, "env.host")
-	_ = os.Setenv(EnvReposRoot, "env.root")
+	_ = os.Setenv(envDefaultHost, "env.host")
+	_ = os.Setenv(envReposRoot, "env.root")
 
 	return &gitconfig{
 		Config: cfg,
@@ -92,8 +93,8 @@ func newConfigWithEmptySectionAndEnvVars() *gitconfig {
 
 	_ = cfg.Raw.Section(GitgetPrefix)
 
-	_ = os.Setenv(EnvDefaultHost, "env.host")
-	_ = os.Setenv(EnvReposRoot, "env.root")
+	_ = os.Setenv(envDefaultHost, "env.host")
+	_ = os.Setenv(envReposRoot, "env.root")
 
 	return &gitconfig{
 		Config: cfg,
@@ -107,7 +108,7 @@ func newConfigWithMixed() *gitconfig {
 	gitget.AddOption(KeyReposRoot, "file.root")
 	gitget.AddOption(KeyDefaultHost, "file.host")
 
-	_ = os.Setenv(EnvDefaultHost, "env.host")
+	_ = os.Setenv(envDefaultHost, "env.host")
 
 	return &gitconfig{
 		Config: cfg,
@@ -150,9 +151,9 @@ func TestConfig(t *testing.T) {
 
 		// Unset env variables and reset viper registry after each test
 		viper.Reset()
-		err := os.Unsetenv(EnvDefaultHost)
+		err := os.Unsetenv(envDefaultHost)
 		checkFatal(t, err)
-		err = os.Unsetenv(EnvReposRoot)
+		err = os.Unsetenv(envReposRoot)
 		checkFatal(t, err)
 	}
 }

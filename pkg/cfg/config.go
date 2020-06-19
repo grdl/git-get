@@ -11,32 +11,35 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Gitconfig section name and env var prefix
+// GitgetPrefix is the name of the gitconfig section name and the env var prefix.
 const GitgetPrefix = "gitget"
 
-// Flag keys and their default values
+// CLI flag keys and their default values.
 const (
 	KeyBranch      = "branch"
 	DefBranch      = "master"
 	KeyDump        = "dump"
-	KeyDefaultHost = "defaultHost"
+	KeyDefaultHost = "host"
 	DefDefaultHost = "github.com"
 	KeyFetch       = "fetch"
 	KeyOutput      = "out"
 	DefOutput      = OutTree
 	KeyPrivateKey  = "privateKey"
 	DefPrivateKey  = "id_rsa"
-	KeyReposRoot   = "reposRoot"
+	KeyReposRoot   = "root"
 	DefReposRoot   = "repositories"
 )
 
-// Allowed values for the --out flag
+// Values for the --out flag.
 const (
 	OutDump  = "dump"
 	OutFlat  = "flat"
-	OutTree  = "tree"
 	OutSmart = "smart"
+	OutTree  = "tree"
 )
+
+// AllowedOut are allowed values for the --out flag.
+var AllowedOut = []string{OutDump, OutFlat, OutSmart, OutTree}
 
 // Version metadata set by ldflags during the build.
 var (

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	errInvalidNumberOfElements = errors.New("More than two space-separated 2 elements on the line")
-	errEmptyLine               = errors.New("Empty line")
+	errInvalidNumberOfElements = errors.New("more than two space-separated 2 elements on the line")
+	errEmptyLine               = errors.New("empty line")
 )
 
 type parsedLine struct {
@@ -22,7 +22,7 @@ type parsedLine struct {
 func parseDumpFile(path string) ([]parsedLine, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed opening dump file %s", path)
+		return nil, errors.Wrapf(err, "failed opening dump file %s", path)
 	}
 	defer file.Close()
 
@@ -34,7 +34,7 @@ func parseDumpFile(path string) ([]parsedLine, error) {
 		line++
 		parsed, err := parseLine(scanner.Text())
 		if err != nil && !errors.Is(errEmptyLine, err) {
-			return nil, errors.Wrapf(err, "Failed parsing line %d", line)
+			return nil, errors.Wrapf(err, "failed parsing dump file line %d", line)
 		}
 
 		parsedLines = append(parsedLines, parsed)

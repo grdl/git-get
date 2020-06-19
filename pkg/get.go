@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	"git-get/pkg/repo"
 	"path"
 )
@@ -16,7 +17,9 @@ type GetCfg struct {
 
 // Get executes the "git get" command.
 func Get(c *GetCfg) error {
-	// TODO: show something when no args
+	if c.URL == "" && c.Dump == "" {
+		return fmt.Errorf("missing <REPO> argument or --dump flag")
+	}
 
 	if c.URL != "" {
 		return cloneSingleRepo(c)

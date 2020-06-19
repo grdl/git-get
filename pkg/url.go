@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var errEmptyURLPath = errors.New("Parsed URL path is empty")
+var errEmptyURLPath = errors.New("parsed URL path is empty")
 
 // scpSyntax matches the SCP-like addresses used by the ssh protocol (eg, [user@]host.xz:path/to/repo.git/).
 // See: https://golang.org/src/cmd/go/internal/get/vcs.go
@@ -30,7 +30,7 @@ func ParseURL(rawURL string, defaultHost string) (url *urlpkg.URL, err error) {
 	} else {
 		url, err = urlpkg.Parse(rawURL)
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed parsing URL")
+			return nil, errors.Wrapf(err, "failed parsing URL %s", rawURL)
 		}
 	}
 

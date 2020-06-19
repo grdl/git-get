@@ -7,10 +7,11 @@
 `git-get` is a better way to clone, organize and manage multiple git repositories. 
 
 It gives you two new git commands:
-- **`git get`** clones repositories into an organized directory structure (like golang's [`go get`](https://golang.org/cmd/go/)). It's dotfiles friendly - you can clone multiple repositories listed in a file.
+- **`git get`** clones repositories into an automatically created directory tree based on repo's URL (like golang's [`go get`](https://golang.org/cmd/go/)). It's dotfiles friendly, you can clone multiple repositories listed in a file.
 - **`git list`** shows status of all your git repositories and their branches.
 
 ![Example](./docs/example.svg)
+
 
 ## Installation
 
@@ -22,6 +23,7 @@ brew install grdl/tap/git-get
 Or grab the [latest release](https://github.com/grdl/git-get/releases) and put the binaries on your PATH.
 
 Each release contains two binaries: `git-get` and `git-list`. When put on PATH, git automatically recognizes them as custom commands and allows to call them as `git get` or `git list`.
+
 
 ## Usage
 

@@ -35,6 +35,7 @@ type CloneOpts struct {
 	IgnoreExisting bool
 }
 
+// Clone clones repository specified in CloneOpts.
 func Clone(opts *CloneOpts) (*Repo, error) {
 	var progress io.Writer
 	if !opts.Quiet {
@@ -82,25 +83,27 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 			return nil, nil
 		}
 
-		return nil, errors.Wrap(err, "Failed cloning repo")
+		return nil, errors.Wrapf(err, "failed cloning %s", opts.URL.String())
 	}
 
 	return New(repo, opts.Path), nil
 }
 
-func Open(repoPath string) (*Repo, error) {
-	repo, err := git.PlainOpen(repoPath)
+// Open opens a repository on a given path.
+func Open(path string) (*Repo, error) {
+	repo, err := git.PlainOpen(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed opening repo")
+		return nil, errors.Wrapf(err, "failed opening repo %s", path)
 	}
 
-	return New(repo, repoPath), nil
+	return New(repo, path), nil
 }
 
-func New(repo *git.Repository, repoPath string) *Repo {
+// New returns a new Repo instance from a given go-git Repository.
+func New(repo *git.Repository, path string) *Repo {
 	return &Repo{
 		Repository: repo,
-		Path:       repoPath,
+		Path:       path,
 		Status:     &RepoStatus{},
 	}
 }
@@ -109,13 +112,13 @@ func New(repo *git.Repository, repoPath string) *Repo {
 func (r *Repo) Fetch() error {
 	remotes, err := r.Remotes()
 	if err != nil {
-		return errors.Wrap(err, "Failed getting remotes")
+		return errors.Wrapf(err, "failed getting remotes of repo %s", r.Path)
 	}
 
 	for _, remote := range remotes {
 		err = remote.Fetch(&git.FetchOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "Failed fetching remote %s", remote.Config().Name)
+			return errors.Wrapf(err, "failed fetching remote %s", remote.Config().Name)
 		}
 	}
 
@@ -126,12 +129,12 @@ func sshKeyAuth() (transport.AuthMethod, error) {
 	privateKey := viper.GetString(cfg.KeyPrivateKey)
 	sshKey, err := ioutil.ReadFile(privateKey)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to open ssh private key %s", privateKey)
+		return nil, errors.Wrapf(err, "failed to open ssh private key %s", privateKey)
 	}
 
 	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to parse ssh private key %s", privateKey)
+		return nil, errors.Wrapf(err, "failed to parse ssh private key %s", privateKey)
 	}
 
 	// TODO: can it ba a different user
@@ -139,6 +142,7 @@ func sshKeyAuth() (transport.AuthMethod, error) {
 	return auth, nil
 }
 
+// CurrentBranchStatus returns the BranchStatus of a currently checked out branch.
 func (r *Repo) CurrentBranchStatus() *BranchStatus {
 	if r.Status.CurrentBranch == StatusDetached || r.Status.CurrentBranch == StatusUnknown {
 		return nil
