@@ -72,4 +72,4 @@ brews:
     test: |
       system "git-get --version"
     install: |
-      bin.install "git-get"
+      bin.install "git-get", "git-list"
