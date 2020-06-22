@@ -10,7 +10,7 @@
 * [Installation](#installation)
 * [Usage](#usage)
   * [git get](#git-get-1)
-  * [git-list](#git-list)
+  * [git list](#git-list)
 * [Configuration](#configuration)
   * [Env variables](#env-variables)
   * [.gitconfig file](#.gitconfig-file)
