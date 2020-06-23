@@ -2,31 +2,30 @@ package repo
 
 import (
 	"fmt"
-	"git-get/pkg/cfg"
-
-	"github.com/go-git/go-git/v5/plumbing"
-
-	"io"
-	"io/ioutil"
+	"git-get/pkg/file"
 	"net/url"
 	"os"
+	"os/exec"
+	"path"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-	"golang.org/x/crypto/ssh"
-
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport"
-	go_git_ssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
+const (
+	dotgit    = ".git"
+	untracked = "??" // Untracked files are marked as "??" in git status output.
+	master    = "master"
+	head      = "HEAD"
+)
+
+// Repo represents a git repository on disk.
 type Repo struct {
-	*git.Repository
-	Path   string
-	Status *RepoStatus
+	path string
 }
 
-// CloneOpts specify details about repository to clone.
+// CloneOpts specify detail about repository to clone.
 type CloneOpts struct {
 	URL            *url.URL
 	Path           string // TODO: should Path be a part of clone opts?
@@ -35,124 +34,190 @@ type CloneOpts struct {
 	IgnoreExisting bool
 }
 
-// Clone clones repository specified in CloneOpts.
-func Clone(opts *CloneOpts) (*Repo, error) {
-	var progress io.Writer
-	if !opts.Quiet {
-		progress = os.Stdout
-		fmt.Printf("Cloning into '%s'...\n", opts.Path)
-	}
-
-	// TODO: can this be cleaner?
-	var auth transport.AuthMethod
-	var err error
-	if opts.URL.Scheme == "ssh" {
-		if auth, err = sshKeyAuth(); err != nil {
-			return nil, err
-		}
-	}
-
-	if opts.Branch == "" {
-		opts.Branch = cfg.DefBranch
-	}
-
-	// If branch name is actually a tag (ie. is prefixed with refs/tags) - check out that tag.
-	// Otherwise, assume it's a branch name and check it out.
-	refName := plumbing.ReferenceName(opts.Branch)
-	if !refName.IsTag() {
-		refName = plumbing.NewBranchReferenceName(opts.Branch)
-	}
-
-	gitOpts := &git.CloneOptions{
-		URL:               opts.URL.String(),
-		Auth:              auth,
-		RemoteName:        git.DefaultRemoteName,
-		ReferenceName:     refName,
-		SingleBranch:      false,
-		NoCheckout:        false,
-		Depth:             0,
-		RecurseSubmodules: git.NoRecurseSubmodules,
-		Progress:          progress,
-		Tags:              git.AllTags,
-	}
-
-	repo, err := git.PlainClone(opts.Path, false, gitOpts)
-	if err != nil {
-
-		if opts.IgnoreExisting && errors.Is(err, git.ErrRepositoryAlreadyExists) {
-			return nil, nil
-		}
-
-		return nil, errors.Wrapf(err, "failed cloning %s", opts.URL.String())
-	}
-
-	return New(repo, opts.Path), nil
-}
-
-// Open opens a repository on a given path.
+// Open checks if given path can be accessed and returns a Repo instance pointing to it.
 func Open(path string) (*Repo, error) {
-	repo, err := git.PlainOpen(path)
+	_, err := file.Exists(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed opening repo %s", path)
+		return nil, err
 	}
 
-	return New(repo, path), nil
-}
-
-// New returns a new Repo instance from a given go-git Repository.
-func New(repo *git.Repository, path string) *Repo {
 	return &Repo{
-		Repository: repo,
-		Path:       path,
-		Status:     &RepoStatus{},
-	}
+		path: path,
+	}, nil
 }
 
-// Fetch performs a git fetch on all remotes
+// Clone clones repository specified with CloneOpts.
+func Clone(opts *CloneOpts) (*Repo, error) {
+	// TODO: not sure if this check should be here
+	if opts.IgnoreExisting {
+		return nil, nil
+	}
+
+	args := []string{"clone", "--progress", "-v"}
+
+	if opts.Branch != "" {
+		args = append(args, "--branch", opts.Branch, "--single-branch")
+	}
+
+	if opts.Quiet {
+		args = append(args, "--quiet")
+	}
+
+	args = append(args, opts.URL.String())
+	args = append(args, opts.Path)
+
+	cmd := exec.Command("git", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, errors.Wrapf(err, "git clone failed")
+	}
+
+	repo, err := Open(opts.Path)
+	return repo, err
+}
+
+// Fetch preforms a git fetch on all remotes
 func (r *Repo) Fetch() error {
-	remotes, err := r.Remotes()
+	cmd := gitCmd(r.path, "fetch", "--all", "--quiet")
+	return cmd.Run()
+}
+
+// Uncommitted returns the number of uncommitted files in the repository.
+// Only tracked files are not counted.
+func (r *Repo) Uncommitted() (int, error) {
+	cmd := gitCmd(r.path, "status", "--ignore-submodules", "--porcelain")
+
+	out, err := cmd.Output()
 	if err != nil {
-		return errors.Wrapf(err, "failed getting remotes of repo %s", r.Path)
+		return 0, cmdError(cmd, err)
 	}
 
-	for _, remote := range remotes {
-		err = remote.Fetch(&git.FetchOptions{})
-		if err != nil {
-			return errors.Wrapf(err, "failed fetching remote %s", remote.Config().Name)
+	lines := lines(out)
+	count := 0
+	for _, line := range lines {
+		// Don't count lines with untracked files and empty lines.
+		if !strings.HasPrefix(line, untracked) && strings.TrimSpace(line) != "" {
+			count++
 		}
 	}
 
-	return nil
+	return count, nil
 }
 
-func sshKeyAuth() (transport.AuthMethod, error) {
-	privateKey := viper.GetString(cfg.KeyPrivateKey)
-	sshKey, err := ioutil.ReadFile(privateKey)
+// Untracked returns the number of untracked files in the repository.
+func (r *Repo) Untracked() (int, error) {
+	cmd := gitCmd(r.path, "status", "--ignore-submodules", "--porcelain")
+
+	out, err := cmd.Output()
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open ssh private key %s", privateKey)
+		return 0, cmdError(cmd, err)
 	}
 
-	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse ssh private key %s", privateKey)
-	}
-
-	// TODO: can it ba a different user
-	auth := &go_git_ssh.PublicKeys{User: "git", Signer: signer}
-	return auth, nil
-}
-
-// CurrentBranchStatus returns the BranchStatus of a currently checked out branch.
-func (r *Repo) CurrentBranchStatus() *BranchStatus {
-	if r.Status.CurrentBranch == StatusDetached || r.Status.CurrentBranch == StatusUnknown {
-		return nil
-	}
-
-	for _, b := range r.Status.Branches {
-		if b.Name == r.Status.CurrentBranch {
-			return b
+	lines := lines(out)
+	count := 0
+	for _, line := range lines {
+		if strings.HasPrefix(line, untracked) {
+			count++
 		}
 	}
 
+	return count, nil
+}
+
+// CurrentBranch returns the short name currently checked-out branch for the repository.
+// If repo is in a detached head state, it will return "HEAD".
+func (r *Repo) CurrentBranch() (string, error) {
+	cmd := gitCmd(r.path, "rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD")
+
+	out, err := cmd.Output()
+	if err != nil {
+		return "", cmdError(cmd, err)
+	}
+
+	lines := lines(out)
+	return lines[0], nil
+}
+
+// Branches returns a list of local branches in the repository.
+func (r *Repo) Branches() ([]string, error) {
+	cmd := gitCmd(r.path, "branch", "--format=%(refname:short)")
+
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, cmdError(cmd, err)
+	}
+
+	lines := lines(out)
+
+	// TODO: Is detached head shown always on the first line? Maybe we don't need to iterate over everything.
+	// Remove the line containing detached head.
+	for i, line := range lines {
+		if strings.Contains(line, "HEAD detached") {
+			lines = append(lines[:i], lines[i+1:]...)
+		}
+	}
+
+	return lines, nil
+}
+
+// Upstream returns the name of an upstream branch if a given branch is tracking one.
+// Otherwise it returns an empty string.
+func (r *Repo) Upstream(branch string) (string, error) {
+	cmd := gitCmd(r.path, "rev-parse", "--abbrev-ref", "--symbolic-full-name", fmt.Sprintf("%s@{upstream}", branch))
+
+	// TODO: no upstream will also throw an error.
+	out, err := cmd.Output()
+	if err != nil {
+		return "", cmdError(cmd, err)
+	}
+
+	lines := lines(out)
+	return lines[0], nil
+}
+
+// AheadBehind returns the number of commits a given branch is ahead and/or behind the upstream.
+func (r *Repo) AheadBehind(branch string, upstream string) (int, int, error) {
+	cmd := gitCmd(r.path, "rev-list", "--left-right", "--count", fmt.Sprintf("%s...%s", branch, upstream))
+
+	out, err := cmd.Output()
+	if err != nil {
+		return 0, 0, cmdError(cmd, err)
+	}
+
+	lines := lines(out)
+
+	// rev-list --left-right --count output is separated by a tab
+	lr := strings.Split(lines[0], "\t")
+
+	ahead, err := strconv.Atoi(lr[0])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	behind, err := strconv.Atoi(lr[1])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return ahead, behind, nil
+}
+
+func gitCmd(repoPath string, args ...string) *exec.Cmd {
+	args = append([]string{"--work-tree", repoPath, "--git-dir", path.Join(repoPath, dotgit)}, args...)
+	return exec.Command("git", args...)
+}
+
+func lines(output []byte) []string {
+	lines := strings.TrimSuffix(string(output), "\n")
+	return strings.Split(lines, "\n")
+}
+
+func cmdError(cmd *exec.Cmd, err error) error {
+	if err != nil {
+		return errors.Wrapf(err, "git %s failed", cmd.Args[4]) // Show which git command failed (skip "--work-tree and --gitdir flags")
+	}
 	return nil
 }
