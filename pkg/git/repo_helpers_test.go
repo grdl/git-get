@@ -2,7 +2,7 @@ package git
 
 import (
 	"fmt"
-	"git-get/pkg/file"
+	"git-get/pkg/io"
 	"net/url"
 	"os"
 	"os/exec"
@@ -27,7 +27,7 @@ func (r *testRepo) cleanup() {
 }
 
 func testRepoEmpty(t *testing.T) *testRepo {
-	dir, err := file.TempDir()
+	dir, err := io.TempDir()
 	checkFatal(t, err)
 
 	r, err := Open(dir)
@@ -174,7 +174,7 @@ func testRepoWithBranchAheadAndBehind(t *testing.T) *testRepo {
 
 func (r *testRepo) writeFile(filename string, content string) {
 	path := path.Join(r.path, filename)
-	err := file.Write(path, content)
+	err := io.Write(path, content)
 	checkFatal(r.T, err)
 }
 
@@ -209,7 +209,7 @@ func (r *testRepo) checkout(name string) {
 }
 
 func (r *testRepo) clone() *testRepo {
-	dir, err := file.TempDir()
+	dir, err := io.TempDir()
 	checkFatal(r.T, err)
 
 	url, err := url.Parse(fmt.Sprintf("file://%s/.git", r.path))

@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"fmt"
-	"git-get/pkg/repo"
+	"git-get/pkg/git"
 	"path"
 )
 
@@ -37,13 +37,13 @@ func cloneSingleRepo(c *GetCfg) error {
 		return err
 	}
 
-	cloneOpts := &repo.CloneOpts{
+	cloneOpts := &git.CloneOpts{
 		URL:    url,
 		Path:   path.Join(c.Root, URLToPath(url)),
 		Branch: c.Branch,
 	}
 
-	_, err = repo.Clone(cloneOpts)
+	_, err = git.Clone(cloneOpts)
 
 	return err
 }
@@ -60,14 +60,14 @@ func cloneDumpFile(c *GetCfg) error {
 			return err
 		}
 
-		cloneOpts := &repo.CloneOpts{
+		cloneOpts := &git.CloneOpts{
 			URL:            url,
 			Path:           path.Join(c.Root, URLToPath(url)),
 			Branch:         line.branch,
 			IgnoreExisting: true,
 		}
 
-		_, err = repo.Clone(cloneOpts)
+		_, err = git.Clone(cloneOpts)
 		if err != nil {
 			return err
 		}

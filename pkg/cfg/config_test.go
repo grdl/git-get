@@ -2,7 +2,6 @@ package cfg
 
 import (
 	"fmt"
-	"git-get/pkg_old/cfg"
 	"os"
 	"strings"
 	"testing"
@@ -109,10 +108,10 @@ func testConfigInFlag(t *testing.T) {
 	os.Setenv(envVarName, fromEnv)
 
 	cmd := cobra.Command{}
-	cmd.PersistentFlags().String(cfg.KeyDefaultHost, cfg.DefDefaultHost, "")
-	viper.BindPFlag(cfg.KeyDefaultHost, cmd.PersistentFlags().Lookup(cfg.KeyDefaultHost))
+	cmd.PersistentFlags().String(KeyDefaultHost, DefDefaultHost, "")
+	viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost))
 
-	cmd.SetArgs([]string{"--" + cfg.KeyDefaultHost, fromFlag})
+	cmd.SetArgs([]string{"--" + KeyDefaultHost, fromFlag})
 	cmd.Execute()
 	Init(&gitconfigValid{})
 }

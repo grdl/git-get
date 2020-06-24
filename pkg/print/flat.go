@@ -2,32 +2,49 @@ package print
 
 import (
 	"fmt"
-	"git-get/pkg/repo"
-	"path/filepath"
 	"strings"
 )
 
-// FlatPrinter implements Printer interface and provides method for printing list of repos in flat format.
+// FlatPrinter prints a list of repos in a flat format.
 type FlatPrinter struct{}
 
+// NewFlatPrinter creates a FlatPrinter.
+func NewFlatPrinter() *FlatPrinter {
+	return &FlatPrinter{}
+}
+
 // Print generates a flat list of repositories and their statuses - each repo in new line with full path.
-func (p *FlatPrinter) Print(root string, repos []*repo.Repo) string {
+func (p *FlatPrinter) Print(repos []Repo) string {
 	var str strings.Builder
 
 	for _, r := range repos {
-		path := strings.TrimPrefix(r.Path, root)
-		path = strings.Trim(path, string(filepath.Separator))
+		str.WriteString(fmt.Sprintf("\n%s %s", r.Path(), printCurrentBranchLine(r)))
 
-		str.WriteString(fmt.Sprintf("\n%s %s", path, printWorktreeStatus(r)))
+		branches, err := r.Branches()
+		if err != nil {
+			str.WriteString(printErr(err))
+			continue
+		}
 
-		for _, branch := range r.Status.Branches {
+		current, err := r.CurrentBranch()
+		if err != nil {
+			str.WriteString(printErr(err))
+			continue
+		}
+
+		for _, branch := range branches {
 			// Don't print the status of the current branch. It was already printed above.
-			if branch.Name == r.Status.CurrentBranch {
+			if branch == current {
 				continue
 			}
 
-			indent := strings.Repeat(" ", len(path))
-			str.WriteString(fmt.Sprintf("\n%s %s", indent, printBranchStatus(branch)))
+			status, err := printBranchStatus(r, branch)
+			if err != nil {
+				status = printErr(err)
+			}
+
+			indent := strings.Repeat(" ", len(r.Path()))
+			str.WriteString(fmt.Sprintf("\n%s %s %s", indent, printBranchName(branch), status))
 		}
 	}
 

@@ -2,7 +2,7 @@ package git
 
 import (
 	"fmt"
-	"git-get/pkg/file"
+	"git-get/pkg/io"
 	"net/url"
 	"os"
 	"os/exec"
@@ -36,7 +36,7 @@ type CloneOpts struct {
 
 // Open checks if given path can be accessed and returns a Repo instance pointing to it.
 func Open(path string) (*Repo, error) {
-	_, err := file.Exists(path)
+	_, err := io.Exists(path)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (r *Repo) Uncommitted() (int, error) {
 
 // Untracked returns the number of untracked files in the repository.
 func (r *Repo) Untracked() (int, error) {
-	cmd := gitCmd(r.path, "status", "--ignore-submodules", "--porcelain")
+	cmd := gitCmd(r.path, "status", "--ignore-submodules", "--untracked-files=all", "--porcelain")
 
 	out, err := cmd.Output()
 	if err != nil {
@@ -168,10 +168,11 @@ func (r *Repo) Branches() ([]string, error) {
 func (r *Repo) Upstream(branch string) (string, error) {
 	cmd := gitCmd(r.path, "rev-parse", "--abbrev-ref", "--symbolic-full-name", fmt.Sprintf("%s@{upstream}", branch))
 
-	// TODO: no upstream will also throw an error.
 	out, err := cmd.Output()
 	if err != nil {
-		return "", cmdError(cmd, err)
+
+		// TODO: no upstream will also throw an error.
+		return "", nil //cmdError(cmd, err)
 	}
 
 	lines := lines(out)
@@ -203,6 +204,27 @@ func (r *Repo) AheadBehind(branch string, upstream string) (int, int, error) {
 	}
 
 	return ahead, behind, nil
+}
+
+// Remote returns URL of remote repository.
+func (r *Repo) Remote() (string, error) {
+	// https://stackoverflow.com/a/16880000/1085632
+	cmd := gitCmd(r.path, "ls-remote", "--get-url")
+
+	out, err := cmd.Output()
+	if err != nil {
+		return "", cmdError(cmd, err)
+	}
+
+	lines := lines(out)
+
+	// TODO: needs testing. What happens when there are more than 1 remotes?
+	return lines[0], nil
+}
+
+// Path returns path to the repository.
+func (r *Repo) Path() string {
+	return r.path
 }
 
 func gitCmd(repoPath string, args ...string) *exec.Cmd {

@@ -16,30 +16,26 @@ const GitgetPrefix = "gitget"
 
 // CLI flag keys and their default values.
 const (
-	KeyBranch = "branch"
-	// DefBranch      = "master"
+	KeyBranch      = "branch"
 	KeyDump        = "dump"
 	KeyDefaultHost = "host"
 	DefDefaultHost = "github.com"
 	KeyFetch       = "fetch"
 	KeyOutput      = "out"
 	DefOutput      = OutTree
-	KeyPrivateKey  = "privateKey"
-	DefPrivateKey  = "id_rsa"
 	KeyReposRoot   = "root"
 	DefReposRoot   = "repositories"
 )
 
 // Values for the --out flag.
 const (
-	OutDump  = "dump"
-	OutFlat  = "flat"
-	OutSmart = "smart"
-	OutTree  = "tree"
+	OutDump = "dump"
+	OutFlat = "flat"
+	OutTree = "tree"
 )
 
 // AllowedOut are allowed values for the --out flag.
-var AllowedOut = []string{OutDump, OutFlat, OutSmart, OutTree}
+var AllowedOut = []string{OutDump, OutFlat, OutTree}
 
 // Version metadata set by ldflags during the build.
 var (
@@ -83,10 +79,6 @@ func setMissingValues(cfg Gitconfig) {
 
 	if isUnsetOrEmpty(KeyDefaultHost) {
 		viper.Set(KeyDefaultHost, getOrDef(cfg, KeyDefaultHost, DefDefaultHost))
-	}
-
-	if isUnsetOrEmpty(KeyPrivateKey) {
-		viper.Set(KeyPrivateKey, getOrDef(cfg, KeyPrivateKey, path.Join(home(), ".ssh", DefPrivateKey)))
 	}
 }
 

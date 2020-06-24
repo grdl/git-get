@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 	"syscall"
 
@@ -74,10 +75,10 @@ func NewRepoFinder(root string) *RepoFinder {
 	}
 }
 
-// Find returns paths to git repos found inside a given root path.
+// Find returns a sorted list of paths to git repos found inside a given root path.
 // Returns error if root repo path can't be found or accessed.
-func (r *RepoFinder) Find(root string) ([]string, error) {
-	if _, err := Exists(root); err != nil {
+func (r *RepoFinder) Find() ([]string, error) {
+	if _, err := Exists(r.root); err != nil {
 		return nil, err
 	}
 
@@ -88,14 +89,16 @@ func (r *RepoFinder) Find(root string) ([]string, error) {
 		Unsorted: true,
 	}
 
-	err := godirwalk.Walk(root, walkOpts)
+	err := godirwalk.Walk(r.root, walkOpts)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(r.repos) == 0 {
-		return nil, fmt.Errorf("no git repos found in root path %s", root)
+		return nil, fmt.Errorf("no git repos found in root path %s", r.root)
 	}
+
+	sort.Strings(r.repos)
 
 	return r.repos, nil
 }

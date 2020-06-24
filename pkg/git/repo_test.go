@@ -1,7 +1,7 @@
 package git
 
 import (
-	"git-get/pkg/file"
+	"git-get/pkg/io"
 	"reflect"
 	"testing"
 )
@@ -9,7 +9,7 @@ import (
 func TestOpen(t *testing.T) {
 	_, err := Open("/paththatdoesnotexist/repo")
 
-	if err != file.ErrDirectoryAccess {
+	if err != io.ErrDirectoryAccess {
 		t.Errorf("Opening a repo in non existing path should throw an error")
 	}
 }
@@ -307,18 +307,3 @@ func TestAheadBehind(t *testing.T) {
 		})
 	}
 }
-
-// func TestClone(t *testing.T) {
-// 	url, _ := url.Parse("https://github.com/grdl/pronestheus")
-// 	opts := &CloneOpts{
-// 		URL:  url,
-// 		Path: "/tmp/stuff/nanana",
-// 	}
-
-// 	repo, err := Clone(opts)
-// 	if err != nil {
-// 		t.Errorf("got error %q", err)
-// 	}
-
-// 	fmt.Println(repo.path)
-// }
