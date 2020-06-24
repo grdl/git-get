@@ -43,7 +43,7 @@ type Repo interface {
 
 // prints status of currently checked out branch and the work tree.
 // The format is: branch_name branch_status [ worktree_status ]
-// Eg: master 1 head 2 behind [ 1 uncomitted ]
+// Eg: master 1 head 2 behind [ 1 uncommitted ]
 func printCurrentBranchLine(r Repo) string {
 	var res []string
 

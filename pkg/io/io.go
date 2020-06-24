@@ -17,7 +17,7 @@ import (
 // It's handled by ErrorsCallback to tell the WalkCallback to skip this dir.
 var ErrSkipNode = errors.New(".git directory found, skipping this node")
 
-// ErrDirectoryAccess indicated a direcotry doesn't exists or can't be accessed
+// ErrDirectoryAccess indicated a directory doesn't exists or can't be accessed
 var ErrDirectoryAccess = errors.New("directory doesn't exist or can't be accessed")
 
 // TempDir creates a temporary directory for test repos.
