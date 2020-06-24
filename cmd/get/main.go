@@ -3,6 +3,7 @@ package main
 import (
 	"git-get/pkg"
 	"git-get/pkg/cfg"
+	"git-get/pkg/git"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -24,10 +25,9 @@ var cmd = &cobra.Command{
 }
 
 func init() {
-	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", cfg.DefBranch, "Branch (or tag) to checkout after cloning. Tag name needs to be prefixed with 'refs/tags/'.")
+	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", "", "Branch (or tag) to checkout after cloning.")
 	cmd.PersistentFlags().StringP(cfg.KeyDefaultHost, "t", cfg.DefDefaultHost, "Host to use when <REPO> doesn't have a specified host.")
 	cmd.PersistentFlags().StringP(cfg.KeyDump, "d", "", "Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.")
-	cmd.PersistentFlags().StringP(cfg.KeyPrivateKey, "p", "", "Path to SSH private key. (default \"~/.ssh/id_rsa\")")
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "Path to repos root where repositories are cloned. (default \"~/repositories\")")
 	cmd.PersistentFlags().BoolP("help", "h", false, "Print this help and exit.")
 	cmd.PersistentFlags().BoolP("version", "v", false, "Print version and exit.")
@@ -35,12 +35,11 @@ func init() {
 	viper.BindPFlag(cfg.KeyBranch, cmd.PersistentFlags().Lookup(cfg.KeyBranch))
 	viper.BindPFlag(cfg.KeyDefaultHost, cmd.PersistentFlags().Lookup(cfg.KeyDefaultHost))
 	viper.BindPFlag(cfg.KeyDump, cmd.PersistentFlags().Lookup(cfg.KeyDump))
-	viper.BindPFlag(cfg.KeyPrivateKey, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	cfg.Init()
+	cfg.Init(&git.ConfigGlobal{})
 
 	var url string
 	if len(args) > 0 {

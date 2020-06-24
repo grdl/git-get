@@ -1,20 +1,29 @@
 package print
 
 import (
-	"git-get/pkg/repo"
+	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/xlab/treeprint"
 )
 
-// TreePrinter implements Printer interface and provides methods for printing repos and their statuses.
-type TreePrinter struct{}
+// TreePrinter prints list of repos in a directory tree format.
+type TreePrinter struct {
+}
+
+// NewTreePrinter creates a TreePrinter.
+func NewTreePrinter() *TreePrinter {
+	return &TreePrinter{}
+}
 
 // Print generates a tree view of repos and their statuses.
-func (p *TreePrinter) Print(root string, repos []*repo.Repo) string {
-	tree := buildTree(root, repos)
+func (p *TreePrinter) Print(root string, repos []Repo) string {
+	if len(repos) == 0 {
+		return fmt.Sprintf("There are no git repos under %s", root)
+	}
 
+	tree := buildTree(root, repos)
 	tp := treeprint.New()
 	tp.SetValue(root)
 
@@ -23,16 +32,15 @@ func (p *TreePrinter) Print(root string, repos []*repo.Repo) string {
 	return tp.String()
 }
 
-// Node represents a node (ie. path fragment) in a repos tree.
+// Node represents a path fragment in repos tree.
 type Node struct {
 	val      string
-	depth    int // depth is a nesting depth used when rendering a smart tree, not a depth level of a tree node.
 	parent   *Node
 	children []*Node
-	repo     *repo.Repo
+	repo     Repo
 }
 
-// Root creates a new root of a tree
+// Root creates a new root of a tree.
 func Root(val string) *Node {
 	root := &Node{
 		val: val,
@@ -40,7 +48,7 @@ func Root(val string) *Node {
 	return root
 }
 
-// Add adds a child node
+// Add adds a child node with given value to a current node.
 func (n *Node) Add(val string) *Node {
 	if n.children == nil {
 		n.children = make([]*Node, 0)
@@ -73,11 +81,11 @@ func (n *Node) GetChild(val string) *Node {
 // buildTree builds a directory tree of paths to repositories.
 // Each node represents a directory in the repo path.
 // Each leaf (final node) contains a pointer to the repo.
-func buildTree(root string, repos []*repo.Repo) *Node {
+func buildTree(root string, repos []Repo) *Node {
 	tree := Root(root)
 
 	for _, r := range repos {
-		path := strings.TrimPrefix(r.Path, root)
+		path := strings.TrimPrefix(r.Path(), root)
 		path = strings.Trim(path, string(filepath.Separator))
 		subs := strings.Split(path, string(filepath.Separator))
 
@@ -106,16 +114,34 @@ func buildTree(root string, repos []*repo.Repo) *Node {
 
 func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
 	if node.children == nil {
-		tp.SetValue(node.val + " " + printWorktreeStatus(node.repo))
+		r := node.repo
+		tp.SetValue(node.val + " " + printCurrentBranchLine(r))
 
-		for _, branch := range node.repo.Status.Branches {
-			// Don't print the status of the current branch. It was already printed above.
-			if branch.Name == node.repo.Status.CurrentBranch {
-				continue
-			}
-			tp.AddNode(printBranchStatus(branch))
+		branches, err := r.Branches()
+		if err != nil {
+			tp.AddNode(printErr(err))
+			return
 		}
 
+		current, err := r.CurrentBranch()
+		if err != nil {
+			tp.AddNode(printErr(err))
+			return
+		}
+
+		for _, branch := range branches {
+			// Don't print the status of the current branch. It was already printed above.
+			if branch == current {
+				continue
+			}
+
+			status, err := printBranchStatus(r, branch)
+			if err != nil {
+				tp.AddNode(printErr(err))
+				continue
+			}
+			tp.AddNode(printBranchName(branch) + " " + status)
+		}
 	}
 
 	for _, child := range node.children {

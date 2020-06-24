@@ -3,163 +3,115 @@ package cfg
 import (
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"testing"
 
-	"github.com/go-git/go-git/v5/config"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	envDefaultHost = strings.ToUpper(fmt.Sprintf("%s_%s", GitgetPrefix, KeyDefaultHost))
-	envReposRoot   = strings.ToUpper(fmt.Sprintf("%s_%s", GitgetPrefix, KeyReposRoot))
+	envVarName    = strings.ToUpper(fmt.Sprintf("%s_%s", GitgetPrefix, KeyDefaultHost))
+	fromGitconfig = "value.from.gitconfig"
+	fromEnv       = "value.from.env"
+	fromFlag      = "value.from.flag"
 )
 
-func newConfigWithFullGitconfig() *gitconfig {
-	cfg := config.NewConfig()
-
-	gitget := cfg.Raw.Section(GitgetPrefix)
-	gitget.AddOption(KeyReposRoot, "file.root")
-	gitget.AddOption(KeyDefaultHost, "file.host")
-
-	return &gitconfig{
-		Config: cfg,
-	}
-}
-
-func newConfigWithEmptyGitgetSection() *gitconfig {
-	cfg := config.NewConfig()
-
-	_ = cfg.Raw.Section(GitgetPrefix)
-
-	return &gitconfig{
-		Config: cfg,
-	}
-}
-
-func newConfigWithEmptyValues() *gitconfig {
-	cfg := config.NewConfig()
-
-	gitget := cfg.Raw.Section(GitgetPrefix)
-	gitget.AddOption(KeyReposRoot, "")
-	gitget.AddOption(KeyDefaultHost, "   ")
-
-	return &gitconfig{
-		Config: cfg,
-	}
-}
-
-func newConfigWithoutGitgetSection() *gitconfig {
-	cfg := config.NewConfig()
-
-	return &gitconfig{
-		Config: cfg,
-	}
-}
-
-func newConfigWithEmptyGitconfig() *gitconfig {
-	return &gitconfig{
-		Config: nil,
-	}
-}
-
-func newConfigWithEnvVars() *gitconfig {
-	_ = os.Setenv(envDefaultHost, "env.host")
-	_ = os.Setenv(envReposRoot, "env.root")
-
-	return &gitconfig{
-		Config: nil,
-	}
-}
-
-func newConfigWithGitconfigAndEnvVars() *gitconfig {
-	cfg := config.NewConfig()
-
-	gitget := cfg.Raw.Section(GitgetPrefix)
-	gitget.AddOption(KeyReposRoot, "file.root")
-	gitget.AddOption(KeyDefaultHost, "file.host")
-
-	_ = os.Setenv(envDefaultHost, "env.host")
-	_ = os.Setenv(envReposRoot, "env.root")
-
-	return &gitconfig{
-		Config: cfg,
-	}
-}
-
-func newConfigWithEmptySectionAndEnvVars() *gitconfig {
-	cfg := config.NewConfig()
-
-	_ = cfg.Raw.Section(GitgetPrefix)
-
-	_ = os.Setenv(envDefaultHost, "env.host")
-	_ = os.Setenv(envReposRoot, "env.root")
-
-	return &gitconfig{
-		Config: cfg,
-	}
-}
-
-func newConfigWithMixed() *gitconfig {
-	cfg := config.NewConfig()
-
-	gitget := cfg.Raw.Section(GitgetPrefix)
-	gitget.AddOption(KeyReposRoot, "file.root")
-	gitget.AddOption(KeyDefaultHost, "file.host")
-
-	_ = os.Setenv(envDefaultHost, "env.host")
-
-	return &gitconfig{
-		Config: cfg,
-	}
-}
-
 func TestConfig(t *testing.T) {
-	defReposRoot := path.Join(home(), DefReposRoot)
-
-	var tests = []struct {
-		makeConfig      func() *gitconfig
-		wantReposRoot   string
-		wantDefaultHost string
+	tests := []struct {
+		name        string
+		configMaker func(*testing.T)
+		key         string
+		want        string
 	}{
-		{newConfigWithFullGitconfig, "file.root", "file.host"},
-		{newConfigWithoutGitgetSection, defReposRoot, DefDefaultHost},
-		{newConfigWithEmptyGitconfig, defReposRoot, DefDefaultHost},
-		{newConfigWithEnvVars, "env.root", "env.host"},
-		{newConfigWithGitconfigAndEnvVars, "env.root", "env.host"},
-		{newConfigWithEmptySectionAndEnvVars, "env.root", "env.host"},
-		{newConfigWithEmptyGitgetSection, defReposRoot, DefDefaultHost},
-		{newConfigWithEmptyValues, defReposRoot, DefDefaultHost},
-		{newConfigWithMixed, "file.root", "env.host"},
+		{
+			name:        "no config",
+			configMaker: testConfigEmpty,
+			key:         KeyDefaultHost,
+			want:        DefDefaultHost,
+		},
+		{
+			name:        "value only in gitconfig",
+			configMaker: testConfigOnlyInGitconfig,
+			key:         KeyDefaultHost,
+			want:        fromGitconfig,
+		},
+		{
+			name:        "value only in env var",
+			configMaker: testConfigOnlyInEnvVar,
+			key:         KeyDefaultHost,
+			want:        fromEnv,
+		},
+		{
+			name:        "value in gitconfig and env var",
+			configMaker: testConfigInGitconfigAndEnvVar,
+			key:         KeyDefaultHost,
+			want:        fromEnv,
+		},
+		{
+			name:        "value in flag",
+			configMaker: testConfigInFlag,
+			key:         KeyDefaultHost,
+			want:        fromFlag,
+		},
 	}
 
 	for _, test := range tests {
-		viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
-		viper.AutomaticEnv()
+		t.Run(test.name, func(t *testing.T) {
+			test.configMaker(t)
 
-		cfg := test.makeConfig()
-		setMissingValues(cfg)
+			got := viper.GetString(test.key)
+			if got != test.want {
+				t.Errorf("expected %q; got %q", test.want, got)
+			}
 
-		if viper.GetString(KeyDefaultHost) != test.wantDefaultHost {
-			t.Errorf("Wrong %s value, got: %s; want: %s", KeyDefaultHost, viper.GetString(KeyDefaultHost), test.wantDefaultHost)
-		}
-
-		if viper.GetString(KeyReposRoot) != test.wantReposRoot {
-			t.Errorf("Wrong %s value, got: %s; want: %s", KeyReposRoot, viper.GetString(KeyReposRoot), test.wantReposRoot)
-		}
-
-		// Unset env variables and reset viper registry after each test
-		viper.Reset()
-		err := os.Unsetenv(envDefaultHost)
-		checkFatal(t, err)
-		err = os.Unsetenv(envReposRoot)
-		checkFatal(t, err)
+			// Clear env variables and reset viper registry after each test so they impact other tests.
+			os.Clearenv()
+			viper.Reset()
+		})
 	}
 }
 
-func checkFatal(t *testing.T, err error) {
-	if err != nil {
-		t.Fatalf("%+v", err)
-	}
+type gitconfigEmpty struct{}
+
+func (c *gitconfigEmpty) Get(key string) string {
+	return ""
+}
+
+type gitconfigValid struct{}
+
+func (c *gitconfigValid) Get(key string) string {
+	return fromGitconfig
+}
+
+func testConfigEmpty(t *testing.T) {
+	Init(&gitconfigEmpty{})
+}
+
+func testConfigOnlyInGitconfig(t *testing.T) {
+	Init(&gitconfigValid{})
+}
+
+func testConfigOnlyInEnvVar(t *testing.T) {
+	os.Setenv(envVarName, fromEnv)
+
+	Init(&gitconfigEmpty{})
+}
+
+func testConfigInGitconfigAndEnvVar(t *testing.T) {
+	os.Setenv(envVarName, fromEnv)
+
+	Init(&gitconfigValid{})
+}
+
+func testConfigInFlag(t *testing.T) {
+	os.Setenv(envVarName, fromEnv)
+
+	cmd := cobra.Command{}
+	cmd.PersistentFlags().String(KeyDefaultHost, DefDefaultHost, "")
+	viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost))
+
+	cmd.SetArgs([]string{"--" + KeyDefaultHost, fromFlag})
+	cmd.Execute()
+	Init(&gitconfigValid{})
 }

@@ -1,3 +1,5 @@
+// Package cfg provides common configuration to all commands.
+// It contains config key names, default values and provides methods to read values from global gitconfig file.
 package cfg
 
 import (
@@ -5,8 +7,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/go-git/go-git/v5/config"
-	plumbing "github.com/go-git/go-git/v5/plumbing/format/config"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
@@ -17,29 +17,25 @@ const GitgetPrefix = "gitget"
 // CLI flag keys and their default values.
 const (
 	KeyBranch      = "branch"
-	DefBranch      = "master"
 	KeyDump        = "dump"
 	KeyDefaultHost = "host"
 	DefDefaultHost = "github.com"
 	KeyFetch       = "fetch"
 	KeyOutput      = "out"
 	DefOutput      = OutTree
-	KeyPrivateKey  = "privateKey"
-	DefPrivateKey  = "id_rsa"
 	KeyReposRoot   = "root"
 	DefReposRoot   = "repositories"
 )
 
 // Values for the --out flag.
 const (
-	OutDump  = "dump"
-	OutFlat  = "flat"
-	OutSmart = "smart"
-	OutTree  = "tree"
+	OutDump = "dump"
+	OutFlat = "flat"
+	OutTree = "tree"
 )
 
 // AllowedOut are allowed values for the --out flag.
-var AllowedOut = []string{OutDump, OutFlat, OutSmart, OutTree}
+var AllowedOut = []string{OutDump, OutFlat, OutTree}
 
 // Version metadata set by ldflags during the build.
 var (
@@ -58,79 +54,39 @@ func Version() string {
 	return fmt.Sprintf("%s - revision %s built at %s", version, commit[:6], date)
 }
 
-// gitconfig provides methods for looking up configiration values inside .gitconfig file
-type gitconfig struct {
-	*config.Config
+// Gitconfig represents gitconfig file
+type Gitconfig interface {
+	Get(key string) string
 }
 
-// Init initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value
+// Init initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value.
 // Viper doesn't support gitconfig file format so it can't find missing values there automatically. They need to be specified in setMissingValues func.
 //
 // Because it reads the cli flags it needs to be called after the cmd.Execute().
-func Init() {
+func Init(cfg Gitconfig) {
 	viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
 	viper.AutomaticEnv()
 
-	cfg := loadGitconfig()
 	setMissingValues(cfg)
-}
-
-// loadGitconfig loads configuration from a gitconfig file.
-// We ignore errors when gitconfig file can't be found, opened or parsed. In those cases viper will provide default config values.
-func loadGitconfig() *gitconfig {
-	// TODO: load system scope
-	cfg, _ := config.LoadConfig(config.GlobalScope)
-
-	return &gitconfig{
-		Config: cfg,
-	}
 }
 
 // setMissingValues checks if config values are provided by flags or env vars. If not, it tries loading them from gitconfig file.
 // If that fails, the default values are used.
-func setMissingValues(cfg *gitconfig) {
+func setMissingValues(cfg Gitconfig) {
 	if isUnsetOrEmpty(KeyReposRoot) {
-		viper.Set(KeyReposRoot, cfg.get(KeyReposRoot, path.Join(home(), DefReposRoot)))
+		viper.Set(KeyReposRoot, getOrDef(cfg, KeyReposRoot, path.Join(home(), DefReposRoot)))
 	}
 
 	if isUnsetOrEmpty(KeyDefaultHost) {
-		viper.Set(KeyDefaultHost, cfg.get(KeyDefaultHost, DefDefaultHost))
-	}
-
-	if isUnsetOrEmpty(KeyPrivateKey) {
-		viper.Set(KeyPrivateKey, cfg.get(KeyPrivateKey, path.Join(home(), ".ssh", DefPrivateKey)))
+		viper.Set(KeyDefaultHost, getOrDef(cfg, KeyDefaultHost, DefDefaultHost))
 	}
 }
 
-// get looks up the value for a given key in gitconfig file.
-// It returns the default value when gitconfig is missing, or it doesn't contain a gitget section,
-// or if the section is empty, or if it doesn't contain a valid value for the key.
-func (c *gitconfig) get(key string, def string) string {
-	if c == nil || c.Config == nil {
-		return def
+func getOrDef(cfg Gitconfig, key string, def string) string {
+	if val := cfg.Get(key); val != "" {
+		return val
 	}
-
-	gitget := c.findGitconfigSection(GitgetPrefix)
-	if gitget == nil {
-		return def
-	}
-
-	opt := gitget.Option(key)
-	if strings.TrimSpace(opt) == "" {
-		return def
-	}
-
-	return opt
-}
-
-func (c *gitconfig) findGitconfigSection(name string) *plumbing.Section {
-	for _, s := range c.Raw.Sections {
-		if strings.ToLower(s.Name) == strings.ToLower(name) {
-			return s
-		}
-	}
-
-	return nil
+	return def
 }
 
 // home returns path to a home directory or empty string if can't be found.
