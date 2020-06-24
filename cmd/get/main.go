@@ -25,7 +25,7 @@ var cmd = &cobra.Command{
 }
 
 func init() {
-	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", "", "Branch (or tag) to checkout after cloning. Tag name needs to be prefixed with 'refs/tags/'.")
+	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", "", "Branch (or tag) to checkout after cloning.")
 	cmd.PersistentFlags().StringP(cfg.KeyDefaultHost, "t", cfg.DefDefaultHost, "Host to use when <REPO> doesn't have a specified host.")
 	cmd.PersistentFlags().StringP(cfg.KeyDump, "d", "", "Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.")
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "Path to repos root where repositories are cloned. (default \"~/repositories\")")

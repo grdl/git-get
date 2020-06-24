@@ -11,6 +11,7 @@
 * [Usage](#usage)
   * [git get](#git-get-1)
   * [git list](#git-list)
+  * [dump file](#dump-file)
 * [Configuration](#configuration)
   * [Env variables](#env-variables)
   * [.gitconfig file](#.gitconfig-file)
@@ -44,47 +45,19 @@ Each release contains two binaries: `git-get` and `git-list`. When put on PATH, 
 git get <REPO> [flags]
 
 Flags:
-  -b, --branch string       Branch (or tag) to checkout after cloning. Tag name needs to be prefixed with 'refs/tags/'. (default "master")
+  -b, --branch string       Branch (or tag) to checkout after cloning.
   -d, --dump string         Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.
   -h, --help                Print this help and exit.
   -t, --host string         Host to use when <REPO> doesn't have a specified host. (default "github.com")
-  -p, --privateKey string   Path to SSH private key. (default "~/.ssh/id_rsa")
   -r, --root string         Path to repos root where repositories are cloned. (default "~/repositories")
   -v, --version             Print version and exit.
 ```
 
-The `<REPO>` argument can be any valid URL supported by git. Such as:
-```
-https://github.com/grdl/git-get
-git@github.com:grdl/git-get.git
-ssh://user@server/repository.git
-file:///project/repository.git
-```
+The `<REPO>` argument can be any valid URL supported by git. It also accepts a short `USER/REPO` format. In that case `git-get` will automatically use the configured host (github.com by default).
 
-#### Short URLs
+For example, `git get grdl/git-get` will clone `https://github.com/grdl/git-get`.
 
-`<REPO>` can be a short path without any protocol or host. In that case `git-get` will automatically use the `https` protocol and the configured host (github.com by default).
-For example `git get grdl/git-get` will clone `https://github.com/grdl/git-get.git`.
 
-#### Dump file
-
-`git get` is dotfiles friendly. Using `--dump` flag, it accepts a file with a list of repositories and clones all of them.
-
-Dump file format is simply:
-- Each repo URL on a separate line.
-- Each URL can have a suffix with a branch or tag name to check out after cloning. Without that suffix, `master` is used.
-- Tag name should be prefixed with `refs/tags/`.
-
-Example dump file content:
-```
-https://github.com/grdl/git-get refs/tags/v1.0.0
-git@github.com:grdl/another-repository.git
-```
-
-You can generate a dump file with all your currently cloned repos by running:
-```
-git list --out dump > repos.dump
-``` 
 
 
 ### git list
@@ -96,7 +69,6 @@ Flags:
   -f, --fetch               First fetch from remotes before listing repositories.
   -h, --help                Print this help and exit.
   -o, --out string          Output format. Allowed values: [dump, flat, smart, tree]. (default "tree")
-  -p, --privateKey string   Path to SSH private key. (default "~/.ssh/id_rsa")
   -r, --root string         Path to repos root where repositories are cloned. (default "~/repositories")
   -v, --version             Print version and exit.
 ```
@@ -132,17 +104,24 @@ https://github.com/grdl/homebrew-tap master
 https://github.com/grdl/testsite master
 ```
 
-- **smart** (experimental) - similar to the tree view but saves space by automatically folding paths with only a single child. In theory it's supposed to be more readable but fails to prove it in practice so far :wink:
+### Dump file
+
+`git get` is dotfiles friendly. Using `--dump` flag, it accepts a file with a list of repositories and clones all of them.
+
+Dump file format is simply:
+- Each repo URL on a separate line.
+- Each URL can have a suffix with a branch or tag name to check out after cloning. Without that suffix, repository HEAD is used (usually it's `master`).
+
+Example dump file content:
 ```
-❯ git list -o smart
-/home/grdl/repositories
-github.com/grdl/
-    git-get master 1 ahead [ untracked ]
-            development ok
-    homebrew-tap master ok
-    testsite master ok
+https://github.com/grdl/git-get v1.0.0
+git@github.com:grdl/another-repository.git
 ```
 
+You can generate a dump file with all your currently cloned repos by running:
+```
+git list --out dump > repos.dump
+``` 
 
 ## Configuration
 
@@ -168,18 +147,14 @@ export GITGET_ROOT=/path/to/my/repos
 
 ### .gitconfig file
 
-You can define a `[gitget]` section inside your `.gitconfig` file and set the configuration flags there. A common and recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults. Here's an example of a working snippet from `.gitconfig` file:
+You can define a `[gitget]` section inside your global `.gitconfig` file and set the configuration flags there. A common and recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults. 
+
+Here's an example of a working snippet from `.gitconfig` file:
 ```
 [gitget]
     root = /path/to/my/repos
-    host = git.example.com
+    host = gitlab.com
 ```
-
-`git-get` looks for the `.gitconfig` file in the following locations:
-- `$XDG_CONFIG_HOME/git/config`
-- `~/.gitconfig`
-- `~/.config/git/config`
-- `/etc/gitconfig`
 
 
 ## Contributing
