@@ -189,7 +189,7 @@ func (r *testRepo) stageFile(path string) {
 }
 
 func (r *testRepo) commit(msg string) {
-	cmd := gitCmd(r.path, "commit", "-m", msg)
+	cmd := gitCmd(r.path, "commit", "-m", msg, "--author=\"user <user@example.com>\"")
 	runGitCmd(r.T, cmd)
 }
 
