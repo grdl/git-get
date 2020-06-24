@@ -239,7 +239,7 @@ func lines(output []byte) []string {
 
 func cmdError(cmd *exec.Cmd, err error) error {
 	if err != nil {
-		return errors.Wrapf(err, "git %s failed", cmd.Args[4]) // Show which git command failed (skip "--work-tree and --gitdir flags")
+		return errors.Wrapf(err, "%s failed: %+v", strings.Join(cmd.Args, " "), err) // Show which git command failed (skip "--work-tree and --gitdir flags")
 	}
 	return nil
 }
