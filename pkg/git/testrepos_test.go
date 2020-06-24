@@ -233,22 +233,6 @@ func (r *testRepo) clone() *testRepo {
 	return tr
 }
 
-func (r *testRepo) GetCfg(key string) string {
-	cmd := gitCmd(r.path, "config", "--local", key)
-	out, err := cmd.Output()
-	if err != nil {
-		return ""
-	}
-
-	lines := lines(out)
-	return lines[0]
-}
-
-func (r *testRepo) setCfg(key string, value string) {
-	cmd := gitCmd(r.path, "config", "--local", key, value)
-	runGitCmd(r.T, cmd)
-}
-
 func runGitCmd(t *testing.T, cmd *exec.Cmd) {
 	err := cmd.Run()
 	checkFatal(t, cmdError(cmd, err))

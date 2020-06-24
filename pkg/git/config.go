@@ -2,15 +2,11 @@ package git
 
 import "os/exec"
 
-// Gitconfig provides methods to get value from gitconfig files.
-type Gitconfig interface {
-	GetCfg(key string) string
-}
+// ConfigGlobal represents a global gitconfig file.
+type ConfigGlobal struct{}
 
-// globalCfg represents a global gitconfig file.
-type globalCfg struct{}
-
-func (c *globalCfg) GetCfg(key string) string {
+// Get reads a value from global gitconfig file. Returns empty string when key is missing.
+func (c *ConfigGlobal) Get(key string) string {
 	cmd := exec.Command("git", "config", "--global", key)
 	out, err := cmd.Output()
 
