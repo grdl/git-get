@@ -53,7 +53,7 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 		return nil, nil
 	}
 
-	args := []string{"clone", "--progress", "-v"}
+	args := []string{"clone"}
 
 	if opts.Branch != "" {
 		args = append(args, "--branch", opts.Branch, "--single-branch")
