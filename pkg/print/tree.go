@@ -18,7 +18,7 @@ func NewTreePrinter() *TreePrinter {
 }
 
 // Print generates a tree view of repos and their statuses.
-func (p *TreePrinter) Print(root string, repos []Repo) string {
+func (p *TreePrinter) Print(root string, repos []Printable) string {
 	if len(repos) == 0 {
 		return fmt.Sprintf("There are no git repos under %s", root)
 	}
@@ -37,7 +37,7 @@ type Node struct {
 	val      string
 	parent   *Node
 	children []*Node
-	repo     Repo
+	repo     Printable
 }
 
 // Root creates a new root of a tree.
@@ -81,7 +81,7 @@ func (n *Node) GetChild(val string) *Node {
 // buildTree builds a directory tree of paths to repositories.
 // Each node represents a directory in the repo path.
 // Each leaf (final node) contains a pointer to the repo.
-func buildTree(root string, repos []Repo) *Node {
+func buildTree(root string, repos []Printable) *Node {
 	tree := Root(root)
 
 	for _, r := range repos {
@@ -115,32 +115,26 @@ func buildTree(root string, repos []Repo) *Node {
 func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
 	if node.children == nil {
 		r := node.repo
-		tp.SetValue(node.val + " " + printCurrentBranchLine(r))
+		current := r.BranchStatus(r.Current())
+		worktree := r.WorkTreeStatus()
 
-		branches, err := r.Branches()
-		if err != nil {
-			tp.AddNode(printErr(err))
-			return
+		if worktree != "" {
+			worktree = fmt.Sprintf("[ %s ]", worktree)
 		}
 
-		current, err := r.CurrentBranch()
-		if err != nil {
-			tp.AddNode(printErr(err))
-			return
+		if worktree == "" && current == "" {
+			tp.SetValue(node.val + " " + blue(r.Current()) + " " + green("ok"))
+		} else {
+			tp.SetValue(node.val + " " + blue(r.Current()) + " " + strings.Join([]string{yellow(current), red(worktree)}, " "))
 		}
 
-		for _, branch := range branches {
-			// Don't print the status of the current branch. It was already printed above.
-			if branch == current {
-				continue
+		for _, branch := range r.Branches() {
+			status := r.BranchStatus(branch)
+			if status == "" {
+				status = green("ok")
 			}
 
-			status, err := printBranchStatus(r, branch)
-			if err != nil {
-				tp.AddNode(printErr(err))
-				continue
-			}
-			tp.AddNode(printBranchName(branch) + " " + status)
+			tp.AddNode(blue(branch) + " " + yellow(status))
 		}
 	}
 

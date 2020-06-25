@@ -2,6 +2,7 @@ package print
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -14,37 +15,38 @@ func NewFlatPrinter() *FlatPrinter {
 }
 
 // Print generates a flat list of repositories and their statuses - each repo in new line with full path.
-func (p *FlatPrinter) Print(repos []Repo) string {
+func (p *FlatPrinter) Print(repos []Printable) string {
 	var str strings.Builder
 
-	for _, r := range repos {
-		str.WriteString(fmt.Sprintf("\n%s %s", r.Path(), printCurrentBranchLine(r)))
+	for i, r := range repos {
+		str.WriteString(strings.TrimSuffix(r.Path(), string(os.PathSeparator)))
+		str.WriteString(" " + blue(r.Current()))
 
-		branches, err := r.Branches()
-		if err != nil {
-			str.WriteString(printErr(err))
-			continue
+		current := r.BranchStatus(r.Current())
+		worktree := r.WorkTreeStatus()
+
+		if worktree != "" {
+			worktree = fmt.Sprintf("[ %s ]", worktree)
 		}
 
-		current, err := r.CurrentBranch()
-		if err != nil {
-			str.WriteString(printErr(err))
-			continue
+		if worktree == "" && current == "" {
+			str.WriteString(" " + green("ok"))
+		} else {
+			str.WriteString(" " + strings.Join([]string{yellow(current), red(worktree)}, " "))
 		}
 
-		for _, branch := range branches {
-			// Don't print the status of the current branch. It was already printed above.
-			if branch == current {
-				continue
+		for _, branch := range r.Branches() {
+			status := r.BranchStatus(branch)
+			if status == "" {
+				status = green("ok")
 			}
 
-			status, err := printBranchStatus(r, branch)
-			if err != nil {
-				status = printErr(err)
-			}
+			indent := strings.Repeat(" ", len(r.Path())-1)
+			str.WriteString(fmt.Sprintf("\n%s %s %s", indent, blue(branch), yellow(status)))
+		}
 
-			indent := strings.Repeat(" ", len(r.Path()))
-			str.WriteString(fmt.Sprintf("\n%s %s %s", indent, printBranchName(branch), status))
+		if i < len(repos)-1 {
+			str.WriteString("\n")
 		}
 	}
 

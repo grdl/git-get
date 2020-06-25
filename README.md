@@ -110,7 +110,7 @@ https://github.com/grdl/testsite master
 
 Dump file format is simply:
 - Each repo URL on a separate line.
-- Each URL can have a suffix with a branch or tag name to check out after cloning. Without that suffix, repository HEAD is used (usually it's `master`).
+- Each URL can have a space-separated suffix with a branch or tag name to check out after cloning. Without that suffix, repository HEAD is cloned (usually it's `master`).
 
 Example dump file content:
 ```

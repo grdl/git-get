@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sort"
 	"strings"
 	"syscall"
 
@@ -97,8 +96,6 @@ func (r *RepoFinder) Find() ([]string, error) {
 	if len(r.repos) == 0 {
 		return nil, fmt.Errorf("no git repos found in root path %s", r.root)
 	}
-
-	sort.Strings(r.repos)
 
 	return r.repos, nil
 }

@@ -3,13 +3,11 @@ package pkg
 import (
 	"fmt"
 	"git-get/pkg/cfg"
-	"git-get/pkg/git"
 	"git-get/pkg/io"
 	"git-get/pkg/print"
+	"sort"
 	"strings"
 )
-
-var repos []string
 
 // ListCfg provides configuration for the List command.
 type ListCfg struct {
@@ -25,50 +23,52 @@ func List(c *ListCfg) error {
 		return err
 	}
 
-	// TODO: we should open, fetch and read status of each repo in separate goroutine
-	var repos []git.Repo
-	for _, path := range paths {
-		repo, err := git.Open(path)
-		if err != nil {
-			// TODO: how should we handle it?
-			continue
-		}
+	loaded := loadAll(paths)
 
-		if c.Fetch {
-			err := repo.Fetch()
-			if err != nil {
-				// TODO: handle error
-			}
-		}
-
-		repos = append(repos, *repo)
+	printables := make([]print.Printable, len(loaded))
+	for i := range loaded {
+		printables[i] = loaded[i]
 	}
 
 	switch c.Output {
 	case cfg.OutFlat:
-		printables := make([]print.Repo, len(repos))
-		for i := range repos {
-			printables[i] = &repos[i]
-		}
 		fmt.Println(print.NewFlatPrinter().Print(printables))
-
 	case cfg.OutTree:
-		printables := make([]print.Repo, len(repos))
-		for i := range repos {
-			printables[i] = &repos[i]
-		}
 		fmt.Println(print.NewTreePrinter().Print(c.Root, printables))
-
 	case cfg.OutDump:
-		printables := make([]print.DumpRepo, len(repos))
-		for i := range repos {
-			printables[i] = &repos[i]
-		}
 		fmt.Println(print.NewDumpPrinter().Print(printables))
-
 	default:
 		return fmt.Errorf("invalid --out flag; allowed values: [%s]", strings.Join(cfg.AllowedOut, ", "))
 	}
 
 	return nil
+}
+
+// loadAll runs a separate goroutine to open, fetch (if asked to) and load status of git repo
+func loadAll(paths []string) []*Loaded {
+	var ll []*Loaded
+
+	loadedChan := make(chan *Loaded)
+
+	for _, path := range paths {
+		go func(path string) {
+			loadedChan <- Load(path)
+		}(path)
+	}
+
+	for l := range loadedChan {
+		ll = append(ll, l)
+
+		// Close the channell when loaded all paths
+		if len(ll) == len(paths) {
+			close(loadedChan)
+		}
+	}
+
+	// sort the loaded slice by path
+	sort.Slice(ll, func(i, j int) bool {
+		return strings.Compare(ll[i].path, ll[j].path) < 0
+	})
+
+	return ll
 }
