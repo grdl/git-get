@@ -2,6 +2,7 @@ package git
 
 import (
 	"git-get/pkg/io"
+	"git-get/pkg/test"
 	"reflect"
 	"testing"
 )
@@ -17,39 +18,39 @@ func TestOpen(t *testing.T) {
 func TestUncommitted(t *testing.T) {
 	tests := []struct {
 		name      string
-		repoMaker func(*testing.T) *testRepo
+		repoMaker func(*testing.T) *test.Repo
 		want      int
 	}{
 		{
 			name:      "empty",
-			repoMaker: testRepoEmpty,
+			repoMaker: test.RepoEmpty,
 			want:      0,
 		},
 		{
 			name:      "single untracked",
-			repoMaker: testRepoWithUntracked,
+			repoMaker: test.RepoWithUntracked,
 			want:      0,
 		},
 		{
 			name:      "single tracked ",
-			repoMaker: testRepoWithStaged,
+			repoMaker: test.RepoWithStaged,
 			want:      1,
 		},
 		{
 			name:      "committed",
-			repoMaker: testRepoWithCommit,
+			repoMaker: test.RepoWithCommit,
 			want:      0,
 		},
 		{
 			name:      "untracked and uncommitted",
-			repoMaker: testRepoWithUncommittedAndUntracked,
+			repoMaker: test.RepoWithUncommittedAndUntracked,
 			want:      1,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := test.repoMaker(t)
+			r, _ := Open(test.repoMaker(t).Path())
 			got, err := r.Uncommitted()
 
 			if err != nil {
@@ -65,39 +66,39 @@ func TestUncommitted(t *testing.T) {
 func TestUntracked(t *testing.T) {
 	tests := []struct {
 		name      string
-		repoMaker func(*testing.T) *testRepo
+		repoMaker func(*testing.T) *test.Repo
 		want      int
 	}{
 		{
 			name:      "empty",
-			repoMaker: testRepoEmpty,
+			repoMaker: test.RepoEmpty,
 			want:      0,
 		},
 		{
 			name:      "single untracked",
-			repoMaker: testRepoWithUntracked,
+			repoMaker: test.RepoWithUntracked,
 			want:      0,
 		},
 		{
 			name:      "single tracked ",
-			repoMaker: testRepoWithStaged,
+			repoMaker: test.RepoWithStaged,
 			want:      1,
 		},
 		{
 			name:      "committed",
-			repoMaker: testRepoWithCommit,
+			repoMaker: test.RepoWithCommit,
 			want:      0,
 		},
 		{
 			name:      "untracked and uncommitted",
-			repoMaker: testRepoWithUncommittedAndUntracked,
+			repoMaker: test.RepoWithUncommittedAndUntracked,
 			want:      1,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := test.repoMaker(t)
+			r, _ := Open(test.repoMaker(t).Path())
 			got, err := r.Uncommitted()
 
 			if err != nil {
@@ -114,7 +115,7 @@ func TestUntracked(t *testing.T) {
 func TestCurrentBranch(t *testing.T) {
 	tests := []struct {
 		name      string
-		repoMaker func(*testing.T) *testRepo
+		repoMaker func(*testing.T) *test.Repo
 		want      string
 	}{
 		// TODO: maybe add wantErr to check if error is returned correctly?
@@ -125,24 +126,24 @@ func TestCurrentBranch(t *testing.T) {
 		// },
 		{
 			name:      "only master branch",
-			repoMaker: testRepoWithCommit,
+			repoMaker: test.RepoWithCommit,
 			want:      master,
 		},
 		{
 			name:      "checked out new branch",
-			repoMaker: testRepoWithBranch,
+			repoMaker: test.RepoWithBranch,
 			want:      "feature/branch",
 		},
 		{
 			name:      "checked out new tag",
-			repoMaker: testRepoWithTag,
+			repoMaker: test.RepoWithTag,
 			want:      head,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := test.repoMaker(t)
+			r, _ := Open(test.repoMaker(t).Path())
 			got, err := r.CurrentBranch()
 
 			if err != nil {
@@ -158,34 +159,34 @@ func TestCurrentBranch(t *testing.T) {
 func TestBranches(t *testing.T) {
 	tests := []struct {
 		name      string
-		repoMaker func(*testing.T) *testRepo
+		repoMaker func(*testing.T) *test.Repo
 		want      []string
 	}{
 		{
 			name:      "empty",
-			repoMaker: testRepoEmpty,
+			repoMaker: test.RepoEmpty,
 			want:      []string{""},
 		},
 		{
 			name:      "only master branch",
-			repoMaker: testRepoWithCommit,
+			repoMaker: test.RepoWithCommit,
 			want:      []string{"master"},
 		},
 		{
 			name:      "new branch",
-			repoMaker: testRepoWithBranch,
+			repoMaker: test.RepoWithBranch,
 			want:      []string{"feature/branch", "master"},
 		},
 		{
 			name:      "checked out new tag",
-			repoMaker: testRepoWithTag,
+			repoMaker: test.RepoWithTag,
 			want:      []string{"master"},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := test.repoMaker(t)
+			r, _ := Open(test.repoMaker(t).Path())
 			got, err := r.Branches()
 
 			if err != nil {
@@ -201,38 +202,38 @@ func TestBranches(t *testing.T) {
 func TestUpstream(t *testing.T) {
 	tests := []struct {
 		name      string
-		repoMaker func(*testing.T) *testRepo
+		repoMaker func(*testing.T) *test.Repo
 		branch    string
 		want      string
 	}{
 		{
 			name:      "empty",
-			repoMaker: testRepoEmpty,
+			repoMaker: test.RepoEmpty,
 			branch:    "master",
 			want:      "",
 		},
 		// TODO: add wantErr
 		{
 			name:      "wrong branch name",
-			repoMaker: testRepoWithCommit,
+			repoMaker: test.RepoWithCommit,
 			branch:    "wrong_branch_name",
 			want:      "",
 		},
 		{
 			name:      "master with upstream",
-			repoMaker: testRepoWithBranchWithUpstream,
+			repoMaker: test.RepoWithBranchWithUpstream,
 			branch:    "master",
 			want:      "origin/master",
 		},
 		{
 			name:      "branch with upstream",
-			repoMaker: testRepoWithBranchWithUpstream,
+			repoMaker: test.RepoWithBranchWithUpstream,
 			branch:    "feature/branch",
 			want:      "origin/feature/branch",
 		},
 		{
 			name:      "branch without upstream",
-			repoMaker: testRepoWithBranchWithoutUpstream,
+			repoMaker: test.RepoWithBranchWithoutUpstream,
 			branch:    "feature/branch",
 			want:      "",
 		},
@@ -240,7 +241,7 @@ func TestUpstream(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := test.repoMaker(t)
+			r, _ := Open(test.repoMaker(t).Path())
 			got, _ := r.Upstream(test.branch)
 
 			// TODO:
@@ -257,32 +258,32 @@ func TestUpstream(t *testing.T) {
 func TestAheadBehind(t *testing.T) {
 	tests := []struct {
 		name      string
-		repoMaker func(*testing.T) *testRepo
+		repoMaker func(*testing.T) *test.Repo
 		branch    string
 		want      []int
 	}{
 		{
 			name:      "fresh clone",
-			repoMaker: testRepoWithBranchWithUpstream,
+			repoMaker: test.RepoWithBranchWithUpstream,
 			branch:    "master",
 			want:      []int{0, 0},
 		},
 		{
 			name:      "branch ahead",
-			repoMaker: testRepoWithBranchAhead,
+			repoMaker: test.RepoWithBranchAhead,
 			branch:    "feature/branch",
 			want:      []int{1, 0},
 		},
 
 		{
 			name:      "branch behind",
-			repoMaker: testRepoWithBranchBehind,
+			repoMaker: test.RepoWithBranchBehind,
 			branch:    "feature/branch",
 			want:      []int{0, 1},
 		},
 		{
 			name:      "branch ahead and behind",
-			repoMaker: testRepoWithBranchAheadAndBehind,
+			repoMaker: test.RepoWithBranchAheadAndBehind,
 			branch:    "feature/branch",
 			want:      []int{2, 1},
 		},
@@ -290,7 +291,7 @@ func TestAheadBehind(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := test.repoMaker(t)
+			r, _ := Open(test.repoMaker(t).Path())
 			upstream, err := r.Upstream(test.branch)
 			if err != nil {
 				t.Errorf("got error %q", err)

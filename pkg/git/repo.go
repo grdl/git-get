@@ -3,14 +3,10 @@ package git
 import (
 	"fmt"
 	"git-get/pkg/io"
+	"git-get/pkg/run"
 	"net/url"
-	"os"
-	"os/exec"
-	"path"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -21,7 +17,19 @@ const (
 )
 
 // Repo represents a git repository on disk.
-type Repo struct {
+type Repo interface {
+	Path() string
+	Branches() ([]string, error)
+	CurrentBranch() (string, error)
+	Fetch() error
+	Remote() (string, error)
+	Uncommitted() (int, error)
+	Untracked() (int, error)
+	Upstream(string) (string, error)
+	AheadBehind(string, string) (int, int, error)
+}
+
+type repo struct {
 	path string
 }
 
@@ -35,44 +43,38 @@ type CloneOpts struct {
 }
 
 // Open checks if given path can be accessed and returns a Repo instance pointing to it.
-func Open(path string) (*Repo, error) {
+func Open(path string) (Repo, error) {
 	_, err := io.Exists(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Repo{
+	return &repo{
 		path: path,
 	}, nil
 }
 
 // Clone clones repository specified with CloneOpts.
-func Clone(opts *CloneOpts) (*Repo, error) {
+func Clone(opts *CloneOpts) (Repo, error) {
 	// TODO: not sure if this check should be here
 	if opts.IgnoreExisting {
 		return nil, nil
 	}
 
-	args := []string{"clone"}
-
+	runGit := run.Git("clone", opts.URL.String(), opts.Path)
 	if opts.Branch != "" {
-		args = append(args, "--branch", opts.Branch, "--single-branch")
+		runGit = run.Git("clone", "--branch", opts.Branch, "--single-branch", opts.URL.String(), opts.Path)
 	}
 
+	var err error
 	if opts.Quiet {
-		args = append(args, "--quiet")
+		err = runGit.AndShutUp()
+	} else {
+		err = runGit.AndShow()
 	}
 
-	args = append(args, opts.URL.String())
-	args = append(args, opts.Path)
-
-	cmd := exec.Command("git", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Run()
 	if err != nil {
-		return nil, errors.Wrapf(err, "git clone failed")
+		return nil, err
 	}
 
 	repo, err := Open(opts.Path)
@@ -80,24 +82,21 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 }
 
 // Fetch preforms a git fetch on all remotes
-func (r *Repo) Fetch() error {
-	cmd := gitCmd(r.path, "fetch", "--all", "--quiet")
-	return cmd.Run()
+func (r *repo) Fetch() error {
+	err := run.Git("fetch", "--all").OnRepo(r.path).AndShutUp()
+	return err
 }
 
 // Uncommitted returns the number of uncommitted files in the repository.
 // Only tracked files are not counted.
-func (r *Repo) Uncommitted() (int, error) {
-	cmd := gitCmd(r.path, "status", "--ignore-submodules", "--porcelain")
-
-	out, err := cmd.Output()
+func (r *repo) Uncommitted() (int, error) {
+	out, err := run.Git("status", "--ignore-submodules", "--porcelain").OnRepo(r.path).AndCaptureLines()
 	if err != nil {
-		return 0, cmdError(cmd, err)
+		return 0, err
 	}
 
-	lines := lines(out)
 	count := 0
-	for _, line := range lines {
+	for _, line := range out {
 		// Don't count lines with untracked files and empty lines.
 		if !strings.HasPrefix(line, untracked) && strings.TrimSpace(line) != "" {
 			count++
@@ -108,17 +107,14 @@ func (r *Repo) Uncommitted() (int, error) {
 }
 
 // Untracked returns the number of untracked files in the repository.
-func (r *Repo) Untracked() (int, error) {
-	cmd := gitCmd(r.path, "status", "--ignore-submodules", "--untracked-files=all", "--porcelain")
-
-	out, err := cmd.Output()
+func (r *repo) Untracked() (int, error) {
+	out, err := run.Git("status", "--ignore-submodules", "--untracked-files=all", "--porcelain").OnRepo(r.path).AndCaptureLines()
 	if err != nil {
-		return 0, cmdError(cmd, err)
+		return 0, err
 	}
 
-	lines := lines(out)
 	count := 0
-	for _, line := range lines {
+	for _, line := range out {
 		if strings.HasPrefix(line, untracked) {
 			count++
 		}
@@ -129,69 +125,54 @@ func (r *Repo) Untracked() (int, error) {
 
 // CurrentBranch returns the short name currently checked-out branch for the repository.
 // If repo is in a detached head state, it will return "HEAD".
-func (r *Repo) CurrentBranch() (string, error) {
-	cmd := gitCmd(r.path, "rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD")
-
-	out, err := cmd.Output()
+func (r *repo) CurrentBranch() (string, error) {
+	out, err := run.Git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
-		return "", cmdError(cmd, err)
+		return "", err
 	}
 
-	lines := lines(out)
-	return lines[0], nil
+	return out, nil
 }
 
 // Branches returns a list of local branches in the repository.
-func (r *Repo) Branches() ([]string, error) {
-	cmd := gitCmd(r.path, "branch", "--format=%(refname:short)")
-
-	out, err := cmd.Output()
+func (r *repo) Branches() ([]string, error) {
+	out, err := run.Git("branch", "--format=%(refname:short)").OnRepo(r.path).AndCaptureLines()
 	if err != nil {
-		return nil, cmdError(cmd, err)
+		return nil, err
 	}
-
-	lines := lines(out)
 
 	// TODO: Is detached head shown always on the first line? Maybe we don't need to iterate over everything.
 	// Remove the line containing detached head.
-	for i, line := range lines {
+	for i, line := range out {
 		if strings.Contains(line, "HEAD detached") {
-			lines = append(lines[:i], lines[i+1:]...)
+			out = append(out[:i], out[i+1:]...)
 		}
 	}
 
-	return lines, nil
+	return out, nil
 }
 
 // Upstream returns the name of an upstream branch if a given branch is tracking one.
 // Otherwise it returns an empty string.
-func (r *Repo) Upstream(branch string) (string, error) {
-	cmd := gitCmd(r.path, "rev-parse", "--abbrev-ref", "--symbolic-full-name", fmt.Sprintf("%s@{upstream}", branch))
-
-	out, err := cmd.Output()
+func (r *repo) Upstream(branch string) (string, error) {
+	out, err := run.Git("rev-parse", "--abbrev-ref", "--symbolic-full-name", fmt.Sprintf("%s@{upstream}", branch)).OnRepo(r.path).AndCaptureLine()
 	if err != nil {
-
 		// TODO: no upstream will also throw an error.
-		return "", nil //cmdError(cmd, err)
+		return "", nil
 	}
 
-	lines := lines(out)
-	return lines[0], nil
+	return out, nil
 }
 
 // AheadBehind returns the number of commits a given branch is ahead and/or behind the upstream.
-func (r *Repo) AheadBehind(branch string, upstream string) (int, int, error) {
-	cmd := gitCmd(r.path, "rev-list", "--left-right", "--count", fmt.Sprintf("%s...%s", branch, upstream))
-
-	out, err := cmd.Output()
+func (r *repo) AheadBehind(branch string, upstream string) (int, int, error) {
+	out, err := run.Git("rev-list", "--left-right", "--count", fmt.Sprintf("%s...%s", branch, upstream)).OnRepo(r.path).AndCaptureLine()
 	if err != nil {
-		return 0, 0, cmdError(cmd, err)
+		return 0, 0, err
 	}
 
-	lines := lines(out)
-
 	// rev-list --left-right --count output is separated by a tab
-	lr := strings.Split(lines[0], "\t")
+	lr := strings.Split(out, "\t")
 
 	ahead, err := strconv.Atoi(lr[0])
 	if err != nil {
@@ -207,39 +188,18 @@ func (r *Repo) AheadBehind(branch string, upstream string) (int, int, error) {
 }
 
 // Remote returns URL of remote repository.
-func (r *Repo) Remote() (string, error) {
+func (r *repo) Remote() (string, error) {
 	// https://stackoverflow.com/a/16880000/1085632
-	cmd := gitCmd(r.path, "ls-remote", "--get-url")
-
-	out, err := cmd.Output()
+	out, err := run.Git("ls-remote", "--get-url").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
-		return "", cmdError(cmd, err)
+		return "", err
 	}
 
-	lines := lines(out)
-
 	// TODO: needs testing. What happens when there are more than 1 remotes?
-	return lines[0], nil
+	return out, nil
 }
 
 // Path returns path to the repository.
-func (r *Repo) Path() string {
+func (r *repo) Path() string {
 	return r.path
-}
-
-func gitCmd(repoPath string, args ...string) *exec.Cmd {
-	args = append([]string{"--work-tree", repoPath, "--git-dir", path.Join(repoPath, dotgit)}, args...)
-	return exec.Command("git", args...)
-}
-
-func lines(output []byte) []string {
-	lines := strings.TrimSuffix(string(output), "\n")
-	return strings.Split(lines, "\n")
-}
-
-func cmdError(cmd *exec.Cmd, err error) error {
-	if err != nil {
-		return errors.Wrapf(err, "%s failed: %+v", strings.Join(cmd.Args, " "), err) // Show which git command failed (skip "--work-tree and --gitdir flags")
-	}
-	return nil
 }

@@ -83,7 +83,7 @@ func setMissingValues(cfg Gitconfig) {
 }
 
 func getOrDef(cfg Gitconfig, key string, def string) string {
-	if val := cfg.Get(key); val != "" {
+	if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, key)); val != "" {
 		return val
 	}
 	return def

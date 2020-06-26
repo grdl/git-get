@@ -54,7 +54,7 @@ func Load(path string) *Loaded {
 	return loaded
 }
 
-func loadBranches(r *git.Repo) (map[string]string, []error) {
+func loadBranches(r git.Repo) (map[string]string, []error) {
 	statuses := make(map[string]string)
 	errors := make([]error, 0)
 
@@ -75,7 +75,7 @@ func loadBranches(r *git.Repo) (map[string]string, []error) {
 	return statuses, errors
 }
 
-func loadBranchStatus(r *git.Repo, branch string) (string, error) {
+func loadBranchStatus(r git.Repo, branch string) (string, error) {
 	upstream, err := r.Upstream(branch)
 	if err != nil {
 		return "", err
@@ -105,7 +105,7 @@ func loadBranchStatus(r *git.Repo, branch string) (string, error) {
 	return strings.Join(res, " "), nil
 }
 
-func loadWorkTree(r *git.Repo) (string, error) {
+func loadWorkTree(r git.Repo) (string, error) {
 	uncommitted, err := r.Uncommitted()
 	if err != nil {
 		return "", err
