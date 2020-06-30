@@ -50,7 +50,7 @@ func TestURLParse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		url, err := ParseURL(test.in, cfg.DefDefaultHost)
+		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost])
 		if err != nil {
 			t.Errorf("Error parsing Path: %+v", err)
 		}
@@ -74,7 +74,7 @@ func TestInvalidURLParse(t *testing.T) {
 	}
 
 	for _, in := range invalidURLs {
-		got, err := ParseURL(in, cfg.DefDefaultHost)
+		got, err := ParseURL(in, cfg.Defaults[cfg.KeyDefaultHost])
 		if err == nil {
 			t.Errorf("Wrong result of parsing invalid Path: %s, got: %s, wantBranch: error", in, got)
 		}

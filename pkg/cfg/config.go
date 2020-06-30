@@ -4,7 +4,7 @@ package cfg
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
@@ -14,18 +14,22 @@ import (
 // GitgetPrefix is the name of the gitconfig section name and the env var prefix.
 const GitgetPrefix = "gitget"
 
-// CLI flag keys and their default values.
-const (
+// CLI flag keys.
+var (
 	KeyBranch      = "branch"
 	KeyDump        = "dump"
 	KeyDefaultHost = "host"
-	DefDefaultHost = "github.com"
 	KeyFetch       = "fetch"
 	KeyOutput      = "out"
-	DefOutput      = OutTree
 	KeyReposRoot   = "root"
-	DefReposRoot   = "repositories"
 )
+
+// Defaults is a map of default values for config keys.
+var Defaults = map[string]string{
+	KeyDefaultHost: "github.com",
+	KeyOutput:      OutTree,
+	KeyReposRoot:   fmt.Sprintf("~%c%s", filepath.Separator, "repositories"),
+}
 
 // Values for the --out flag.
 const (
@@ -68,18 +72,21 @@ func Init(cfg Gitconfig) {
 	viper.AutomaticEnv()
 
 	setMissingValues(cfg)
+	expandValues()
 }
 
 // setMissingValues checks if config values are provided by flags or env vars. If not, it tries loading them from gitconfig file.
 // If that fails, the default values are used.
 func setMissingValues(cfg Gitconfig) {
-	if isUnsetOrEmpty(KeyReposRoot) {
-		viper.Set(KeyReposRoot, getOrDef(cfg, KeyReposRoot, path.Join(home(), DefReposRoot)))
+	for key, def := range Defaults {
+		if isUnsetOrEmpty(key) {
+			viper.Set(key, getOrDef(cfg, key, def))
+		}
 	}
+}
 
-	if isUnsetOrEmpty(KeyDefaultHost) {
-		viper.Set(KeyDefaultHost, getOrDef(cfg, KeyDefaultHost, DefDefaultHost))
-	}
+func isUnsetOrEmpty(key string) bool {
+	return !viper.IsSet(key) || strings.TrimSpace(viper.GetString(key)) == ""
 }
 
 func getOrDef(cfg Gitconfig, key string, def string) string {
@@ -89,18 +96,11 @@ func getOrDef(cfg Gitconfig, key string, def string) string {
 	return def
 }
 
-// home returns path to a home directory or empty string if can't be found.
-// Using empty string means that in the unlikely situation where home dir can't be found
-// and there's no reposRoot specified by any of the config methods, the current dir will be used as repos root.
-func home() string {
-	home, err := homedir.Dir()
-	if err != nil {
-		return ""
+// expandValues applies the homedir expansion to a config value. If expansion is not needed value is not modified.
+func expandValues() {
+	for _, key := range viper.AllKeys() {
+		if expanded, err := homedir.Expand(viper.GetString(key)); err == nil {
+			viper.Set(key, expanded)
+		}
 	}
-
-	return home
-}
-
-func isUnsetOrEmpty(key string) bool {
-	return !viper.IsSet(key) || strings.TrimSpace(viper.GetString(key)) == ""
 }

@@ -22,8 +22,8 @@ var cmd = &cobra.Command{
 
 func init() {
 	cmd.PersistentFlags().BoolP(cfg.KeyFetch, "f", false, "First fetch from remotes before listing repositories.")
-	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.DefOutput, fmt.Sprintf("Output format. Allowed values: [%s].", strings.Join(cfg.AllowedOut, ", ")))
-	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", "", "Path to repos root where repositories are cloned. (default \"~/repositories\")")
+	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.Defaults[cfg.KeyOutput], fmt.Sprintf("Output format. Allowed values: [%s].", strings.Join(cfg.AllowedOut, ", ")))
+	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", cfg.Defaults[cfg.KeyReposRoot], "Path to repos root where repositories are cloned.")
 	cmd.PersistentFlags().BoolP("help", "h", false, "Print this help and exit.")
 	cmd.PersistentFlags().BoolP("version", "v", false, "Print version and exit.")
 

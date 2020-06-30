@@ -133,10 +133,6 @@ The order of precedence for configuration is as follows:
 - .gitconfig entry
 - default value
 
-> :warning: **WARNING!** :warning:
->
-> When changing repos root path using .gitconfig or env variables, use a full path. For example, use `/home/greg/my_repos` instead of `~/my_repos` or `$HOME/my_repos`. This is becase `git-get` can't expand shell variables.
-
 
 ### Env variables
 

@@ -28,7 +28,7 @@ func TestConfig(t *testing.T) {
 			name:        "no config",
 			configMaker: testConfigEmpty,
 			key:         KeyDefaultHost,
-			want:        DefDefaultHost,
+			want:        Defaults[KeyDefaultHost],
 		},
 		{
 			name:        "value only in gitconfig",
@@ -108,7 +108,7 @@ func testConfigInFlag(t *testing.T) {
 	os.Setenv(envVarName, fromEnv)
 
 	cmd := cobra.Command{}
-	cmd.PersistentFlags().String(KeyDefaultHost, DefDefaultHost, "")
+	cmd.PersistentFlags().String(KeyDefaultHost, Defaults[KeyDefaultHost], "")
 	viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost))
 
 	cmd.SetArgs([]string{"--" + KeyDefaultHost, fromFlag})
