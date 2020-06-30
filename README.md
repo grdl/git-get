@@ -8,6 +8,9 @@
 
 * [Description](#description)
 * [Installation](#installation)
+  * [macOS](#macos)
+  * [Linux](#linux)
+  * [Windows](#windows)
 * [Usage](#usage)
   * [git get](#git-get-1)
   * [git list](#git-list)
@@ -28,14 +31,27 @@
 
 ## Installation
 
+Each release contains two binaries: `git-get` and `git-list`. When put on PATH, git automatically recognizes them as custom commands and allows to run them as `git get` or `git list`.
+
+### macOS
+
 Use Homebrew:
 ```
 brew install grdl/tap/git-get
 ```
 
-Or grab the [latest release](https://github.com/grdl/git-get/releases) and put the binaries on your PATH.
+### Linux
 
-Each release contains two binaries: `git-get` and `git-list`. When put on PATH, git automatically recognizes them as custom commands and allows to run them as `git get` or `git list`.
+Download and install `.deb` or `.rpm` file from the [latest release](https://github.com/grdl/git-get/releases/latest).
+
+Or install with [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux):
+```
+brew install grdl/tap/git-get
+```
+
+### Windows
+
+Grab the `.zip` file from the [latest release](https://github.com/grdl/git-get/releases/latest) and put the binaries on your PATH.
 
 
 ## Usage
@@ -45,19 +61,17 @@ Each release contains two binaries: `git-get` and `git-list`. When put on PATH, 
 git get <REPO> [flags]
 
 Flags:
-  -b, --branch string       Branch (or tag) to checkout after cloning.
-  -d, --dump string         Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.
+  -b, --branch              Branch (or tag) to checkout after cloning.
+  -d, --dump                Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.
   -h, --help                Print this help and exit.
-  -t, --host string         Host to use when <REPO> doesn't have a specified host. (default "github.com")
-  -r, --root string         Path to repos root where repositories are cloned. (default "~/repositories")
+  -t, --host                Host to use when <REPO> doesn't have a specified host. (default "github.com")
+  -r, --root                Path to repos root where repositories are cloned. (default "~/repositories")
   -v, --version             Print version and exit.
 ```
 
 The `<REPO>` argument can be any valid URL supported by git. It also accepts a short `USER/REPO` format. In that case `git-get` will automatically use the configured host (github.com by default).
 
 For example, `git get grdl/git-get` will clone `https://github.com/grdl/git-get`.
-
-
 
 
 ### git list
@@ -68,8 +82,8 @@ Usage:
 Flags:
   -f, --fetch               First fetch from remotes before listing repositories.
   -h, --help                Print this help and exit.
-  -o, --out string          Output format. Allowed values: [dump, flat, smart, tree]. (default "tree")
-  -r, --root string         Path to repos root where repositories are cloned. (default "~/repositories")
+  -o, --out                 Output format. Allowed values: [dump, flat, smart, tree]. (default "tree")
+  -r, --root                Path to repos root where repositories are cloned. (default "~/repositories")
   -v, --version             Print version and exit.
 ```
 
