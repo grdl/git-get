@@ -4,7 +4,7 @@ import (
 	"git-get/pkg/io"
 	"git-get/pkg/run"
 	"git-get/pkg/test"
-	"path"
+	"path/filepath"
 	"testing"
 )
 
@@ -75,7 +75,7 @@ func TestGitConfig(t *testing.T) {
 
 func makeConfigEmpty(t *testing.T) *cfgStub {
 	c := newCfgStub(t)
-	io.Write(path.Join(c.repo.Path(), dotgit, "config"), "")
+	io.Write(filepath.Join(c.repo.Path(), dotgit, "config"), "")
 
 	return c
 }
@@ -89,7 +89,7 @@ func makeConfigValid(t *testing.T) *cfgStub {
 	[gitget]
 		host = github.com
 	`
-	io.Write(path.Join(c.repo.Path(), dotgit, "config"), gitconfig)
+	io.Write(filepath.Join(c.repo.Path(), dotgit, "config"), gitconfig)
 
 	return c
 }

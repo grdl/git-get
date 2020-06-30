@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"git-get/pkg/git"
 	"git-get/pkg/io"
-	"path"
+	"path/filepath"
 )
 
 // GetCfg provides configuration for the Get command.
@@ -40,7 +40,7 @@ func cloneSingleRepo(c *GetCfg) error {
 
 	opts := &git.CloneOpts{
 		URL:    url,
-		Path:   path.Join(c.Root, URLToPath(url)),
+		Path:   filepath.Join(c.Root, URLToPath(url)),
 		Branch: c.Branch,
 	}
 
@@ -63,7 +63,7 @@ func cloneDumpFile(c *GetCfg) error {
 
 		opts := &git.CloneOpts{
 			URL:    url,
-			Path:   path.Join(c.Root, URLToPath(url)),
+			Path:   filepath.Join(c.Root, URLToPath(url)),
 			Branch: line.branch,
 		}
 

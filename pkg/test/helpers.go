@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"git-get/pkg/io"
 	"git-get/pkg/run"
-	"path"
+	"path/filepath"
 	"testing"
 )
 
 func (r *Repo) writeFile(filename string, content string) {
-	path := path.Join(r.path, filename)
+	path := filepath.Join(r.path, filename)
 	err := io.Write(path, content)
 	checkFatal(r.t, err)
 }

@@ -2,7 +2,7 @@ package pkg
 
 import (
 	urlpkg "net/url"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -67,7 +67,7 @@ func URLToPath(url *urlpkg.URL) (repoPath string) {
 	repoHost := strings.Split(url.Host, ":")[0]
 
 	// Remove trailing ".git" from repo name
-	repoPath = path.Join(repoHost, url.Path)
+	repoPath = filepath.Join(repoHost, url.Path)
 	repoPath = strings.TrimSuffix(repoPath, ".git")
 
 	// Remove tilde (~) char from username
