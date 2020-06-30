@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2020-06-30
+### Changed
+- Remove dependency on [go-git](https://github.com/go-git/go-git) and major refactor to fix performance issues on big repos.
+
+### Fixed
+- Correctly expand `--root` pointing to a path containing home variable (eg, `~/my-repos`).
+- Correctly process paths on Windows.
+
+
 ## [0.0.4] - 2020-06-19
 ### Added
 - `--dump` flag that allows to clone multiple repos listed in a dump file.
@@ -38,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release using [goreleaser](https://github.com/goreleaser/goreleaser).
 
-
+[0.0.5]: https://github.com/grdl/git-get/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/grdl/git-get/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/grdl/git-get/compare/v0.0.1...v0.0.3
 [0.0.1]: https://github.com/grdl/git-get/releases/tag/v0.0.1
