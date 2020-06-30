@@ -76,16 +76,14 @@ func (c *Cmd) AndCaptureLine() (string, error) {
 	return lines[0], nil
 }
 
-// AndShow executes the command and prints its output into standard output.
+// AndShow executes the command and prints its stderr and stdout.
 func (c *Cmd) AndShow() error {
 	c.cmd.Stdout = os.Stdout
-
-	errStream := &bytes.Buffer{}
-	c.cmd.Stderr = errStream
+	c.cmd.Stderr = os.Stderr
 
 	err := c.cmd.Run()
 	if err != nil {
-		return &GitError{errStream, c.cmd.Args, err}
+		return &GitError{&bytes.Buffer{}, c.cmd.Args, err}
 	}
 	return nil
 }
