@@ -31,10 +31,11 @@ func init() {
 	viper.BindPFlag(cfg.KeyOutput, cmd.PersistentFlags().Lookup(cfg.KeyOutput))
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 
+	cfg.Init(&git.ConfigGlobal{})
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	cfg.Init(&git.ConfigGlobal{})
+	cfg.Expand(cfg.KeyReposRoot)
 
 	config := &pkg.ListCfg{
 		Fetch:  viper.GetBool(cfg.KeyFetch),

@@ -36,15 +36,17 @@ func init() {
 	viper.BindPFlag(cfg.KeyDefaultHost, cmd.PersistentFlags().Lookup(cfg.KeyDefaultHost))
 	viper.BindPFlag(cfg.KeyDump, cmd.PersistentFlags().Lookup(cfg.KeyDump))
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
+
+	cfg.Init(&git.ConfigGlobal{})
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	cfg.Init(&git.ConfigGlobal{})
-
 	var url string
 	if len(args) > 0 {
 		url = args[0]
 	}
+
+	cfg.Expand(cfg.KeyReposRoot)
 
 	config := &pkg.GetCfg{
 		Branch:  viper.GetString(cfg.KeyBranch),

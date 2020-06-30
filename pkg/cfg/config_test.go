@@ -58,6 +58,7 @@ func TestConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			viper.SetDefault(test.key, Defaults[KeyDefaultHost])
 			test.configMaker(t)
 
 			got := viper.GetString(test.key)
@@ -93,18 +94,18 @@ func testConfigOnlyInGitconfig(t *testing.T) {
 }
 
 func testConfigOnlyInEnvVar(t *testing.T) {
+	Init(&gitconfigEmpty{})
 	os.Setenv(envVarName, fromEnv)
 
-	Init(&gitconfigEmpty{})
 }
 
 func testConfigInGitconfigAndEnvVar(t *testing.T) {
-	os.Setenv(envVarName, fromEnv)
-
 	Init(&gitconfigValid{})
+	os.Setenv(envVarName, fromEnv)
 }
 
 func testConfigInFlag(t *testing.T) {
+	Init(&gitconfigValid{})
 	os.Setenv(envVarName, fromEnv)
 
 	cmd := cobra.Command{}
@@ -113,5 +114,4 @@ func testConfigInFlag(t *testing.T) {
 
 	cmd.SetArgs([]string{"--" + KeyDefaultHost, fromFlag})
 	cmd.Execute()
-	Init(&gitconfigValid{})
 }

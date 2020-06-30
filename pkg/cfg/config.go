@@ -3,6 +3,7 @@
 package cfg
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -64,43 +65,33 @@ type Gitconfig interface {
 }
 
 // Init initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value.
-// Viper doesn't support gitconfig file format so it can't find missing values there automatically. They need to be specified in setMissingValues func.
-//
-// Because it reads the cli flags it needs to be called after the cmd.Execute().
 func Init(cfg Gitconfig) {
+	readGitconfig(cfg)
+
 	viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
 	viper.AutomaticEnv()
-
-	setMissingValues(cfg)
-	expandValues()
 }
 
-// setMissingValues checks if config values are provided by flags or env vars. If not, it tries loading them from gitconfig file.
-// If that fails, the default values are used.
-func setMissingValues(cfg Gitconfig) {
-	for key, def := range Defaults {
-		if isUnsetOrEmpty(key) {
-			viper.Set(key, getOrDef(cfg, key, def))
+// readGitConfig loads values from gitconfig file into viper's registry.
+// Viper doesn't support the gitconfig format so we load it using "git config --global" command and populate a temporary "env" string,
+// which is then feed to Viper.
+func readGitconfig(cfg Gitconfig) {
+	var lines []string
+
+	for key := range Defaults {
+		if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, key)); val != "" {
+			lines = append(lines, fmt.Sprintf("%s=%s", key, val))
 		}
 	}
+
+	viper.SetConfigType("env")
+	viper.ReadConfig(bytes.NewBuffer([]byte(strings.Join(lines, "\n"))))
 }
 
-func isUnsetOrEmpty(key string) bool {
-	return !viper.IsSet(key) || strings.TrimSpace(viper.GetString(key)) == ""
-}
-
-func getOrDef(cfg Gitconfig, key string, def string) string {
-	if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, key)); val != "" {
-		return val
-	}
-	return def
-}
-
-// expandValues applies the homedir expansion to a config value. If expansion is not needed value is not modified.
-func expandValues() {
-	for _, key := range viper.AllKeys() {
-		if expanded, err := homedir.Expand(viper.GetString(key)); err == nil {
-			viper.Set(key, expanded)
-		}
+// Expand applies the variables expansion to a viper config of given key.
+// If expansion fails or is not needed, the config is not modified.
+func Expand(key string) {
+	if expanded, err := homedir.Expand(viper.GetString(key)); err == nil {
+		viper.Set(key, expanded)
 	}
 }
