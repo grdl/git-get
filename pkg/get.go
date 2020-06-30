@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"git-get/pkg/git"
+	"git-get/pkg/io"
 	"path"
 )
 
@@ -37,13 +38,13 @@ func cloneSingleRepo(c *GetCfg) error {
 		return err
 	}
 
-	cloneOpts := &git.CloneOpts{
+	opts := &git.CloneOpts{
 		URL:    url,
 		Path:   path.Join(c.Root, URLToPath(url)),
 		Branch: c.Branch,
 	}
 
-	_, err = git.Clone(cloneOpts)
+	_, err = git.Clone(opts)
 
 	return err
 }
@@ -60,14 +61,19 @@ func cloneDumpFile(c *GetCfg) error {
 			return err
 		}
 
-		cloneOpts := &git.CloneOpts{
-			URL:            url,
-			Path:           path.Join(c.Root, URLToPath(url)),
-			Branch:         line.branch,
-			IgnoreExisting: true,
+		opts := &git.CloneOpts{
+			URL:    url,
+			Path:   path.Join(c.Root, URLToPath(url)),
+			Branch: line.branch,
 		}
 
-		_, err = git.Clone(cloneOpts)
+		// If target path already exists, skip cloning this repo
+		if exists, _ := io.Exists(opts.Path); exists {
+			continue
+		}
+
+		fmt.Printf("Cloning %s...\n", opts.URL.String())
+		_, err = git.Clone(opts)
 		if err != nil {
 			return err
 		}

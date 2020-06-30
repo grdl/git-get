@@ -35,11 +35,10 @@ type repo struct {
 
 // CloneOpts specify detail about repository to clone.
 type CloneOpts struct {
-	URL            *url.URL
-	Path           string // TODO: should Path be a part of clone opts?
-	Branch         string
-	Quiet          bool
-	IgnoreExisting bool
+	URL    *url.URL
+	Path   string // TODO: should Path be a part of clone opts?
+	Branch string
+	Quiet  bool
 }
 
 // Open checks if given path can be accessed and returns a Repo instance pointing to it.
@@ -56,11 +55,6 @@ func Open(path string) (Repo, error) {
 
 // Clone clones repository specified with CloneOpts.
 func Clone(opts *CloneOpts) (Repo, error) {
-	// TODO: not sure if this check should be here
-	if opts.IgnoreExisting {
-		return nil, nil
-	}
-
 	runGit := run.Git("clone", opts.URL.String(), opts.Path)
 	if opts.Branch != "" {
 		runGit = run.Git("clone", "--branch", opts.Branch, "--single-branch", opts.URL.String(), opts.Path)
