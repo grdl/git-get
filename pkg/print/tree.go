@@ -38,6 +38,7 @@ type Node struct {
 	parent   *Node
 	children []*Node
 	repo     Printable
+	depth    int
 }
 
 // Root creates a new root of a tree.
@@ -57,6 +58,7 @@ func (n *Node) Add(val string) *Node {
 	child := &Node{
 		val:    val,
 		parent: n,
+		depth:  n.depth + 1,
 	}
 	n.children = append(n.children, child)
 	return child
@@ -122,10 +124,12 @@ func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
 			worktree = fmt.Sprintf("[ %s ]", worktree)
 		}
 
+		var str strings.Builder
+
 		if worktree == "" && current == "" {
-			tp.SetValue(node.val + " " + blue(r.Current()) + " " + green("ok"))
+			str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), green("ok")))
 		} else {
-			tp.SetValue(node.val + " " + blue(r.Current()) + " " + strings.Join([]string{yellow(current), red(worktree)}, " "))
+			str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), strings.Join([]string{yellow(current), red(worktree)}, " ")))
 		}
 
 		for _, branch := range r.Branches() {
@@ -134,12 +138,53 @@ func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
 				status = green("ok")
 			}
 
-			tp.AddNode(blue(branch) + " " + yellow(status))
+			// TODO: This was rushed, see if there's a cleaner way to do it.
+			pipes := nextRowDepth(node)
+			spaces := node.depth - pipes
+			indentation := strings.Repeat("│   ", pipes) + strings.Repeat(" ", 4*spaces) + strings.Repeat(" ", len(node.val)+1)
+
+			str.WriteString(fmt.Sprintf("\n%s%s %s", indentation, blue(branch), yellow(status)))
 		}
+
+		tp.SetValue(str.String())
 	}
 
 	for _, child := range node.children {
 		branch := tp.AddBranch(child.val)
 		p.printTree(child, branch)
 	}
+}
+
+// nextRowDepth returns a depth level of the node that will be printed on the next row.
+// It traverses the tree "upwards" and checks if a node is the youngest one (are there no more siblings in its parent's children slice).
+func nextRowDepth(node *Node) int {
+	depth := node.depth
+	n := node
+	for n.amIYoungest() {
+		n = n.parent
+		if n == nil {
+			break
+		}
+
+		depth--
+	}
+
+	return depth
+}
+
+// amIYoungest checks if the node is the last one in the slice of children
+func (n *Node) amIYoungest() bool {
+	if n.parent == nil {
+		return true
+	}
+
+	sisters := n.parent.children
+	var myIndex int
+	for i, sis := range sisters {
+		if sis.val == n.val {
+			myIndex = i
+			break
+		}
+	}
+	return myIndex == len(sisters)-1
 }
