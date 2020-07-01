@@ -138,12 +138,7 @@ func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
 				status = green("ok")
 			}
 
-			// TODO: This was rushed, see if there's a cleaner way to do it.
-			pipes := nextRowDepth(node)
-			spaces := node.depth - pipes
-			indentation := strings.Repeat("│   ", pipes) + strings.Repeat(" ", 4*spaces) + strings.Repeat(" ", len(node.val)+1)
-
-			str.WriteString(fmt.Sprintf("\n%s%s %s", indentation, blue(branch), yellow(status)))
+			str.WriteString(fmt.Sprintf("\n%s%s %s", indentation(node), blue(branch), yellow(status)))
 		}
 
 		tp.SetValue(str.String())
@@ -155,25 +150,41 @@ func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
 	}
 }
 
-// nextRowDepth returns a depth level of the node that will be printed on the next row.
-// It traverses the tree "upwards" and checks if a node is the youngest one (are there no more siblings in its parent's children slice).
-func nextRowDepth(node *Node) int {
-	depth := node.depth
-	n := node
-	for n.amIYoungest() {
-		n = n.parent
-		if n == nil {
-			break
-		}
+// indentation generates a correct indentation for the branches row to match the links to lower rows.
+// It traverses the tree "upwards" and checks if a parent node is the youngest one (ie, there are no more sibling at the same level).
+// If it is, it means that level should be indented with empty spaces because there is nothing to link to anymore.
+// If it isn't the youngest, that level needs to be indented using a "|" link.
+func indentation(node *Node) string {
+	// Slice of levels. Slice index is node depth, true value means the node is the youngest.
+	levels := make([]bool, node.depth)
 
-		depth--
+	// Traverse until node has no parents (ie, we reached the root).
+	n := node
+	for n.parent != nil {
+		levels[n.depth-1] = n.isYoungest()
+		n = n.parent
 	}
 
-	return depth
+	var indent strings.Builder
+
+	const space = "    "
+	const link = "│   "
+	for _, y := range levels {
+		if y {
+			indent.WriteString(space)
+		} else {
+			indent.WriteString(link)
+		}
+	}
+
+	// Finally, indent by the size of node name (to match the rest of the branches)
+	indent.WriteString(strings.Repeat(" ", len(node.val)+1))
+
+	return indent.String()
 }
 
-// amIYoungest checks if the node is the last one in the slice of children
-func (n *Node) amIYoungest() bool {
+// isYoungest checks if the node is the last one in the slice of children
+func (n *Node) isYoungest() bool {
 	if n.parent == nil {
 		return true
 	}
