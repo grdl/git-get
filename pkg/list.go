@@ -23,7 +23,7 @@ func List(c *ListCfg) error {
 		return err
 	}
 
-	loaded := loadAll(paths)
+	loaded := loadAll(paths, c.Fetch)
 
 	printables := make([]print.Printable, len(loaded))
 	for i := range loaded {
@@ -45,14 +45,15 @@ func List(c *ListCfg) error {
 }
 
 // loadAll runs a separate goroutine to open, fetch (if asked to) and load status of git repo
-func loadAll(paths []string) []*Loaded {
+func loadAll(paths []string, fetch bool) []*Loaded {
 	var ll []*Loaded
 
 	loadedChan := make(chan *Loaded)
 
 	for _, path := range paths {
 		go func(path string) {
-			loadedChan <- Load(path)
+
+			loadedChan <- Load(path, fetch)
 		}(path)
 	}
 

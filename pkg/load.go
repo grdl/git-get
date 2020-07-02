@@ -17,7 +17,7 @@ type Loaded struct {
 }
 
 // Load reads status of a repository at a given path.
-func Load(path string) *Loaded {
+func Load(path string, fetch bool) *Loaded {
 	loaded := &Loaded{
 		path:     path,
 		branches: make(map[string]string),
@@ -28,6 +28,13 @@ func Load(path string) *Loaded {
 	if err != nil {
 		loaded.errors = append(loaded.errors, err.Error())
 		return loaded
+	}
+
+	if fetch {
+		err = repo.Fetch()
+		if err != nil {
+			loaded.errors = append(loaded.errors, err.Error())
+		}
 	}
 
 	loaded.current, err = repo.CurrentBranch()
