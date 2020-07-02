@@ -6,20 +6,21 @@
 
 `git-get` is a better way to clone, organize and manage multiple git repositories. 
 
-* [Description](#description)
-* [Installation](#installation)
-  * [macOS](#macos)
-  * [Linux](#linux)
-  * [Windows](#windows)
-* [Usage](#usage)
-  * [git get](#git-get-1)
-  * [git list](#git-list)
-  * [dump file](#dump-file)
-* [Configuration](#configuration)
-  * [Env variables](#env-variables)
-  * [.gitconfig file](#.gitconfig-file)
-* [Contributing](#contributing)
-* [Acknowledgments](#acknowledgments)
+- [git-get](#git-get)
+  - [Description](#description)
+  - [Installation](#installation)
+    - [macOS](#macos)
+    - [Linux](#linux)
+    - [Windows](#windows)
+  - [Usage](#usage)
+    - [git get](#git-get-1)
+    - [git list](#git-list)
+    - [Dump file](#dump-file)
+  - [Configuration](#configuration)
+    - [Env variables](#env-variables)
+    - [.gitconfig file](#gitconfig-file)
+  - [Contributing](#contributing)
+  - [Acknowledgments](#acknowledgments)
 
 ## Description
 
@@ -90,33 +91,16 @@ Flags:
 `git list` provides different ways to view the list of the repositories and their statuses.
 
 - **tree** (default) - repos rendered as a directory tree.
-```
-❯ git list
-/home/grdl/repositories
-└── github.com
-    └── grdl
-        ├── git-get master 1 ahead [ untracked ]
-        │   └── development ok
-        ├── homebrew-tap master ok
-        └── testsite master ok
-```
+
+![output_tree](./docs/out_tree.png)
 
 - **flat** - each repo (and each branch) on a new line with full path to the repo.
-```
-❯ git list -o flat
-/home/grdl/repositories/github.com/grdl/git-get master 1 ahead [ untracked ]
-                                                development ok
-/home/grdl/repositories/github.com/grdl/homebrew-tap master ok
-/home/grdl/repositories/github.com/grdl/testsite master ok
-```
+
+![output_flat](./docs/out_flat.png)
 
 - **dump** - each repo URL with current branch on a new line. Accepted by `git get --dump` command.
-```
-❯ git list -o dump
-https://github.com/grdl/git-get.git master
-https://github.com/grdl/homebrew-tap master
-https://github.com/grdl/testsite master
-```
+
+![output_dump](./docs/out_dump.png)
 
 ### Dump file
 
