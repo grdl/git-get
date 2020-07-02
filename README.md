@@ -25,8 +25,8 @@
 ## Description
 
 `git-get` gives you two new git commands:
-- **`git get`** clones repositories into an automatically created directory tree based on repo's URL (like golang's [`go get`](https://golang.org/cmd/go/)). It's dotfiles friendly, meaning you can also give it a file with a list of repositories and it will clone all of them.
-- **`git list`** shows status of all your git repositories and their branches.
+- **`git get`** clones repositories into an automatically created directory tree based on repo's URL, owner and name (like golang's [`go get`](https://golang.org/cmd/go/)).
+- **`git list`** shows status of all your git repositories.
 
 ![Example](./docs/example.svg)
 
@@ -83,14 +83,14 @@ Usage:
 Flags:
   -f, --fetch               First fetch from remotes before listing repositories.
   -h, --help                Print this help and exit.
-  -o, --out                 Output format. Allowed values: [dump, flat, smart, tree]. (default "tree")
+  -o, --out                 Output format. Allowed values: [dump, flat, tree]. (default "tree")
   -r, --root                Path to repos root where repositories are cloned. (default "~/repositories")
   -v, --version             Print version and exit.
 ```
 
 `git list` provides different ways to view the list of the repositories and their statuses.
 
-- **tree** (default) - repos rendered as a directory tree.
+- **tree** (default) - repos printed as a directory tree.
 
 ![output_tree](./docs/out_tree.png)
 
@@ -98,13 +98,13 @@ Flags:
 
 ![output_flat](./docs/out_flat.png)
 
-- **dump** - each repo URL with current branch on a new line. Accepted by `git get --dump` command.
+- **dump** - each repo URL with its current branch on a new line. To be consumed by `git get --dump` command.
 
 ![output_dump](./docs/out_dump.png)
 
 ### Dump file
 
-`git get` is dotfiles friendly. Using `--dump` flag, it accepts a file with a list of repositories and clones all of them.
+`git get` is dotfiles friendly. When run with `--dump` flag, it accepts a file with a list of repositories and clones all of them.
 
 Dump file format is simply:
 - Each repo URL on a separate line.
@@ -123,7 +123,7 @@ git list --out dump > repos.dump
 
 ## Configuration
 
-Each configuration flag listed in the [Usage](#Usage) section can be also specified using environment variables or .gitconfig file.
+Each configuration flag listed in the [Usage](#Usage) section can be also specified using environment variables or your global `.gitconfig` file.
 
 The order of precedence for configuration is as follows:
 - command line flag (have the highest precedence)
@@ -141,7 +141,7 @@ export GITGET_ROOT=/path/to/my/repos
 
 ### .gitconfig file
 
-You can define a `[gitget]` section inside your global `.gitconfig` file and set the configuration flags there. A common and recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults. 
+You can define a `[gitget]` section inside your global `.gitconfig` file and set the configuration flags there. A recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults. 
 
 Here's an example of a working snippet from `.gitconfig` file:
 ```
@@ -155,10 +155,9 @@ Here's an example of a working snippet from `.gitconfig` file:
 
 Pull requests are welcome. The project is still very much work in progress. Here's some of the missing features planned to be fixed soon:
 - improvements to the `git list` output (feedback appreciated)
-- submodules status
-- info about stashes
+- info about stashes and submodules
 - better recognition of different repo states: conflict, merging, rebasing, cherry picking etc.
-- plenty of bugfixes and tests
+- plenty of bugfixes and missing tests
 
 
 ## Acknowledgments
