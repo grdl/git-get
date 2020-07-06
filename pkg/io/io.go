@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -101,9 +102,18 @@ func (r *RepoFinder) Find() ([]string, error) {
 }
 
 func (r *RepoFinder) walkCb(path string, ent *godirwalk.Dirent) error {
+	// Do not traverse .git directories
 	if ent.IsDir() && ent.Name() == ".git" {
 		r.repos = append(r.repos, strings.TrimSuffix(path, ".git"))
 		return ErrSkipNode
+	}
+	// Do not traverse directories containing a .git directory
+	if ent.IsDir() {
+		_, err := os.Stat(filepath.Join(path, ".git"))
+		if err == nil {
+			r.repos = append(r.repos, strings.TrimSuffix(path, ".git"))
+			return ErrSkipNode
+		}
 	}
 	return nil
 }
