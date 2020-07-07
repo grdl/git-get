@@ -22,6 +22,7 @@ var (
 	KeyDefaultHost = "host"
 	KeyFetch       = "fetch"
 	KeyOutput      = "out"
+	KeySkipHost    = "skip-host"
 	KeyReposRoot   = "root"
 )
 
@@ -30,6 +31,7 @@ var Defaults = map[string]string{
 	KeyDefaultHost: "github.com",
 	KeyOutput:      OutTree,
 	KeyReposRoot:   fmt.Sprintf("~%c%s", filepath.Separator, "repositories"),
+	// KeySkipHost:    "false",
 }
 
 // Values for the --out flag.
@@ -78,6 +80,7 @@ func Init(cfg Gitconfig) {
 func readGitconfig(cfg Gitconfig) {
 	var lines []string
 
+	// TODO: Can we somehow iterate over all possible flags?
 	for key := range Defaults {
 		if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, key)); val != "" {
 			lines = append(lines, fmt.Sprintf("%s=%s", key, val))
@@ -86,6 +89,11 @@ func readGitconfig(cfg Gitconfig) {
 
 	viper.SetConfigType("env")
 	viper.ReadConfig(bytes.NewBuffer([]byte(strings.Join(lines, "\n"))))
+
+	// TODO: A hacky way to read boolean flag from gitconfig. Find a cleaner way.
+	if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, KeySkipHost)); strings.ToLower(val) == "true" {
+		viper.Set(KeySkipHost, true)
+	}
 }
 
 // Expand applies the variables expansion to a viper config of given key.

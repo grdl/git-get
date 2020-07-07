@@ -2,6 +2,7 @@ package pkg
 
 import (
 	urlpkg "net/url"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -52,6 +53,12 @@ func ParseURL(rawURL string, defaultHost string) (url *urlpkg.URL, err error) {
 		url.Host = defaultHost
 	}
 
+	// Don't use host when scheme is file://. The fragment detected as url.Host should be a first directory of url.Path
+	if url.Scheme == "file" && url.Host != "" {
+		url.Path = path.Join(url.Host, url.Path)
+		url.Host = ""
+	}
+
 	// Default to https when scheme is empty
 	if url.Scheme == "" {
 		url.Scheme = "https"
@@ -60,18 +67,30 @@ func ParseURL(rawURL string, defaultHost string) (url *urlpkg.URL, err error) {
 	return url, nil
 }
 
-// URLToPath cleans up the URL and converts it into a path string.
+// URLToPath cleans up the URL and converts it into a path string with correct separators for the current OS.
 // Eg, ssh://git@github.com:22/~user/repo.git => github.com/user/repo
-func URLToPath(url *urlpkg.URL) (repoPath string) {
-	// Remove port numbers from host
-	repoHost := strings.Split(url.Host, ":")[0]
+//
+// If skipHost is true, it removes the host part from the path.
+// Eg, ssh://git@github.com:22/~user/repo.git => user/repo
+func URLToPath(url urlpkg.URL, skipHost bool) string {
+	// Remove port numbers from host.
+	url.Host = strings.Split(url.Host, ":")[0]
 
-	// Remove trailing ".git" from repo name
-	repoPath = filepath.Join(repoHost, url.Path)
-	repoPath = strings.TrimSuffix(repoPath, ".git")
+	// Remove tilde (~) char from username.
+	url.Path = strings.ReplaceAll(url.Path, "~", "")
 
-	// Remove tilde (~) char from username
-	repoPath = strings.ReplaceAll(repoPath, "~", "")
+	// Remove leading and trailing slashes (correct separator is added by the filepath.Join() below).
+	url.Path = strings.Trim(url.Path, "/")
 
-	return repoPath
+	// Remove trailing ".git" from repo name.
+	url.Path = strings.TrimSuffix(url.Path, ".git")
+
+	// Replace slashes with separator correct for the current OS.
+	url.Path = strings.ReplaceAll(url.Path, "/", string(filepath.Separator))
+
+	if skipHost {
+		url.Host = ""
+	}
+
+	return filepath.Join(url.Host, url.Path)
 }
