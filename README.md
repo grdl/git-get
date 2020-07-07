@@ -67,6 +67,7 @@ Flags:
   -h, --help                Print this help and exit.
   -t, --host                Host to use when <REPO> doesn't have a specified host. (default "github.com")
   -r, --root                Path to repos root where repositories are cloned. (default "~/repositories")
+  -s, --skip-host           Don't create a directory for host.
   -v, --version             Print version and exit.
 ```
 
@@ -143,11 +144,14 @@ export GITGET_ROOT=/path/to/my/repos
 
 You can define a `[gitget]` section inside your global `.gitconfig` file and set the configuration flags there. A recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults. 
 
+If all of your repos come from the same host and you find creating directory for it redundant, you can use the `skip-host` flag to skip creating it.
+
 Here's an example of a working snippet from `.gitconfig` file:
 ```
 [gitget]
     root = /path/to/my/repos
     host = gitlab.com
+    skip-host = true
 ```
 
 

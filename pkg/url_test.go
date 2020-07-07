@@ -52,13 +52,58 @@ func TestURLParse(t *testing.T) {
 	for _, test := range tests {
 		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost])
 		if err != nil {
-			t.Errorf("Error parsing Path: %+v", err)
+			t.Fatalf("got error: %+v", err)
 		}
 
-		got := URLToPath(url)
+		got := URLToPath(*url, false)
 
 		if got != test.want {
-			t.Errorf("Wrong result of parsing Path: %s, got: %s; wantBranch: %s", test.in, got, test.want)
+			t.Errorf("wrong result for %q; expected %q; got %q", test.in, test.want, got)
+		}
+	}
+}
+func TestURLParseSkipHost(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"ssh://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"ssh://user@github.com/grdl/git-get.git", "grdl/git-get"},
+		{"ssh://user@github.com:1234/grdl/git-get.git", "grdl/git-get"},
+		{"ssh://user@github.com/~user/grdl/git-get.git", "user/grdl/git-get"},
+		{"git+ssh://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"git@github.com:grdl/git-get.git", "grdl/git-get"},
+		{"git@github.com:/~user/grdl/git-get.git", "user/grdl/git-get"},
+		{"git://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"git://github.com/~user/grdl/git-get.git", "user/grdl/git-get"},
+		{"https://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"http://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"https://github.com/grdl/git-get", "grdl/git-get"},
+		{"https://github.com/git-get.git", "git-get"},
+		{"https://github.com/git-get", "git-get"},
+		{"https://github.com/grdl/sub/path/git-get.git", "grdl/sub/path/git-get"},
+		{"https://github.com:1234/grdl/git-get.git", "grdl/git-get"},
+		{"https://github.com/grdl/git-get.git/", "grdl/git-get"},
+		{"https://github.com/grdl/git-get/", "grdl/git-get"},
+		{"https://github.com/grdl/git-get/////", "grdl/git-get"},
+		{"https://github.com/grdl/git-get.git/////", "grdl/git-get"},
+		{"ftp://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"ftps://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"rsync://github.com/grdl/git-get.git", "grdl/git-get"},
+		{"local/grdl/git-get/", "local/grdl/git-get"},
+		{"file://local/grdl/git-get", "local/grdl/git-get"},
+	}
+
+	for _, test := range tests {
+		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost])
+		if err != nil {
+			t.Fatalf("got error: %+v", err)
+		}
+
+		got := URLToPath(*url, true)
+
+		if got != test.want {
+			t.Errorf("wrong result for %q; expected %q; got %q", test.in, test.want, got)
 		}
 	}
 }
@@ -73,10 +118,10 @@ func TestInvalidURLParse(t *testing.T) {
 		//"git@github.com:1234:grdl/git-get.git",
 	}
 
-	for _, in := range invalidURLs {
-		got, err := ParseURL(in, cfg.Defaults[cfg.KeyDefaultHost])
+	for _, test := range invalidURLs {
+		got, err := ParseURL(test, cfg.Defaults[cfg.KeyDefaultHost])
 		if err == nil {
-			t.Errorf("Wrong result of parsing invalid Path: %s, got: %s, wantBranch: error", in, got)
+			t.Errorf("expected error; got %q", got)
 		}
 	}
 }

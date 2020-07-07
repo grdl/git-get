@@ -9,11 +9,12 @@ import (
 
 // GetCfg provides configuration for the Get command.
 type GetCfg struct {
-	Branch  string
-	DefHost string
-	Dump    string
-	Root    string
-	URL     string
+	Branch   string
+	DefHost  string
+	Dump     string
+	Root     string
+	SkipHost bool
+	URL      string
 }
 
 // Get executes the "git get" command.
@@ -40,7 +41,7 @@ func cloneSingleRepo(c *GetCfg) error {
 
 	opts := &git.CloneOpts{
 		URL:    url,
-		Path:   filepath.Join(c.Root, URLToPath(url)),
+		Path:   filepath.Join(c.Root, URLToPath(*url, c.SkipHost)),
 		Branch: c.Branch,
 	}
 
@@ -63,7 +64,7 @@ func cloneDumpFile(c *GetCfg) error {
 
 		opts := &git.CloneOpts{
 			URL:    url,
-			Path:   filepath.Join(c.Root, URLToPath(url)),
+			Path:   filepath.Join(c.Root, URLToPath(*url, c.SkipHost)),
 			Branch: line.branch,
 		}
 

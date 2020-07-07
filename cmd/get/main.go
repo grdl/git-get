@@ -28,6 +28,7 @@ func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", "", "Branch (or tag) to checkout after cloning.")
 	cmd.PersistentFlags().StringP(cfg.KeyDefaultHost, "t", cfg.Defaults[cfg.KeyDefaultHost], "Host to use when <REPO> doesn't have a specified host.")
 	cmd.PersistentFlags().StringP(cfg.KeyDump, "d", "", "Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.")
+	cmd.PersistentFlags().BoolP(cfg.KeySkipHost, "s", false, "Don't create a directory for host.")
 	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", cfg.Defaults[cfg.KeyReposRoot], "Path to repos root where repositories are cloned.")
 	cmd.PersistentFlags().BoolP("help", "h", false, "Print this help and exit.")
 	cmd.PersistentFlags().BoolP("version", "v", false, "Print version and exit.")
@@ -36,6 +37,7 @@ func init() {
 	viper.BindPFlag(cfg.KeyDefaultHost, cmd.PersistentFlags().Lookup(cfg.KeyDefaultHost))
 	viper.BindPFlag(cfg.KeyDump, cmd.PersistentFlags().Lookup(cfg.KeyDump))
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
+	viper.BindPFlag(cfg.KeySkipHost, cmd.PersistentFlags().Lookup(cfg.KeySkipHost))
 
 	cfg.Init(&git.ConfigGlobal{})
 }
@@ -49,11 +51,12 @@ func run(cmd *cobra.Command, args []string) error {
 	cfg.Expand(cfg.KeyReposRoot)
 
 	config := &pkg.GetCfg{
-		Branch:  viper.GetString(cfg.KeyBranch),
-		DefHost: viper.GetString(cfg.KeyDefaultHost),
-		Dump:    viper.GetString(cfg.KeyDump),
-		Root:    viper.GetString(cfg.KeyReposRoot),
-		URL:     url,
+		Branch:   viper.GetString(cfg.KeyBranch),
+		DefHost:  viper.GetString(cfg.KeyDefaultHost),
+		Dump:     viper.GetString(cfg.KeyDump),
+		SkipHost: viper.GetBool(cfg.KeySkipHost),
+		Root:     viper.GetString(cfg.KeyReposRoot),
+		URL:      url,
 	}
 	return pkg.Get(config)
 }
