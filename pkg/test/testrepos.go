@@ -19,8 +19,13 @@ func (r *Repo) Path() string {
 
 // RepoEmpty creates an empty git repo.
 func RepoEmpty(t *testing.T) *Repo {
+	return RepoEmptyInDir(t, "")
+}
+
+// RepoEmptyInDir creates an empty git repo inside a given parent dir.
+func RepoEmptyInDir(t *testing.T, parent string) *Repo {
 	r := &Repo{
-		path: tempDir(t, ""),
+		path: TempDir(t, parent),
 		t:    t,
 	}
 

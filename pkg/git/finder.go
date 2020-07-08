@@ -81,12 +81,13 @@ func (r *RepoFinder) walkCb(path string, ent *godirwalk.Dirent) error {
 		r.repos = append(r.repos, strings.TrimSuffix(path, ".git"))
 		return errSkipNode
 	}
+
 	// Do not traverse directories containing a .git directory
 	if ent.IsDir() {
 		_, err := os.Stat(filepath.Join(path, ".git"))
 		if err == nil {
 			r.repos = append(r.repos, strings.TrimSuffix(path, ".git"))
-			return ErrSkipNode
+			return errSkipNode
 		}
 	}
 	return nil
