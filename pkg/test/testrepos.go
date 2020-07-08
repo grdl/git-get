@@ -1,8 +1,8 @@
 package test
 
 import (
-	"git-get/pkg/io"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ func (r *Repo) cleanup() {
 
 // RepoEmpty creates an empty git repo.
 func RepoEmpty(t *testing.T) *Repo {
-	dir, err := io.TempDir()
+	dir, err := tempDir("")
 	checkFatal(t, err)
 
 	r := &Repo{
@@ -175,6 +175,29 @@ func RepoWithBranchAheadAndBehind(t *testing.T) *Repo {
 	r.commit("local.new2")
 
 	r.fetch()
+
+	return r
+}
+
+// RepoWithEmptyConfig creates a git repo with empty .git/config file
+func RepoWithEmptyConfig(t *testing.T) *Repo {
+	r := RepoEmpty(t)
+	r.writeFile(filepath.Join(".git", "config"), "")
+
+	return r
+}
+
+// RepoWithValidConfig creates a git repo with valid content in .git/config file
+func RepoWithValidConfig(t *testing.T) *Repo {
+	r := RepoEmpty(t)
+
+	gitconfig := `
+	[user]
+		name = grdl
+	[gitget]
+		host = github.com
+	`
+	r.writeFile(filepath.Join(".git", "config"), gitconfig)
 
 	return r
 }

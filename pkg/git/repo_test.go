@@ -1,7 +1,6 @@
 package git
 
 import (
-	"git-get/pkg/io"
 	"git-get/pkg/test"
 	"reflect"
 	"testing"
@@ -10,7 +9,7 @@ import (
 func TestOpen(t *testing.T) {
 	_, err := Open("/paththatdoesnotexist/repo")
 
-	if err != io.ErrDirectoryAccess {
+	if err != errDirectoryAccess {
 		t.Errorf("Opening a repo in non existing path should throw an error")
 	}
 }

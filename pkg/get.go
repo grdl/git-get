@@ -3,7 +3,6 @@ package pkg
 import (
 	"fmt"
 	"git-get/pkg/git"
-	"git-get/pkg/io"
 	"path/filepath"
 )
 
@@ -69,7 +68,7 @@ func cloneDumpFile(c *GetCfg) error {
 		}
 
 		// If target path already exists, skip cloning this repo
-		if exists, _ := io.Exists(opts.Path); exists {
+		if exists, _ := git.Exists(opts.Path); exists {
 			continue
 		}
 

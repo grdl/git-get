@@ -1,27 +1,18 @@
 package git
 
 import (
-	"git-get/pkg/io"
 	"git-get/pkg/run"
 	"git-get/pkg/test"
-	"path/filepath"
 	"testing"
 )
 
 // cfgStub represents a gitconfig file but instead of using a global one, it creates a temporary git repo and uses its local gitconfig.
 type cfgStub struct {
-	repo *test.Repo
-}
-
-func newCfgStub(t *testing.T) *cfgStub {
-	r := test.RepoEmpty(t)
-	return &cfgStub{
-		repo: r,
-	}
+	*test.Repo
 }
 
 func (c *cfgStub) Get(key string) string {
-	out, err := run.Git("config", "--local", key).OnRepo(c.repo.Path()).AndCaptureLine()
+	out, err := run.Git("config", "--local", key).OnRepo(c.Path()).AndCaptureLine()
 	if err != nil {
 		return ""
 	}
@@ -74,22 +65,13 @@ func TestGitConfig(t *testing.T) {
 }
 
 func makeConfigEmpty(t *testing.T) *cfgStub {
-	c := newCfgStub(t)
-	io.Write(filepath.Join(c.repo.Path(), dotgit, "config"), "")
-
-	return c
+	return &cfgStub{
+		Repo: test.RepoWithEmptyConfig(t),
+	}
 }
 
 func makeConfigValid(t *testing.T) *cfgStub {
-	c := newCfgStub(t)
-
-	gitconfig := `
-	[user]
-		name = grdl
-	[gitget]
-		host = github.com
-	`
-	io.Write(filepath.Join(c.repo.Path(), dotgit, "config"), gitconfig)
-
-	return c
+	return &cfgStub{
+		Repo: test.RepoWithValidConfig(t),
+	}
 }

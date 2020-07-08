@@ -2,7 +2,6 @@ package git
 
 import (
 	"fmt"
-	"git-get/pkg/io"
 	"git-get/pkg/run"
 	"net/url"
 	"strconv"
@@ -43,8 +42,7 @@ type CloneOpts struct {
 
 // Open checks if given path can be accessed and returns a Repo instance pointing to it.
 func Open(path string) (Repo, error) {
-	_, err := io.Exists(path)
-	if err != nil {
+	if _, err := Exists(path); err != nil {
 		return nil, err
 	}
 
