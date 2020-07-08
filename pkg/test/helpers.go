@@ -51,11 +51,10 @@ func (r *Repo) checkout(name string) {
 }
 
 func (r *Repo) clone() *Repo {
-	dir, err := tempDir("")
-	checkFatal(r.t, err)
+	dir := tempDir(r.t, "")
 
 	url := fmt.Sprintf("file://%s/.git", r.path)
-	err = run.Git("clone", url, dir).AndShutUp()
+	err := run.Git("clone", url, dir).AndShutUp()
 	checkFatal(r.t, err)
 
 	clone := &Repo{
@@ -63,7 +62,6 @@ func (r *Repo) clone() *Repo {
 		t:    r.t,
 	}
 
-	clone.t.Cleanup(r.cleanup)
 	return clone
 }
 
@@ -73,11 +71,20 @@ func (r *Repo) fetch() {
 }
 
 // tempDir creates a temporary directory inside the parent dir.
-// If parent is empty it will use a system default temp dir (usually /tmp).
-func tempDir(parent string) (string, error) {
+// If parent is empty, it will use a system default temp dir (usually /tmp).
+func tempDir(t *testing.T, parent string) string {
 	dir, err := ioutil.TempDir(parent, "git-get-repo-")
+	checkFatal(t, err)
 
-	return dir, err
+	// Automatically remove temp dir when the test is over.
+	t.Cleanup(func() {
+		err := os.RemoveAll(dir)
+		if err != nil {
+			t.Errorf("failed removing test repo %s", dir)
+		}
+	})
+
+	return dir
 }
 
 func checkFatal(t *testing.T, err error) {

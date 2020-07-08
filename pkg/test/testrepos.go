@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -13,31 +12,17 @@ type Repo struct {
 	t    *testing.T
 }
 
-// Path returs path to a repository.
+// Path returns path to a repository.
 func (r *Repo) Path() string {
 	return r.path
 }
 
-// TODO: this should be a method of a tempDir, not a repo
-// Automatically remove test repo when the test is over.
-func (r *Repo) cleanup() {
-	err := os.RemoveAll(r.path)
-	if err != nil {
-		r.t.Errorf("failed removing test repo directory %s", r.path)
-	}
-}
-
 // RepoEmpty creates an empty git repo.
 func RepoEmpty(t *testing.T) *Repo {
-	dir, err := tempDir("")
-	checkFatal(t, err)
-
 	r := &Repo{
-		path: dir,
+		path: tempDir(t, ""),
 		t:    t,
 	}
-
-	t.Cleanup(r.cleanup)
 
 	r.init()
 	return r
