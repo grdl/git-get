@@ -1,8 +1,7 @@
 package test
 
 import (
-	"git-get/pkg/io"
-	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -13,31 +12,22 @@ type Repo struct {
 	t    *testing.T
 }
 
-// Path returs path to a repository.
+// Path returns path to a repository.
 func (r *Repo) Path() string {
 	return r.path
 }
 
-// TODO: this should be a method of a tempDir, not a repo
-// Automatically remove test repo when the test is over.
-func (r *Repo) cleanup() {
-	err := os.RemoveAll(r.path)
-	if err != nil {
-		r.t.Errorf("failed removing test repo directory %s", r.path)
-	}
-}
-
 // RepoEmpty creates an empty git repo.
 func RepoEmpty(t *testing.T) *Repo {
-	dir, err := io.TempDir()
-	checkFatal(t, err)
+	return RepoEmptyInDir(t, "")
+}
 
+// RepoEmptyInDir creates an empty git repo inside a given parent dir.
+func RepoEmptyInDir(t *testing.T, parent string) *Repo {
 	r := &Repo{
-		path: dir,
+		path: TempDir(t, parent),
 		t:    t,
 	}
-
-	t.Cleanup(r.cleanup)
 
 	r.init()
 	return r
@@ -175,6 +165,29 @@ func RepoWithBranchAheadAndBehind(t *testing.T) *Repo {
 	r.commit("local.new2")
 
 	r.fetch()
+
+	return r
+}
+
+// RepoWithEmptyConfig creates a git repo with empty .git/config file
+func RepoWithEmptyConfig(t *testing.T) *Repo {
+	r := RepoEmpty(t)
+	r.writeFile(filepath.Join(".git", "config"), "")
+
+	return r
+}
+
+// RepoWithValidConfig creates a git repo with valid content in .git/config file
+func RepoWithValidConfig(t *testing.T) *Repo {
+	r := RepoEmpty(t)
+
+	gitconfig := `
+	[user]
+		name = grdl
+	[gitget]
+		host = github.com
+	`
+	r.writeFile(filepath.Join(".git", "config"), gitconfig)
 
 	return r
 }

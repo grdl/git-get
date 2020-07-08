@@ -3,7 +3,7 @@ package pkg
 import (
 	"fmt"
 	"git-get/pkg/cfg"
-	"git-get/pkg/io"
+	"git-get/pkg/git"
 	"git-get/pkg/print"
 	"sort"
 	"strings"
@@ -18,7 +18,7 @@ type ListCfg struct {
 
 // List executes the "git list" command.
 func List(c *ListCfg) error {
-	paths, err := io.NewRepoFinder(c.Root).Find()
+	paths, err := git.NewRepoFinder(c.Root).Find()
 	if err != nil {
 		return err
 	}
