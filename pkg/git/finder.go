@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 
@@ -36,10 +37,11 @@ func Exists(path string) (bool, error) {
 	return true, errDirectoryAccess
 }
 
-// RepoFinder finds paths to git repos inside given path.
+// RepoFinder finds git repositories inside a given path.
 type RepoFinder struct {
-	root  string
-	repos []string
+	root   string
+	repos  []*Repo
+	errors []error
 }
 
 // NewRepoFinder returns a RepoFinder pointed at given root path.
@@ -49,51 +51,95 @@ func NewRepoFinder(root string) *RepoFinder {
 	}
 }
 
-// Find returns a sorted list of paths to git repos found inside a given root path.
+// Find finds git repositories inside a given root path.
+// It doesn't add repositories nested inside other git repos.
 // Returns error if root repo path can't be found or accessed.
-func (r *RepoFinder) Find() ([]string, error) {
-	if _, err := Exists(r.root); err != nil {
-		return nil, err
+func (f *RepoFinder) Find() error {
+	if _, err := Exists(f.root); err != nil {
+		return err
 	}
 
 	walkOpts := &godirwalk.Options{
-		ErrorCallback: r.errorCb,
-		Callback:      r.walkCb,
+		ErrorCallback: f.errorCb,
+		Callback:      f.walkCb,
 		// Use Unsorted to improve speed because repos will be processed by goroutines in a random order anyway.
 		Unsorted: true,
 	}
 
-	err := godirwalk.Walk(r.root, walkOpts)
+	err := godirwalk.Walk(f.root, walkOpts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if len(r.repos) == 0 {
-		return nil, fmt.Errorf("no git repos found in root path %s", r.root)
+	if len(f.repos) == 0 {
+		return fmt.Errorf("no git repos found in root path %s", f.root)
 	}
 
-	return r.repos, nil
+	return nil
 }
 
-func (r *RepoFinder) walkCb(path string, ent *godirwalk.Dirent) error {
+// LoadAll loads and returns sorted slice of statuses of all repositories found by RepoFinder.
+// If fetch equals true, it first fetches from the remote repo before loading the status.
+// Each repo is loaded concurrently in its own goroutine, with max 100 repos being loaded at the same time.
+func (f *RepoFinder) LoadAll(fetch bool) []*Status {
+	var ss []*Status
+
+	loadedChan := make(chan *Status)
+
+	for _, repo := range f.repos {
+		go func(repo *Repo) {
+			loadedChan <- repo.LoadStatus(fetch)
+		}(repo)
+	}
+
+	for l := range loadedChan {
+		ss = append(ss, l)
+
+		// Close the channel when all repos are loaded.
+		if len(ss) == len(f.repos) {
+			close(loadedChan)
+		}
+	}
+
+	// Sort the status slice by path
+	sort.Slice(ss, func(i, j int) bool {
+		return strings.Compare(ss[i].path, ss[j].path) < 0
+	})
+
+	return ss
+}
+
+func (f *RepoFinder) walkCb(path string, ent *godirwalk.Dirent) error {
 	// Do not traverse .git directories
-	if ent.IsDir() && ent.Name() == ".git" {
-		r.repos = append(r.repos, strings.TrimSuffix(path, ".git"))
+	if ent.IsDir() && ent.Name() == dotgit {
+		f.addIfOk(path)
 		return errSkipNode
 	}
 
 	// Do not traverse directories containing a .git directory
 	if ent.IsDir() {
-		_, err := os.Stat(filepath.Join(path, ".git"))
+		_, err := os.Stat(filepath.Join(path, dotgit))
 		if err == nil {
-			r.repos = append(r.repos, strings.TrimSuffix(path, ".git"))
+			f.addIfOk(path)
 			return errSkipNode
 		}
 	}
 	return nil
 }
 
-func (r *RepoFinder) errorCb(_ string, err error) godirwalk.ErrorAction {
+// addIfOk adds the found repo to the repos slice if it can be opened.
+// If repo path can't be accessed it will add an error to the errors slice.
+func (f *RepoFinder) addIfOk(path string) {
+	repo, err := Open(strings.TrimSuffix(path, dotgit))
+	if err != nil {
+		f.errors = append(f.errors, err)
+		return
+	}
+
+	f.repos = append(f.repos, repo)
+}
+
+func (f *RepoFinder) errorCb(_ string, err error) godirwalk.ErrorAction {
 	// Skip .git directory and directories we don't have permissions to access
 	// TODO: Will syscall.EACCES work on windows?
 	if errors.Is(err, errSkipNode) || errors.Is(err, syscall.EACCES) {

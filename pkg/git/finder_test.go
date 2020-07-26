@@ -38,10 +38,10 @@ func TestFinder(t *testing.T) {
 			root := test.reposMaker(t)
 
 			finder := NewRepoFinder(root)
-			paths, _ := finder.Find()
+			finder.Find()
 
-			if len(paths) != test.want {
-				t.Errorf("expected %d; got %d", test.want, len(paths))
+			if len(finder.repos) != test.want {
+				t.Errorf("expected %d; got %d", test.want, len(finder.repos))
 			}
 		})
 	}
