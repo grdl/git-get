@@ -1,7 +1,7 @@
 package git
 
 import (
-	"git-get/pkg/test"
+	"git-get/pkg/git/test"
 	"testing"
 )
 

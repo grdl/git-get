@@ -1,7 +1,7 @@
 package git
 
 import (
-	"git-get/pkg/test"
+	"git-get/pkg/git/test"
 	"reflect"
 	"testing"
 )
@@ -31,7 +31,7 @@ func TestUncommitted(t *testing.T) {
 			want:      0,
 		},
 		{
-			name:      "single tracked ",
+			name:      "single tracked",
 			repoMaker: test.RepoWithStaged,
 			want:      1,
 		},
