@@ -1,67 +1,62 @@
-package pkg
+package git
 
 import (
 	"fmt"
-	"git-get/pkg/git"
 	"strings"
 )
 
-// Loaded represents a repository which status is Loaded from disk and stored for printing.
-type Loaded struct {
+// Status contains human readable (and printable) representation of a git repository status.
+type Status struct {
 	path     string
 	current  string
 	branches map[string]string // key: branch name, value: branch status
 	worktree string
 	remote   string
-	errors   []string
+	errors   []string // Slice of errors which occurred when loading the status.
 }
 
-// Load reads status of a repository at a given path.
-func Load(path string, fetch bool) *Loaded {
-	loaded := &Loaded{
-		path:     path,
+// LoadStatus reads status of a repository.
+// If fetch equals true, it first fetches from the remote repo before loading the status.
+// If errors occur during loading, they are stored in Status.errors slice.
+func (r *Repo) LoadStatus(fetch bool) *Status {
+	status := &Status{
+		path:     r.path,
 		branches: make(map[string]string),
 		errors:   make([]string, 0),
 	}
 
-	repo, err := git.Open(path)
-	if err != nil {
-		loaded.errors = append(loaded.errors, err.Error())
-		return loaded
-	}
-
 	if fetch {
-		err = repo.Fetch()
-		if err != nil {
-			loaded.errors = append(loaded.errors, err.Error())
+		if err := r.Fetch(); err != nil {
+			status.errors = append(status.errors, err.Error())
 		}
 	}
 
-	loaded.current, err = repo.CurrentBranch()
+	var err error
+	status.current, err = r.CurrentBranch()
 	if err != nil {
-		loaded.errors = append(loaded.errors, err.Error())
+		status.errors = append(status.errors, err.Error())
 	}
 
 	var errs []error
-	loaded.branches, errs = loadBranches(repo)
+	status.branches, errs = r.loadBranches()
 	for _, err := range errs {
-		loaded.errors = append(loaded.errors, err.Error())
+		status.errors = append(status.errors, err.Error())
 	}
 
-	loaded.worktree, err = loadWorkTree(repo)
+	status.worktree, err = r.loadWorkTree()
 	if err != nil {
-		loaded.errors = append(loaded.errors, err.Error())
+		status.errors = append(status.errors, err.Error())
 	}
 
-	loaded.remote, err = repo.Remote()
+	status.remote, err = r.Remote()
 	if err != nil {
-		loaded.errors = append(loaded.errors, err.Error())
+		status.errors = append(status.errors, err.Error())
 	}
 
-	return loaded
+	return status
 }
 
-func loadBranches(r git.Repo) (map[string]string, []error) {
+func (r *Repo) loadBranches() (map[string]string, []error) {
 	statuses := make(map[string]string)
 	errors := make([]error, 0)
 
@@ -72,7 +67,7 @@ func loadBranches(r git.Repo) (map[string]string, []error) {
 	}
 
 	for _, branch := range branches {
-		status, err := loadBranchStatus(r, branch)
+		status, err := r.loadBranchStatus(branch)
 		statuses[branch] = status
 		if err != nil {
 			errors = append(errors, err)
@@ -82,7 +77,7 @@ func loadBranches(r git.Repo) (map[string]string, []error) {
 	return statuses, errors
 }
 
-func loadBranchStatus(r git.Repo, branch string) (string, error) {
+func (r *Repo) loadBranchStatus(branch string) (string, error) {
 	upstream, err := r.Upstream(branch)
 	if err != nil {
 		return "", err
@@ -112,7 +107,7 @@ func loadBranchStatus(r git.Repo, branch string) (string, error) {
 	return strings.Join(res, " "), nil
 }
 
-func loadWorkTree(r git.Repo) (string, error) {
+func (r *Repo) loadWorkTree() (string, error) {
 	uncommitted, err := r.Uncommitted()
 	if err != nil {
 		return "", err
@@ -139,20 +134,20 @@ func loadWorkTree(r git.Repo) (string, error) {
 }
 
 // Path returns path to a repository.
-func (r *Loaded) Path() string {
-	return r.path
+func (s *Status) Path() string {
+	return s.path
 }
 
 // Current returns the name of currently checked out branch (or tag or detached HEAD).
-func (r *Loaded) Current() string {
-	return r.current
+func (s *Status) Current() string {
+	return s.current
 }
 
 // Branches returns a list of all branches names except the currently checked out one. Use Current() to get its name.
-func (r *Loaded) Branches() []string {
+func (s *Status) Branches() []string {
 	var branches []string
-	for b := range r.branches {
-		if b != r.current {
+	for b := range s.branches {
+		if b != s.current {
 			branches = append(branches, b)
 		}
 	}
@@ -160,21 +155,21 @@ func (r *Loaded) Branches() []string {
 }
 
 // BranchStatus returns status of a given branch
-func (r *Loaded) BranchStatus(branch string) string {
-	return r.branches[branch]
+func (s *Status) BranchStatus(branch string) string {
+	return s.branches[branch]
 }
 
 // WorkTreeStatus returns status of a worktree
-func (r *Loaded) WorkTreeStatus() string {
-	return r.worktree
+func (s *Status) WorkTreeStatus() string {
+	return s.worktree
 }
 
 // Remote returns URL to remote repository
-func (r *Loaded) Remote() string {
-	return r.remote
+func (s *Status) Remote() string {
+	return s.remote
 }
 
 // Errors is a slice of errors that occurred when loading repo status
-func (r *Loaded) Errors() []string {
-	return r.errors
+func (s *Status) Errors() []string {
+	return s.errors
 }

@@ -15,24 +15,12 @@ const (
 	head      = "HEAD"
 )
 
-// Repo represents a git repository on disk.
-type Repo interface {
-	Path() string
-	Branches() ([]string, error)
-	CurrentBranch() (string, error)
-	Fetch() error
-	Remote() (string, error)
-	Uncommitted() (int, error)
-	Untracked() (int, error)
-	Upstream(string) (string, error)
-	AheadBehind(string, string) (int, int, error)
-}
-
-type repo struct {
+// Repo represents a git Repository cloned or initialized on disk.
+type Repo struct {
 	path string
 }
 
-// CloneOpts specify detail about repository to clone.
+// CloneOpts specify detail about Repository to clone.
 type CloneOpts struct {
 	URL    *url.URL
 	Path   string // TODO: should Path be a part of clone opts?
@@ -41,18 +29,18 @@ type CloneOpts struct {
 }
 
 // Open checks if given path can be accessed and returns a Repo instance pointing to it.
-func Open(path string) (Repo, error) {
+func Open(path string) (*Repo, error) {
 	if _, err := Exists(path); err != nil {
 		return nil, err
 	}
 
-	return &repo{
+	return &Repo{
 		path: path,
 	}, nil
 }
 
-// Clone clones repository specified with CloneOpts.
-func Clone(opts *CloneOpts) (Repo, error) {
+// Clone clones Repository specified with CloneOpts.
+func Clone(opts *CloneOpts) (*Repo, error) {
 	runGit := run.Git("clone", opts.URL.String(), opts.Path)
 	if opts.Branch != "" {
 		runGit = run.Git("clone", "--branch", opts.Branch, "--single-branch", opts.URL.String(), opts.Path)
@@ -69,19 +57,19 @@ func Clone(opts *CloneOpts) (Repo, error) {
 		return nil, err
 	}
 
-	repo, err := Open(opts.Path)
-	return repo, err
+	Repo, err := Open(opts.Path)
+	return Repo, err
 }
 
 // Fetch preforms a git fetch on all remotes
-func (r *repo) Fetch() error {
+func (r *Repo) Fetch() error {
 	err := run.Git("fetch", "--all").OnRepo(r.path).AndShutUp()
 	return err
 }
 
-// Uncommitted returns the number of uncommitted files in the repository.
+// Uncommitted returns the number of uncommitted files in the Repository.
 // Only tracked files are not counted.
-func (r *repo) Uncommitted() (int, error) {
+func (r *Repo) Uncommitted() (int, error) {
 	out, err := run.Git("status", "--ignore-submodules", "--porcelain").OnRepo(r.path).AndCaptureLines()
 	if err != nil {
 		return 0, err
@@ -98,8 +86,8 @@ func (r *repo) Uncommitted() (int, error) {
 	return count, nil
 }
 
-// Untracked returns the number of untracked files in the repository.
-func (r *repo) Untracked() (int, error) {
+// Untracked returns the number of untracked files in the Repository.
+func (r *Repo) Untracked() (int, error) {
 	out, err := run.Git("status", "--ignore-submodules", "--untracked-files=all", "--porcelain").OnRepo(r.path).AndCaptureLines()
 	if err != nil {
 		return 0, err
@@ -115,9 +103,9 @@ func (r *repo) Untracked() (int, error) {
 	return count, nil
 }
 
-// CurrentBranch returns the short name currently checked-out branch for the repository.
-// If repo is in a detached head state, it will return "HEAD".
-func (r *repo) CurrentBranch() (string, error) {
+// CurrentBranch returns the short name currently checked-out branch for the Repository.
+// If Repo is in a detached head state, it will return "HEAD".
+func (r *Repo) CurrentBranch() (string, error) {
 	out, err := run.Git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
 		return "", err
@@ -126,8 +114,8 @@ func (r *repo) CurrentBranch() (string, error) {
 	return out, nil
 }
 
-// Branches returns a list of local branches in the repository.
-func (r *repo) Branches() ([]string, error) {
+// Branches returns a list of local branches in the Repository.
+func (r *Repo) Branches() ([]string, error) {
 	out, err := run.Git("branch", "--format=%(refname:short)").OnRepo(r.path).AndCaptureLines()
 	if err != nil {
 		return nil, err
@@ -146,7 +134,7 @@ func (r *repo) Branches() ([]string, error) {
 
 // Upstream returns the name of an upstream branch if a given branch is tracking one.
 // Otherwise it returns an empty string.
-func (r *repo) Upstream(branch string) (string, error) {
+func (r *Repo) Upstream(branch string) (string, error) {
 	out, err := run.Git("rev-parse", "--abbrev-ref", "--symbolic-full-name", fmt.Sprintf("%s@{upstream}", branch)).OnRepo(r.path).AndCaptureLine()
 	if err != nil {
 		// TODO: no upstream will also throw an error.
@@ -157,7 +145,7 @@ func (r *repo) Upstream(branch string) (string, error) {
 }
 
 // AheadBehind returns the number of commits a given branch is ahead and/or behind the upstream.
-func (r *repo) AheadBehind(branch string, upstream string) (int, int, error) {
+func (r *Repo) AheadBehind(branch string, upstream string) (int, int, error) {
 	out, err := run.Git("rev-list", "--left-right", "--count", fmt.Sprintf("%s...%s", branch, upstream)).OnRepo(r.path).AndCaptureLine()
 	if err != nil {
 		return 0, 0, err
@@ -179,8 +167,8 @@ func (r *repo) AheadBehind(branch string, upstream string) (int, int, error) {
 	return ahead, behind, nil
 }
 
-// Remote returns URL of remote repository.
-func (r *repo) Remote() (string, error) {
+// Remote returns URL of remote Repository.
+func (r *Repo) Remote() (string, error) {
 	// https://stackoverflow.com/a/16880000/1085632
 	out, err := run.Git("ls-remote", "--get-url").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
@@ -191,7 +179,7 @@ func (r *repo) Remote() (string, error) {
 	return out, nil
 }
 
-// Path returns path to the repository.
-func (r *repo) Path() string {
+// Path returns path to the Repository.
+func (r *Repo) Path() string {
 	return r.path
 }
