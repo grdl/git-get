@@ -16,8 +16,8 @@ import (
 // It's handled by ErrorsCallback to tell the WalkCallback to skip this dir.
 var errSkipNode = errors.New(".git directory found, skipping this node")
 
-// errDirectoryAccess indicates a directory doesn't exists or can't be accessed
-var errDirectoryAccess = errors.New("directory doesn't exist or can't be accessed")
+var errDirNoAccess = errors.New("directory can't be accessed")
+var errDirNotExist = errors.New("directory doesn't exist")
 
 // Exists returns true if a directory exists. If it doesn't or the directory can't be accessed it returns an error.
 func Exists(path string) (bool, error) {
@@ -29,12 +29,12 @@ func Exists(path string) (bool, error) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return false, errDirectoryAccess
+			return false, errors.Wrapf(errDirNotExist, "can't access %s", path)
 		}
 	}
 
 	// Directory exists but can't be accessed
-	return true, errDirectoryAccess
+	return true, errors.Wrapf(errDirNoAccess, "can't access %s", path)
 }
 
 // RepoFinder finds git repositories inside a given path.

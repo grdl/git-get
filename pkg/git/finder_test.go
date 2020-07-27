@@ -1,8 +1,11 @@
 package git
 
 import (
+	"errors"
 	"git-get/pkg/git/test"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFinder(t *testing.T) {
@@ -15,18 +18,15 @@ func TestFinder(t *testing.T) {
 			name:       "no repos",
 			reposMaker: makeNoRepos,
 			want:       0,
-		},
-		{
+		}, {
 			name:       "single repos",
 			reposMaker: makeSingleRepo,
 			want:       1,
-		},
-		{
+		}, {
 			name:       "single nested repo",
 			reposMaker: makeNestedRepo,
 			want:       1,
-		},
-		{
+		}, {
 			name:       "multiple nested repo",
 			reposMaker: makeMultipleNestedRepos,
 			want:       2,
@@ -40,9 +40,38 @@ func TestFinder(t *testing.T) {
 			finder := NewRepoFinder(root)
 			finder.Find()
 
-			if len(finder.repos) != test.want {
-				t.Errorf("expected %d; got %d", test.want, len(finder.repos))
-			}
+			assert.Len(t, finder.repos, test.want)
+		})
+	}
+}
+
+// TODO: this test will only work on Linux
+func TestExists(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want error
+	}{
+		{
+			name: "dir does not exist",
+			path: "/this/directory/does/not/exist",
+			want: errDirNotExist,
+		}, {
+			name: "dir cant be accessed",
+			path: "/root/some/directory",
+			want: errDirNoAccess,
+		}, {
+			name: "dir exists",
+			path: "/tmp/",
+			want: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := Exists(test.path)
+
+			assert.True(t, errors.Is(err, test.want))
 		})
 	}
 }
