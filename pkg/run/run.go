@@ -25,13 +25,16 @@ import (
 // - run.Git("pull").OnRepo(<REPO>).AndShutUp()
 //   means running "git pull" inside <REPO> and not printing any output
 type Cmd struct {
-	cmd *exec.Cmd
+	cmd  *exec.Cmd
+	args string
+	path string
 }
 
 // Git creates a git command with given arguments.
 func Git(args ...string) *Cmd {
 	return &Cmd{
-		cmd: exec.Command("git", args...),
+		cmd:  exec.Command("git", args...),
+		args: strings.Join(args, " "),
 	}
 }
 
@@ -46,6 +49,8 @@ func (c *Cmd) OnRepo(path string) *Cmd {
 	// Insert into the args slice after the 1st element (https://github.com/golang/go/wiki/SliceTricks#insert)
 	c.cmd.Args = append(c.cmd.Args[:1], append(insert, c.cmd.Args[1:]...)...)
 
+	c.path = path
+
 	return c
 }
 
@@ -56,7 +61,7 @@ func (c *Cmd) AndCaptureLines() ([]string, error) {
 
 	out, err := c.cmd.Output()
 	if err != nil {
-		return nil, &GitError{errStream, c.cmd.Args, err}
+		return nil, &GitError{errStream, c.args, c.path, err}
 	}
 
 	lines := lines(out)
@@ -83,7 +88,7 @@ func (c *Cmd) AndShow() error {
 
 	err := c.cmd.Run()
 	if err != nil {
-		return &GitError{&bytes.Buffer{}, c.cmd.Args, err}
+		return &GitError{&bytes.Buffer{}, c.args, c.path, err}
 	}
 	return nil
 }
@@ -97,7 +102,7 @@ func (c *Cmd) AndShutUp() error {
 
 	err := c.cmd.Run()
 	if err != nil {
-		return &GitError{errStream, c.cmd.Args, err}
+		return &GitError{errStream, c.args, c.path, err}
 	}
 	return nil
 }
@@ -105,16 +110,20 @@ func (c *Cmd) AndShutUp() error {
 // GitError provides more visibility into why an git command had failed.
 type GitError struct {
 	Stderr *bytes.Buffer
-	Args   []string
+	Args   string
+	Path   string
 	Err    error
 }
 
 func (e GitError) Error() string {
 	msg := e.Stderr.String()
-	if msg != "" && !strings.HasSuffix(msg, "\n") {
-		msg += "\n"
+
+	if e.Path == "" {
+		return fmt.Sprintf("git %s failed: %s", e.Args, msg)
 	}
-	return fmt.Sprintf("%s%q: %s", msg, strings.Join(e.Args, " "), e.Err)
+
+	return fmt.Sprintf("git %s failed on %s: %s", e.Args, e.Path, msg)
+
 }
 
 func lines(output []byte) []string {

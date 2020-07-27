@@ -17,7 +17,7 @@ func NewDumpPrinter() *DumpPrinter {
 func (p *DumpPrinter) Print(repos []Printable) string {
 	var str strings.Builder
 
-	for i, r := range repos {
+	for _, r := range repos {
 		str.WriteString(r.Remote())
 
 		// TODO: if head is detached maybe we should get the revision it points to in case it's a tag
@@ -25,9 +25,7 @@ func (p *DumpPrinter) Print(repos []Printable) string {
 			str.WriteString(" " + current)
 		}
 
-		if i < len(repos)-1 {
-			str.WriteString("\n")
-		}
+		str.WriteString("\n")
 	}
 
 	return str.String()

@@ -29,7 +29,7 @@ func (p *TreePrinter) Print(root string, repos []Printable) string {
 
 	p.printTree(tree, tp)
 
-	return tp.String()
+	return tp.String() + Errors(repos)
 }
 
 // Node represents a path fragment in repos tree.
@@ -114,40 +114,53 @@ func buildTree(root string, repos []Printable) *Node {
 	return tree
 }
 
+// printTree renders the repo tree by recursively traversing the tree nodes.
+// If a node doesn't have any children, it's a leaf node containing the repo status.
 func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
 	if node.children == nil {
-		r := node.repo
-		current := r.BranchStatus(r.Current())
-		worktree := r.WorkTreeStatus()
-
-		if worktree != "" {
-			worktree = fmt.Sprintf("[ %s ]", worktree)
-		}
-
-		var str strings.Builder
-
-		if worktree == "" && current == "" {
-			str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), green("ok")))
-		} else {
-			str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), strings.Join([]string{yellow(current), red(worktree)}, " ")))
-		}
-
-		for _, branch := range r.Branches() {
-			status := r.BranchStatus(branch)
-			if status == "" {
-				status = green("ok")
-			}
-
-			str.WriteString(fmt.Sprintf("\n%s%s %s", indentation(node), blue(branch), yellow(status)))
-		}
-
-		tp.SetValue(str.String())
+		tp.SetValue(printLeaf(node))
 	}
 
 	for _, child := range node.children {
 		branch := tp.AddBranch(child.val)
 		p.printTree(child, branch)
 	}
+}
+
+func printLeaf(node *Node) string {
+	r := node.repo
+
+	// If any errors happened during status loading, don't print the status but "error" instead.
+	// Actual error messages are printed in bulk below the tree.
+	if len(r.Errors()) > 0 {
+		return fmt.Sprintf("%s %s", node.val, red("error"))
+	}
+
+	current := r.BranchStatus(r.Current())
+	worktree := r.WorkTreeStatus()
+
+	if worktree != "" {
+		worktree = fmt.Sprintf("[ %s ]", worktree)
+	}
+
+	var str strings.Builder
+
+	if worktree == "" && current == "" {
+		str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), green("ok")))
+	} else {
+		str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), strings.Join([]string{yellow(current), red(worktree)}, " ")))
+	}
+
+	for _, branch := range r.Branches() {
+		status := r.BranchStatus(branch)
+		if status == "" {
+			status = green("ok")
+		}
+
+		str.WriteString(fmt.Sprintf("\n%s%s %s", indentation(node), blue(branch), yellow(status)))
+	}
+
+	return str.String()
 }
 
 // indentation generates a correct indentation for the branches row to match the links to lower rows.

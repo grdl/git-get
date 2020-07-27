@@ -18,8 +18,14 @@ func NewFlatPrinter() *FlatPrinter {
 func (p *FlatPrinter) Print(repos []Printable) string {
 	var str strings.Builder
 
-	for i, r := range repos {
+	for _, r := range repos {
 		str.WriteString(strings.TrimSuffix(r.Path(), string(os.PathSeparator)))
+
+		if len(r.Errors()) > 0 {
+			str.WriteString(" " + red("error") + "\n")
+			continue
+		}
+
 		str.WriteString(" " + blue(r.Current()))
 
 		current := r.BranchStatus(r.Current())
@@ -45,10 +51,8 @@ func (p *FlatPrinter) Print(repos []Printable) string {
 			str.WriteString(fmt.Sprintf("\n%s %s %s", indent, blue(branch), yellow(status)))
 		}
 
-		if i < len(repos)-1 {
-			str.WriteString("\n")
-		}
+		str.WriteString("\n")
 	}
 
-	return str.String()
+	return str.String() + Errors(repos)
 }

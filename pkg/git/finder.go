@@ -39,9 +39,8 @@ func Exists(path string) (bool, error) {
 
 // RepoFinder finds git repositories inside a given path.
 type RepoFinder struct {
-	root   string
-	repos  []*Repo
-	errors []error
+	root  string
+	repos []*Repo
 }
 
 // NewRepoFinder returns a RepoFinder pointed at given root path.
@@ -128,15 +127,15 @@ func (f *RepoFinder) walkCb(path string, ent *godirwalk.Dirent) error {
 }
 
 // addIfOk adds the found repo to the repos slice if it can be opened.
-// If repo path can't be accessed it will add an error to the errors slice.
 func (f *RepoFinder) addIfOk(path string) {
-	repo, err := Open(strings.TrimSuffix(path, dotgit))
-	if err != nil {
-		f.errors = append(f.errors, err)
-		return
-	}
+	// TODO: is the case below really correct? What if there's a race condition and the dir becomes unaccessible between finding it and opening?
 
-	f.repos = append(f.repos, repo)
+	// Open() should never return an error here. If a finder found a .git inside this dir, it means it could open and access it.
+	// If the dir was unaccessible, then it would have been skipped by the check in errorCb().
+	repo, err := Open(strings.TrimSuffix(path, dotgit))
+	if err == nil {
+		f.repos = append(f.repos, repo)
+	}
 }
 
 func (f *RepoFinder) errorCb(_ string, err error) godirwalk.ErrorAction {

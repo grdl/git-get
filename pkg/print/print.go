@@ -1,6 +1,9 @@
 package print
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	head = "HEAD"
@@ -15,6 +18,28 @@ type Printable interface {
 	WorkTreeStatus() string
 	Remote() string
 	Errors() []string
+}
+
+// Errors returns a printable list of errors from the slice of Printables or an empty string if there are no errors.
+// It's meant to be appended at the end of Print() result.
+func Errors(repos []Printable) string {
+	errors := []string{}
+
+	for _, repo := range repos {
+		for _, err := range repo.Errors() {
+			errors = append(errors, err)
+		}
+	}
+
+	if len(errors) == 0 {
+		return ""
+	}
+
+	var str strings.Builder
+	str.WriteString(red("\nOops, errors happened when loading repository status:\n"))
+	str.WriteString(strings.Join(errors, "\n"))
+
+	return str.String()
 }
 
 // TODO: not sure if this works on windows. See https://github.com/mattn/go-colorable

@@ -30,11 +30,11 @@ func List(c *ListCfg) error {
 
 	switch c.Output {
 	case cfg.OutFlat:
-		fmt.Println(print.NewFlatPrinter().Print(printables))
+		fmt.Print(print.NewFlatPrinter().Print(printables))
 	case cfg.OutTree:
-		fmt.Println(print.NewTreePrinter().Print(c.Root, printables))
+		fmt.Print(print.NewTreePrinter().Print(c.Root, printables))
 	case cfg.OutDump:
-		fmt.Println(print.NewDumpPrinter().Print(printables))
+		fmt.Print(print.NewDumpPrinter().Print(printables))
 	default:
 		return fmt.Errorf("invalid --out flag; allowed values: [%s]", strings.Join(cfg.AllowedOut, ", "))
 	}
