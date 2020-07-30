@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"git-get/pkg/run"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -54,6 +56,7 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 	}
 
 	if err != nil {
+		cleanupFailedClone(opts.Path)
 		return nil, err
 	}
 
@@ -182,4 +185,22 @@ func (r *Repo) Remote() (string, error) {
 // Path returns path to the Repository.
 func (r *Repo) Path() string {
 	return r.path
+}
+
+// cleanupFailedClone removes empty directories created by git when coning failed.
+// Git itself will delete the final repo directory if a clone failed,
+// but it won't delete all the parent dirs that it created when cloning the repo.
+// eg:
+// When operation like `git clone https://github.com/grdl/git-get /tmp/some/temp/dir/git-get` fails,
+// git will only delete the final `git-get` dir in the path an will leave /tmp/some/temp/dir even if it just created them.
+//
+// os.Remove will only delete an empty dir so we traverse the path "upwards" and delete all directories
+// until a non-empty one is reached.
+func cleanupFailedClone(path string) {
+	for {
+		path = filepath.Dir(path)
+		if err := os.Remove(path); err != nil {
+			return
+		}
+	}
 }
