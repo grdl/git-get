@@ -1,9 +1,14 @@
 package git
 
 import (
+	"fmt"
 	"git-get/pkg/git/test"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUncommitted(t *testing.T) {
@@ -298,4 +303,71 @@ func TestAheadBehind(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCleanupFailedClone(t *testing.T) {
+	// Test dir structure:
+	// root
+	// └── a/
+	//     ├── b/
+	//     │   └── c/
+	//     └── x/
+	//         └── y/
+	//        	   └── file.txt
+
+	tests := []struct {
+		path     string // path to cleanup
+		wantGone string // this path should be deleted, if empty - nothing should be deleted
+		wantStay string // this path shouldn't be deleted
+	}{
+		{
+			path:     "a/b/c/repo",
+			wantGone: "a/b/c/repo",
+			wantStay: "a",
+		}, {
+			path:     "a/b/c/repo",
+			wantGone: "a/b",
+			wantStay: "a",
+		}, {
+			path:     "a/b/repo",
+			wantGone: "",
+			wantStay: "a/b/c",
+		}, {
+			path:     "a/x/y/repo",
+			wantGone: "",
+			wantStay: "a/x/y",
+		},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			root := createTestDirTree(t)
+
+			path := filepath.Join(root, test.path)
+			cleanupFailedClone(path)
+
+			if test.wantGone != "" {
+				wantGone := filepath.Join(root, test.wantGone)
+				assert.NoDirExists(t, wantGone, "%s dir should be deleted during the cleanup", wantGone)
+			}
+
+			if test.wantStay != "" {
+				wantLeft := filepath.Join(root, test.wantStay)
+				assert.DirExists(t, wantLeft, "%s dir should not be deleted during the cleanup", wantLeft)
+			}
+		})
+	}
+}
+
+func createTestDirTree(t *testing.T) string {
+	root := test.TempDir(t, "")
+	err := os.MkdirAll(filepath.Join(root, "a", "b", "c"), os.ModePerm)
+	err = os.MkdirAll(filepath.Join(root, "a", "x", "y"), os.ModePerm)
+	_, err = os.Create(filepath.Join(root, "a", "x", "y", "file.txt"))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return root
 }
