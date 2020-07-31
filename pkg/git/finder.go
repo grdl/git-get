@@ -16,8 +16,8 @@ import (
 // It's handled by ErrorsCallback to tell the WalkCallback to skip this dir.
 var errSkipNode = errors.New(".git directory found, skipping this node")
 
-// errDirectoryAccess indicates a directory doesn't exists or can't be accessed
-var errDirectoryAccess = errors.New("directory doesn't exist or can't be accessed")
+var errDirNoAccess = errors.New("directory can't be accessed")
+var errDirNotExist = errors.New("directory doesn't exist")
 
 // Exists returns true if a directory exists. If it doesn't or the directory can't be accessed it returns an error.
 func Exists(path string) (bool, error) {
@@ -29,19 +29,18 @@ func Exists(path string) (bool, error) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return false, errDirectoryAccess
+			return false, errors.Wrapf(errDirNotExist, "can't access %s", path)
 		}
 	}
 
 	// Directory exists but can't be accessed
-	return true, errDirectoryAccess
+	return true, errors.Wrapf(errDirNoAccess, "can't access %s", path)
 }
 
 // RepoFinder finds git repositories inside a given path.
 type RepoFinder struct {
-	root   string
-	repos  []*Repo
-	errors []error
+	root  string
+	repos []*Repo
 }
 
 // NewRepoFinder returns a RepoFinder pointed at given root path.
@@ -128,15 +127,15 @@ func (f *RepoFinder) walkCb(path string, ent *godirwalk.Dirent) error {
 }
 
 // addIfOk adds the found repo to the repos slice if it can be opened.
-// If repo path can't be accessed it will add an error to the errors slice.
 func (f *RepoFinder) addIfOk(path string) {
-	repo, err := Open(strings.TrimSuffix(path, dotgit))
-	if err != nil {
-		f.errors = append(f.errors, err)
-		return
-	}
+	// TODO: is the case below really correct? What if there's a race condition and the dir becomes unaccessible between finding it and opening?
 
-	f.repos = append(f.repos, repo)
+	// Open() should never return an error here. If a finder found a .git inside this dir, it means it could open and access it.
+	// If the dir was unaccessible, then it would have been skipped by the check in errorCb().
+	repo, err := Open(strings.TrimSuffix(path, dotgit))
+	if err == nil {
+		f.repos = append(f.repos, repo)
+	}
 }
 
 func (f *RepoFinder) errorCb(_ string, err error) godirwalk.ErrorAction {

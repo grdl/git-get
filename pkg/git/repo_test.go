@@ -6,14 +6,6 @@ import (
 	"testing"
 )
 
-func TestOpen(t *testing.T) {
-	_, err := Open("/paththatdoesnotexist/repo")
-
-	if err != errDirectoryAccess {
-		t.Errorf("Opening a repo in non existing path should throw an error")
-	}
-}
-
 func TestUncommitted(t *testing.T) {
 	tests := []struct {
 		name      string
