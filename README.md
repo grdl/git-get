@@ -67,6 +67,7 @@ Flags:
   -h, --help                Print this help and exit.
   -t, --host                Host to use when <REPO> doesn't have a specified host. (default "github.com")
   -r, --root                Path to repos root where repositories are cloned. (default "~/repositories")
+  -c, --scheme              Scheme to use when <REPO> doesn't have a specified scheme. (default "ssh")
   -s, --skip-host           Don't create a directory for host.
   -v, --version             Print version and exit.
 ```
