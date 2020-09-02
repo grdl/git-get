@@ -17,21 +17,22 @@ const GitgetPrefix = "gitget"
 
 // CLI flag keys.
 var (
-	KeyBranch      = "branch"
-	KeyDump        = "dump"
-	KeyDefaultHost = "host"
-	KeyFetch       = "fetch"
-	KeyOutput      = "out"
-	KeySkipHost    = "skip-host"
-	KeyReposRoot   = "root"
+	KeyBranch        = "branch"
+	KeyDump          = "dump"
+	KeyDefaultHost   = "host"
+	KeyFetch         = "fetch"
+	KeyOutput        = "out"
+	KeyDefaultScheme = "scheme"
+	KeySkipHost      = "skip-host"
+	KeyReposRoot     = "root"
 )
 
 // Defaults is a map of default values for config keys.
 var Defaults = map[string]string{
-	KeyDefaultHost: "github.com",
-	KeyOutput:      OutTree,
-	KeyReposRoot:   fmt.Sprintf("~%c%s", filepath.Separator, "repositories"),
-	// KeySkipHost:    "false",
+	KeyDefaultHost:   "github.com",
+	KeyOutput:        OutTree,
+	KeyReposRoot:     fmt.Sprintf("~%c%s", filepath.Separator, "repositories"),
+	KeyDefaultScheme: "ssh",
 }
 
 // Values for the --out flag.

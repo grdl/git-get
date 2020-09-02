@@ -3,6 +3,8 @@ package pkg
 import (
 	"git-get/pkg/cfg"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Following URLs are considered valid according to https://git-scm.com/docs/git-clone#_git_urls:
@@ -50,16 +52,11 @@ func TestURLParse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost])
-		if err != nil {
-			t.Fatalf("got error: %+v", err)
-		}
+		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
+		assert.NoError(t, err)
 
 		got := URLToPath(*url, false)
-
-		if got != test.want {
-			t.Errorf("wrong result for %q; expected %q; got %q", test.in, test.want, got)
-		}
+		assert.Equal(t, test.want, got)
 	}
 }
 func TestURLParseSkipHost(t *testing.T) {
@@ -95,16 +92,39 @@ func TestURLParseSkipHost(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost])
-		if err != nil {
-			t.Fatalf("got error: %+v", err)
-		}
+		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
+		assert.NoError(t, err)
 
 		got := URLToPath(*url, true)
+		assert.Equal(t, test.want, got)
+	}
+}
 
-		if got != test.want {
-			t.Errorf("wrong result for %q; expected %q; got %q", test.in, test.want, got)
-		}
+func TestDefaultScheme(t *testing.T) {
+	tests := []struct {
+		in     string
+		scheme string
+		want   string
+	}{
+		{"grdl/git-get", "ssh", "ssh://git@github.com/grdl/git-get"},
+		{"grdl/git-get", "https", "https://github.com/grdl/git-get"},
+		{"https://github.com/grdl/git-get", "ssh", "https://github.com/grdl/git-get"},
+		{"https://github.com/grdl/git-get", "https", "https://github.com/grdl/git-get"},
+		{"ssh://github.com/grdl/git-get", "ssh", "ssh://git@github.com/grdl/git-get"},
+		{"ssh://github.com/grdl/git-get", "https", "ssh://git@github.com/grdl/git-get"},
+		{"git+ssh://github.com/grdl/git-get", "https", "ssh://git@github.com/grdl/git-get"},
+		{"git@github.com:grdl/git-get", "ssh", "ssh://git@github.com/grdl/git-get"},
+		{"git@github.com:grdl/git-get", "https", "ssh://git@github.com/grdl/git-get"},
+	}
+
+	for _, test := range tests {
+		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], test.scheme)
+		assert.NoError(t, err)
+
+		want, err := url.Parse(test.want)
+		assert.NoError(t, err)
+
+		assert.Equal(t, url, want)
 	}
 }
 
@@ -119,9 +139,8 @@ func TestInvalidURLParse(t *testing.T) {
 	}
 
 	for _, test := range invalidURLs {
-		got, err := ParseURL(test, cfg.Defaults[cfg.KeyDefaultHost])
-		if err == nil {
-			t.Errorf("expected error; got %q", got)
-		}
+		_, err := ParseURL(test, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
+
+		assert.Error(t, err)
 	}
 }
