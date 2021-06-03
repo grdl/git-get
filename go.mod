@@ -1,6 +1,6 @@
 module git-get
 
-go 1.14
+go 1.16
 
 require (
 	github.com/karrick/godirwalk v1.15.6

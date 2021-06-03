@@ -60,7 +60,7 @@ release:
 
 brews:
   - name: git-get
-    github:
+    tap:
       owner: grdl
       name: homebrew-tap
     commit_author:
