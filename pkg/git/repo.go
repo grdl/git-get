@@ -2,12 +2,13 @@ package git
 
 import (
 	"fmt"
-	"git-get/pkg/run"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"git-get/pkg/run"
 )
 
 const (
@@ -144,6 +145,16 @@ func (r *Repo) Upstream(branch string) (string, error) {
 		return "", nil
 	}
 
+	return out, nil
+}
+
+// Description returns description of a branch if a given branch has one set with "git branch --edit-description".
+// Otherwise it returns an empty slice.
+func (r *Repo) Description(branch string) ([]string, error) {
+	out, err := run.Git("config", fmt.Sprintf("branch.%s.description", branch)).OnRepo(r.path).AndCaptureLines()
+	if err != nil {
+		return nil, nil
+	}
 	return out, nil
 }
 

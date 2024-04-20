@@ -7,12 +7,13 @@ import (
 
 // Status contains human readable (and printable) representation of a git repository status.
 type Status struct {
-	path     string
-	current  string
-	branches map[string]string // key: branch name, value: branch status
-	worktree string
-	remote   string
-	errors   []string // Slice of errors which occurred when loading the status.
+	path               string
+	current            string
+	branches           map[string]string   // key: branch name, value: branch status
+	branchDescriptions map[string][]string // key: branch name, value: branch description
+	worktree           string
+	remote             string
+	errors             []string // Slice of errors which occurred when loading the status.
 }
 
 // LoadStatus reads status of a repository.
@@ -38,7 +39,7 @@ func (r *Repo) LoadStatus(fetch bool) *Status {
 	}
 
 	var errs []error
-	status.branches, errs = r.loadBranches()
+	status.branches, status.branchDescriptions, errs = r.loadBranches()
 	for _, err := range errs {
 		status.errors = append(status.errors, err.Error())
 	}
@@ -56,14 +57,15 @@ func (r *Repo) LoadStatus(fetch bool) *Status {
 	return status
 }
 
-func (r *Repo) loadBranches() (map[string]string, []error) {
+func (r *Repo) loadBranches() (map[string]string, map[string][]string, []error) {
 	statuses := make(map[string]string)
+	descriptions := make(map[string][]string)
 	errors := make([]error, 0)
 
 	branches, err := r.Branches()
 	if err != nil {
 		errors = append(errors, err)
-		return statuses, errors
+		return statuses, descriptions, errors
 	}
 
 	for _, branch := range branches {
@@ -72,9 +74,14 @@ func (r *Repo) loadBranches() (map[string]string, []error) {
 		if err != nil {
 			errors = append(errors, err)
 		}
+		description, err := r.loadBranchDescription(branch)
+		descriptions[branch] = description
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
 
-	return statuses, errors
+	return statuses, descriptions, errors
 }
 
 func (r *Repo) loadBranchStatus(branch string) (string, error) {
@@ -105,6 +112,10 @@ func (r *Repo) loadBranchStatus(branch string) (string, error) {
 	}
 
 	return strings.Join(res, " "), nil
+}
+
+func (r *Repo) loadBranchDescription(branch string) ([]string, error) {
+	return r.Description(branch)
 }
 
 func (r *Repo) loadWorkTree() (string, error) {
@@ -157,6 +168,11 @@ func (s *Status) Branches() []string {
 // BranchStatus returns status of a given branch
 func (s *Status) BranchStatus(branch string) string {
 	return s.branches[branch]
+}
+
+// BranchDescription returns description of a given branch
+func (s *Status) BranchDescription(branch string) []string {
+	return s.branchDescriptions[branch]
 }
 
 // WorkTreeStatus returns status of a worktree

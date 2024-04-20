@@ -15,6 +15,7 @@ type Printable interface {
 	Current() string
 	Branches() []string
 	BranchStatus(string) string
+	BranchDescription(string) []string
 	WorkTreeStatus() string
 	Remote() string
 	Errors() []string
@@ -57,4 +58,8 @@ func blue(str string) string {
 
 func yellow(str string) string {
 	return fmt.Sprintf("\033[1;33m%s\033[0m", str)
+}
+
+func magenta(str string) string {
+	return fmt.Sprintf("\033[1;35m%s\033[0m", str)
 }

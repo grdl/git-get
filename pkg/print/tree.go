@@ -151,6 +151,14 @@ func printLeaf(node *Node) string {
 		str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), strings.Join([]string{yellow(current), red(worktree)}, " ")))
 	}
 
+	if description := r.BranchDescription(r.Current()); len(description) > 0 {
+		for _, line := range description {
+			if len(line) > 0 {
+				str.WriteString(fmt.Sprintf("\n%s  %s", indentation(node), magenta(line)))
+			}
+		}
+	}
+
 	for _, branch := range r.Branches() {
 		status := r.BranchStatus(branch)
 		if status == "" {
@@ -158,6 +166,14 @@ func printLeaf(node *Node) string {
 		}
 
 		str.WriteString(fmt.Sprintf("\n%s%s %s", indentation(node), blue(branch), yellow(status)))
+
+		if description := r.BranchDescription(branch); len(description) > 0 {
+			for _, line := range description {
+				if len(line) > 0 {
+					str.WriteString(fmt.Sprintf("\n%s  %s", indentation(node), magenta(line)))
+				}
+			}
+		}
 	}
 
 	return str.String()
