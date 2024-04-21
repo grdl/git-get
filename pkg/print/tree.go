@@ -154,7 +154,7 @@ func printLeaf(node *Node) string {
 	if description := r.BranchDescription(r.Current()); len(description) > 0 {
 		for _, line := range description {
 			if len(line) > 0 {
-				str.WriteString(fmt.Sprintf("\n%s  %s", indentation(node), magenta(line)))
+				str.WriteString(fmt.Sprintf("\n%s┈ %s", indentation(node), magenta(line)))
 			}
 		}
 	}
@@ -170,7 +170,7 @@ func printLeaf(node *Node) string {
 		if description := r.BranchDescription(branch); len(description) > 0 {
 			for _, line := range description {
 				if len(line) > 0 {
-					str.WriteString(fmt.Sprintf("\n%s  %s", indentation(node), magenta(line)))
+					str.WriteString(fmt.Sprintf("\n%s┈ %s", indentation(node), magenta(line)))
 				}
 			}
 		}
