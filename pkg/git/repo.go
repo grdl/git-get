@@ -27,6 +27,7 @@ type CloneOpts struct {
 	URL    *url.URL
 	Path   string // TODO: should Path be a part of clone opts?
 	Branch string
+	Depth  int
 	Quiet  bool
 }
 
@@ -43,10 +44,18 @@ func Open(path string) (*Repo, error) {
 
 // Clone clones Repository specified with CloneOpts.
 func Clone(opts *CloneOpts) (*Repo, error) {
-	runGit := run.Git("clone", opts.URL.String(), opts.Path)
+	args := []string{"clone"}
+
 	if opts.Branch != "" {
-		runGit = run.Git("clone", "--branch", opts.Branch, "--single-branch", opts.URL.String(), opts.Path)
+		args = append(args, "--branch", opts.Branch, "--single-branch")
 	}
+
+	if opts.Depth > 0 {
+		args = append(args, "--depth", fmt.Sprintf("%d", opts.Depth))
+	}
+
+	args = append(args, opts.URL.String(), opts.Path)
+	runGit := run.Git(args...)
 
 	var err error
 	if opts.Quiet {

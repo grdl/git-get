@@ -18,6 +18,7 @@ const GitgetPrefix = "gitget"
 // CLI flag keys.
 var (
 	KeyBranch        = "branch"
+	KeyDepth         = "depth"
 	KeyDump          = "dump"
 	KeyDefaultHost   = "host"
 	KeyFetch         = "fetch"
