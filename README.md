@@ -63,6 +63,7 @@ git get <REPO> [flags]
 
 Flags:
   -b, --branch              Branch (or tag) to checkout after cloning.
+  -D, --depth               Create a shallow clone with a history truncated to the specified number of commits.
   -d, --dump                Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.
   -h, --help                Print this help and exit.
   -t, --host                Host to use when <REPO> doesn't have a specified host. (default "github.com")
@@ -76,6 +77,7 @@ The `<REPO>` argument can be any valid URL supported by git. It also accepts a s
 
 For example, `git get grdl/git-get` will clone `https://github.com/grdl/git-get`.
 
+You can also create a shallow clone with a limited history by using the `--depth` flag. For example, `git get grdl/git-get --depth 1` will clone only the latest commit.
 
 ### git list
 ```

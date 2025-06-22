@@ -12,6 +12,7 @@ import (
 const example = `  git get grdl/git-get
   git get https://github.com/grdl/git-get.git
   git get git@github.com:grdl/git-get.git
+  git get grdl/git-get --depth 1
   git get -d path/to/dump/file`
 
 var cmd = &cobra.Command{
@@ -26,6 +27,7 @@ var cmd = &cobra.Command{
 
 func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", "", "Branch (or tag) to checkout after cloning.")
+	cmd.PersistentFlags().IntP(cfg.KeyDepth, "D", 0, "Create a shallow clone with a history truncated to the specified number of commits.")
 	cmd.PersistentFlags().StringP(cfg.KeyDefaultHost, "t", cfg.Defaults[cfg.KeyDefaultHost], "Host to use when <REPO> doesn't have a specified host.")
 	cmd.PersistentFlags().StringP(cfg.KeyDefaultScheme, "c", cfg.Defaults[cfg.KeyDefaultScheme], "Scheme to use when <REPO> doesn't have a specified scheme.")
 	cmd.PersistentFlags().StringP(cfg.KeyDump, "d", "", "Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.")
@@ -35,6 +37,7 @@ func init() {
 	cmd.PersistentFlags().BoolP("version", "v", false, "Print version and exit.")
 
 	viper.BindPFlag(cfg.KeyBranch, cmd.PersistentFlags().Lookup(cfg.KeyBranch))
+	viper.BindPFlag(cfg.KeyDepth, cmd.PersistentFlags().Lookup(cfg.KeyDepth))
 	viper.BindPFlag(cfg.KeyDefaultHost, cmd.PersistentFlags().Lookup(cfg.KeyDefaultHost))
 	viper.BindPFlag(cfg.KeyDefaultScheme, cmd.PersistentFlags().Lookup(cfg.KeyDefaultScheme))
 	viper.BindPFlag(cfg.KeyDump, cmd.PersistentFlags().Lookup(cfg.KeyDump))
@@ -56,6 +59,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Branch:    viper.GetString(cfg.KeyBranch),
 		DefHost:   viper.GetString(cfg.KeyDefaultHost),
 		DefScheme: viper.GetString(cfg.KeyDefaultScheme),
+		Depth:     viper.GetInt(cfg.KeyDepth),
 		Dump:      viper.GetString(cfg.KeyDump),
 		SkipHost:  viper.GetBool(cfg.KeySkipHost),
 		Root:      viper.GetString(cfg.KeyReposRoot),

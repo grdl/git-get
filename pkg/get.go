@@ -11,6 +11,7 @@ type GetCfg struct {
 	Branch    string
 	DefHost   string
 	DefScheme string
+	Depth     int
 	Dump      string
 	Root      string
 	SkipHost  bool
@@ -43,6 +44,7 @@ func cloneSingleRepo(c *GetCfg) error {
 		URL:    url,
 		Path:   filepath.Join(c.Root, URLToPath(*url, c.SkipHost)),
 		Branch: c.Branch,
+		Depth:  c.Depth,
 	}
 
 	_, err = git.Clone(opts)
@@ -66,6 +68,7 @@ func cloneDumpFile(c *GetCfg) error {
 			URL:    url,
 			Path:   filepath.Join(c.Root, URLToPath(*url, c.SkipHost)),
 			Branch: line.branch,
+			Depth:  c.Depth,
 		}
 
 		// If target path already exists, skip cloning this repo
