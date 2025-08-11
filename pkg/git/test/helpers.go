@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -17,17 +18,14 @@ func TempDir(t *testing.T, parent string) string {
 
 	// Automatically remove temp dir when the test is over.
 	t.Cleanup(func() {
-		err := os.RemoveAll(dir)
-		if err != nil {
-			t.Errorf("failed removing test repo %s", dir)
-		}
+		removeTestDir(t, dir)
 	})
 
 	return dir
 }
 
 func (r *Repo) init() {
-	err := run.Git("init", "--quiet", r.path).AndShutUp()
+	err := run.Git("init", "--quiet", "--initial-branch=main", r.path).AndShutUp()
 	checkFatal(r.t, err)
 }
 
@@ -90,5 +88,19 @@ func (r *Repo) fetch() {
 func checkFatal(t *testing.T, err error) {
 	if err != nil {
 		t.Fatalf("failed making test repo: %+v", err)
+	}
+}
+
+// removeTestDir removes a test directory
+func removeTestDir(t *testing.T, dir string) {
+	// Skip cleanup on Windows to avoid file locking issues in CI
+	// The CI runner environment is destroyed after tests anyway
+	if runtime.GOOS == "windows" {
+		return
+	}
+
+	err := os.RemoveAll(dir)
+	if err != nil {
+		t.Logf("warning: failed removing test repo %s: %v", dir, err)
 	}
 }

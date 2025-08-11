@@ -5,7 +5,6 @@ import (
 	"fmt"
 	urlpkg "net/url"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -70,7 +69,7 @@ func ParseURL(rawURL string, defaultHost string, defaultScheme string) (url *url
 	return url, nil
 }
 
-// URLToPath cleans up the URL and converts it into a path string with correct separators for the current OS.
+// URLToPath cleans up the URL and converts it into a path string.
 // Eg, ssh://git@github.com:22/~user/repo.git => github.com/user/repo
 //
 // If skipHost is true, it removes the host part from the path.
@@ -82,18 +81,23 @@ func URLToPath(url urlpkg.URL, skipHost bool) string {
 	// Remove tilde (~) char from username.
 	url.Path = strings.ReplaceAll(url.Path, "~", "")
 
-	// Remove leading and trailing slashes (correct separator is added by the filepath.Join() below).
+	// Remove leading and trailing slashes.
 	url.Path = strings.Trim(url.Path, "/")
 
 	// Remove trailing ".git" from repo name.
 	url.Path = strings.TrimSuffix(url.Path, ".git")
 
-	// Replace slashes with separator correct for the current OS.
-	url.Path = strings.ReplaceAll(url.Path, "/", string(filepath.Separator))
-
 	if skipHost {
-		url.Host = ""
+		return url.Path
 	}
 
-	return filepath.Join(url.Host, url.Path)
+	if url.Host == "" {
+		return url.Path
+	}
+
+	if url.Path == "" {
+		return url.Host
+	}
+
+	return url.Host + "/" + url.Path
 }

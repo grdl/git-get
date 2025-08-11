@@ -16,14 +16,14 @@ import (
 //
 // Examples of different compositions:
 //
-// - run.Git("clone", <URL>).AndShow()
-//   means running "git clone <URL>" and printing the progress into stdout
+//   - run.Git("clone", <URL>).AndShow()
+//     means running "git clone <URL>" and printing the progress into stdout
 //
-// - run.Git("branch","-a").OnRepo(<REPO>).AndCaptureLines()
-//   means running "git branch -a" inside <REPO> and returning a slice of branch names
+//   - run.Git("branch","-a").OnRepo(<REPO>).AndCaptureLines()
+//     means running "git branch -a" inside <REPO> and returning a slice of branch names
 //
-// - run.Git("pull").OnRepo(<REPO>).AndShutUp()
-//   means running "git pull" inside <REPO> and not printing any output
+//   - run.Git("pull").OnRepo(<REPO>).AndShutUp()
+//     means running "git pull" inside <REPO> and not printing any output
 type Cmd struct {
 	cmd  *exec.Cmd
 	args string

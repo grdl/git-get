@@ -13,7 +13,7 @@ import (
 const (
 	dotgit    = ".git"
 	untracked = "??" // Untracked files are marked as "??" in git status output.
-	master    = "master"
+	main      = "main"
 	head      = "HEAD"
 )
 

@@ -120,9 +120,9 @@ func TestCurrentBranch(t *testing.T) {
 			want:      "main",
 		},
 		{
-			name:      "only master branch",
+			name:      "only main branch",
 			repoMaker: test.RepoWithCommit,
-			want:      master,
+			want:      main,
 		},
 		{
 			name:      "checked out new branch",
@@ -163,19 +163,19 @@ func TestBranches(t *testing.T) {
 			want:      []string{""},
 		},
 		{
-			name:      "only master branch",
+			name:      "only main branch",
 			repoMaker: test.RepoWithCommit,
-			want:      []string{"master"},
+			want:      []string{"main"},
 		},
 		{
 			name:      "new branch",
 			repoMaker: test.RepoWithBranch,
-			want:      []string{"feature/branch", "master"},
+			want:      []string{"feature/branch", "main"},
 		},
 		{
 			name:      "checked out new tag",
 			repoMaker: test.RepoWithTag,
-			want:      []string{"master"},
+			want:      []string{"main"},
 		},
 	}
 
@@ -204,7 +204,7 @@ func TestUpstream(t *testing.T) {
 		{
 			name:      "empty",
 			repoMaker: test.RepoEmpty,
-			branch:    "master",
+			branch:    "main",
 			want:      "",
 		},
 		// TODO: add wantErr
@@ -215,10 +215,10 @@ func TestUpstream(t *testing.T) {
 			want:      "",
 		},
 		{
-			name:      "master with upstream",
+			name:      "main with upstream",
 			repoMaker: test.RepoWithBranchWithUpstream,
-			branch:    "master",
-			want:      "origin/master",
+			branch:    "main",
+			want:      "origin/main",
 		},
 		{
 			name:      "branch with upstream",
@@ -260,7 +260,7 @@ func TestAheadBehind(t *testing.T) {
 		{
 			name:      "fresh clone",
 			repoMaker: test.RepoWithBranchWithUpstream,
-			branch:    "master",
+			branch:    "main",
 			want:      []int{0, 0},
 		},
 		{

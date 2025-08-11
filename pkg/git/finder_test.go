@@ -3,6 +3,7 @@ package git
 import (
 	"errors"
 	"git-get/pkg/git/test"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,7 +58,7 @@ func TestExists(t *testing.T) {
 			want: errDirNotExist,
 		}, {
 			name: "dir exists",
-			path: "/tmp/",
+			path: os.TempDir(),
 			want: nil,
 		},
 	}

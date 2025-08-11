@@ -43,7 +43,7 @@ jobs:
           git config --global user.name "CI Test"
           
       - name: Run tests with coverage
-        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        run: go test -race -coverprofile coverage.out -covermode=atomic ./...
         
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.24'
