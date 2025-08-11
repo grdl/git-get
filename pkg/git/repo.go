@@ -108,9 +108,20 @@ func (r *Repo) Untracked() (int, error) {
 
 // CurrentBranch returns the short name currently checked-out branch for the Repository.
 // If Repo is in a detached head state, it will return "HEAD".
+// If the repository has no commits yet, it returns "main" (for new repositories).
 func (r *Repo) CurrentBranch() (string, error) {
 	out, err := run.Git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
+		// Check if this is a new repository without commits
+		if strings.Contains(err.Error(), "ambiguous argument 'HEAD'") {
+			// Try to get the default branch name from git config
+			defaultBranch, branchErr := run.Git("config", "--get", "init.defaultBranch").OnRepo(r.path).AndCaptureLine()
+			if branchErr == nil && defaultBranch != "" {
+				return defaultBranch, nil
+			}
+			// Fall back to "main" as the modern default
+			return "main", nil
+		}
 		return "", err
 	}
 
@@ -175,6 +186,10 @@ func (r *Repo) Remote() (string, error) {
 	// https://stackoverflow.com/a/16880000/1085632
 	out, err := run.Git("ls-remote", "--get-url").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
+		// Check if this is a repository without any remotes configured
+		if strings.Contains(err.Error(), "No remote configured to list refs from") {
+			return "", nil // Return empty string instead of error for missing remote
+		}
 		return "", err
 	}
 

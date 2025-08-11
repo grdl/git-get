@@ -114,12 +114,11 @@ func TestCurrentBranch(t *testing.T) {
 		repoMaker func(*testing.T) *test.Repo
 		want      string
 	}{
-		// TODO: maybe add wantErr to check if error is returned correctly?
-		// {
-		// 	name:      "empty",
-		// 	repoMaker: newTestRepo,
-		// 	want:      "",
-		// },
+		{
+			name:      "empty repo without commits",
+			repoMaker: test.RepoEmpty,
+			want:      "main",
+		},
 		{
 			name:      "only master branch",
 			repoMaker: test.RepoWithCommit,
@@ -354,6 +353,57 @@ func TestCleanupFailedClone(t *testing.T) {
 			if test.wantStay != "" {
 				wantLeft := filepath.Join(root, test.wantStay)
 				assert.DirExists(t, wantLeft, "%s dir should not be deleted during the cleanup", wantLeft)
+			}
+		})
+	}
+}
+
+func TestRemote(t *testing.T) {
+	tests := []struct {
+		name      string
+		repoMaker func(*testing.T) *test.Repo
+		want      string
+		wantErr   bool
+	}{
+		{
+			name:      "empty repo without remote",
+			repoMaker: test.RepoEmpty,
+			want:      "",
+			wantErr:   false,
+		},
+		{
+			name:      "repo with commit but no remote",
+			repoMaker: test.RepoWithCommit,
+			want:      "",
+			wantErr:   false,
+		},
+		{
+			name:      "repo with upstream",
+			repoMaker: test.RepoWithBranchWithUpstream,
+			want:      "", // This will contain the actual remote URL but we just test it doesn't error
+			wantErr:   false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			r, _ := Open(test.repoMaker(t).Path())
+			got, err := r.Remote()
+
+			if test.wantErr && err == nil {
+				t.Errorf("expected error but got none")
+			}
+			if !test.wantErr && err != nil {
+				t.Errorf("unexpected error: %q", err)
+			}
+
+			// For repos with remote, just check no error occurred
+			if test.name == "repo with upstream" {
+				if err != nil {
+					t.Errorf("unexpected error for repo with remote: %q", err)
+				}
+			} else if got != test.want {
+				t.Errorf("expected %q; got %q", test.want, got)
 			}
 		})
 	}
