@@ -1,3 +1,5 @@
+version: 2
+
 run:
   timeout: 5m
   go: '1.24'
@@ -65,21 +67,17 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - depguard
     - dogsled
     - dupl
     - errcheck
-    - exportloopref
     - funlen
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
-    - goimports
+    - godox
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - lll
@@ -87,10 +85,9 @@ linters:
     - nakedret
     - noctx
     - nolintlint
+    - prealloc
     - revive
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
@@ -100,13 +97,12 @@ issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
         - funlen
         - goconst
+        - lll
 
     - path: pkg/git/test/
       linters:
-        - gomnd
         - goconst
 
   exclude-use-default: false

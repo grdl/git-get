@@ -270,6 +270,24 @@ go tool cover -html=coverage.out
 go test -v ./pkg/git
 ```
 
+### Linting
+
+This project uses comprehensive linting with golangci-lint. The linting configuration includes 25+ linters for code quality, security, and style checking.
+
+```bash
+# Install golangci-lint (if not already installed)
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Run linting with the project's configuration
+golangci-lint run
+
+# Run with verbose output
+golangci-lint run -v
+
+# Fix auto-fixable issues
+golangci-lint run --fix
+```
+
 ## Troubleshooting
 
 ### Common Issues
