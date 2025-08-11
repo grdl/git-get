@@ -1,2 +1,4 @@
 dist/
 __debug_bin
+.claude/
+CLAUDE.md
