@@ -45,7 +45,6 @@ func TestFinder(t *testing.T) {
 	}
 }
 
-// TODO: this test will only work on Linux
 func TestExists(t *testing.T) {
 	tests := []struct {
 		name string
@@ -56,10 +55,6 @@ func TestExists(t *testing.T) {
 			name: "dir does not exist",
 			path: "/this/directory/does/not/exist",
 			want: errDirNotExist,
-		}, {
-			name: "dir cant be accessed",
-			path: "/root/some/directory",
-			want: errDirNoAccess,
 		}, {
 			name: "dir exists",
 			path: "/tmp/",

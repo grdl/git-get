@@ -1,13 +1,13 @@
 package pkg
 
 import (
+	"errors"
+	"fmt"
 	urlpkg "net/url"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 var errEmptyURLPath = errors.New("parsed URL path is empty")
@@ -32,7 +32,7 @@ func ParseURL(rawURL string, defaultHost string, defaultScheme string) (url *url
 	} else {
 		url, err = urlpkg.Parse(rawURL)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed parsing URL %s", rawURL)
+			return nil, fmt.Errorf("failed parsing URL %s: %w", rawURL, err)
 		}
 	}
 
