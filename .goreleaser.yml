@@ -1,3 +1,5 @@
+version: 2
+
 before:
   hooks:
     - go mod download
@@ -30,18 +32,16 @@ builds:
 
 archives:
   - id: archive
-    builds:
+    ids:
       - git-get
       - git-list
-    replacements:
-      darwin: macOS
-      linux: linux
-      windows: windows
-      386: i386
-      amd64: x86_64
+    name_template: "git-get_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+      - zip
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     # Don't include any additional files into the archives (such as README, CHANGELOG etc). 
     files:
       - none* 
@@ -50,23 +50,30 @@ checksum:
   name_template: 'checksums.txt'
 
 changelog:
-  skip: true
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore'
+      - typo
 
 release:
   github:
     owner: grdl
     name: git-get
 
-
 brews:
   - name: git-get
-    tap:
+    repository:
       owner: grdl
       name: homebrew-tap
+      branch: main
     commit_author:
       name: Grzegorz Dlugoszewski
       email: git-get@grdl.dev
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/grdl/git-get/
     description: Better way to clone, organize and manage multiple git repositories
     test: |
@@ -75,8 +82,10 @@ brews:
       bin.install "git-get", "git-list"
 
 nfpms:
-  - license: MIT
-    maintainer: grdl
+  - id: packages
+    package_name: git-get
+    license: MIT
+    maintainer: Grzegorz Dlugoszewski <git-get@grdl.dev>
     homepage: https://github.com/grdl/git-get
     bindir: /usr/local/bin
     dependencies:
@@ -85,3 +94,19 @@ nfpms:
     formats:
       - deb
       - rpm
+
+scoops:
+  - name: git-get
+    repository:
+      owner: grdl
+      name: git-get
+      branch: master
+    directory: bucket
+    url_template: "https://github.com/grdl/git-get/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_author:
+      name: Grzegorz Dlugoszewski
+      email: git-get@grdl.dev
+    commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
+    homepage: "https://github.com/grdl/git-get"
+    description: "Better way to clone, organize and manage multiple git repositories"
+    license: MIT

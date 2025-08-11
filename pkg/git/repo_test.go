@@ -114,16 +114,15 @@ func TestCurrentBranch(t *testing.T) {
 		repoMaker func(*testing.T) *test.Repo
 		want      string
 	}{
-		// TODO: maybe add wantErr to check if error is returned correctly?
-		// {
-		// 	name:      "empty",
-		// 	repoMaker: newTestRepo,
-		// 	want:      "",
-		// },
 		{
-			name:      "only master branch",
+			name:      "empty repo without commits",
+			repoMaker: test.RepoEmpty,
+			want:      "main",
+		},
+		{
+			name:      "only main branch",
 			repoMaker: test.RepoWithCommit,
-			want:      master,
+			want:      main,
 		},
 		{
 			name:      "checked out new branch",
@@ -164,19 +163,19 @@ func TestBranches(t *testing.T) {
 			want:      []string{""},
 		},
 		{
-			name:      "only master branch",
+			name:      "only main branch",
 			repoMaker: test.RepoWithCommit,
-			want:      []string{"master"},
+			want:      []string{"main"},
 		},
 		{
 			name:      "new branch",
 			repoMaker: test.RepoWithBranch,
-			want:      []string{"feature/branch", "master"},
+			want:      []string{"feature/branch", "main"},
 		},
 		{
 			name:      "checked out new tag",
 			repoMaker: test.RepoWithTag,
-			want:      []string{"master"},
+			want:      []string{"main"},
 		},
 	}
 
@@ -205,7 +204,7 @@ func TestUpstream(t *testing.T) {
 		{
 			name:      "empty",
 			repoMaker: test.RepoEmpty,
-			branch:    "master",
+			branch:    "main",
 			want:      "",
 		},
 		// TODO: add wantErr
@@ -216,10 +215,10 @@ func TestUpstream(t *testing.T) {
 			want:      "",
 		},
 		{
-			name:      "master with upstream",
+			name:      "main with upstream",
 			repoMaker: test.RepoWithBranchWithUpstream,
-			branch:    "master",
-			want:      "origin/master",
+			branch:    "main",
+			want:      "origin/main",
 		},
 		{
 			name:      "branch with upstream",
@@ -261,7 +260,7 @@ func TestAheadBehind(t *testing.T) {
 		{
 			name:      "fresh clone",
 			repoMaker: test.RepoWithBranchWithUpstream,
-			branch:    "master",
+			branch:    "main",
 			want:      []int{0, 0},
 		},
 		{
@@ -354,6 +353,57 @@ func TestCleanupFailedClone(t *testing.T) {
 			if test.wantStay != "" {
 				wantLeft := filepath.Join(root, test.wantStay)
 				assert.DirExists(t, wantLeft, "%s dir should not be deleted during the cleanup", wantLeft)
+			}
+		})
+	}
+}
+
+func TestRemote(t *testing.T) {
+	tests := []struct {
+		name      string
+		repoMaker func(*testing.T) *test.Repo
+		want      string
+		wantErr   bool
+	}{
+		{
+			name:      "empty repo without remote",
+			repoMaker: test.RepoEmpty,
+			want:      "",
+			wantErr:   false,
+		},
+		{
+			name:      "repo with commit but no remote",
+			repoMaker: test.RepoWithCommit,
+			want:      "",
+			wantErr:   false,
+		},
+		{
+			name:      "repo with upstream",
+			repoMaker: test.RepoWithBranchWithUpstream,
+			want:      "", // This will contain the actual remote URL but we just test it doesn't error
+			wantErr:   false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			r, _ := Open(test.repoMaker(t).Path())
+			got, err := r.Remote()
+
+			if test.wantErr && err == nil {
+				t.Errorf("expected error but got none")
+			}
+			if !test.wantErr && err != nil {
+				t.Errorf("unexpected error: %q", err)
+			}
+
+			// For repos with remote, just check no error occurred
+			if test.name == "repo with upstream" {
+				if err != nil {
+					t.Errorf("unexpected error for repo with remote: %q", err)
+				}
+			} else if got != test.want {
+				t.Errorf("expected %q; got %q", test.want, got)
 			}
 		})
 	}

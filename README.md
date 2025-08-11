@@ -88,7 +88,8 @@ brew install grdl/tap/git-get
 
 **Option 2: Using Scoop**
 ```powershell
-# Coming soon
+scoop bucket add git-get https://github.com/grdl/git-get
+scoop install git-get
 ```
 
 ### Building from Source
@@ -269,6 +270,24 @@ go tool cover -html=coverage.out
 go test -v ./pkg/git
 ```
 
+### Linting
+
+This project uses comprehensive linting with golangci-lint. The linting configuration includes 25+ linters for code quality, security, and style checking.
+
+```bash
+# Install golangci-lint (if not already installed)
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Run linting with the project's configuration
+golangci-lint run
+
+# Run with verbose output
+golangci-lint run -v
+
+# Fix auto-fixable issues
+golangci-lint run --fix
+```
+
 ## Troubleshooting
 
 ### Common Issues
@@ -317,12 +336,13 @@ We welcome contributions!
 1. **Fork the repository** 
 2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
 3. **Install dependencies**: `go mod download`
-3. **Make changes and add tests**
-4. **Run tests**: `go test ./...`
-5. **Run linter**: `golangci-lint run`
-6. **Commit changes**: `git commit -m 'Add amazing feature'`
-7. **Push to branch**: `git push origin feature/amazing-feature`
-8. **Open a Pull Request**
+4. **Make changes and add tests**
+5. **Format**: `go fmt ./...`
+6. **Run tests**: `go test ./...`
+7. **Run linter**: `golangci-lint run`
+8. **Commit changes**: `git commit -m 'Add amazing feature'`
+9. **Push to branch**: `git push origin feature/amazing-feature`
+10. **Open a Pull Request**
 
 
 ## License
