@@ -88,7 +88,8 @@ brew install grdl/tap/git-get
 
 **Option 2: Using Scoop**
 ```powershell
-# Coming soon
+scoop bucket add git-get https://github.com/grdl/git-get
+scoop install git-get
 ```
 
 ### Building from Source
