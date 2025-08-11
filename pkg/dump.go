@@ -2,10 +2,10 @@ package pkg
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 var (
@@ -22,7 +22,7 @@ type parsedLine struct {
 func parseDumpFile(path string) ([]parsedLine, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed opening dump file %s", path)
+		return nil, fmt.Errorf("failed opening dump file %s: %w", path, err)
 	}
 	defer file.Close()
 
@@ -34,7 +34,7 @@ func parseDumpFile(path string) ([]parsedLine, error) {
 		line++
 		parsed, err := parseLine(scanner.Text())
 		if err != nil && !errors.Is(errEmptyLine, err) {
-			return nil, errors.Wrapf(err, "failed parsing dump file line %d", line)
+			return nil, fmt.Errorf("failed parsing dump file line %d: %w", line, err)
 		}
 
 		parsedLines = append(parsedLines, parsed)

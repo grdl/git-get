@@ -1,6 +1,7 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/karrick/godirwalk"
-	"github.com/pkg/errors"
 )
 
 // Max number of concurrently running status loading workers.
@@ -32,12 +32,12 @@ func Exists(path string) (bool, error) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return false, errors.Wrapf(errDirNotExist, "can't access %s", path)
+			return false, fmt.Errorf("can't access %s: %w", path, errDirNotExist)
 		}
 	}
 
 	// Directory exists but can't be accessed
-	return true, errors.Wrapf(errDirNoAccess, "can't access %s", path)
+	return true, fmt.Errorf("can't access %s: %w", path, errDirNoAccess)
 }
 
 // RepoFinder finds git repositories inside a given path and loads their status.

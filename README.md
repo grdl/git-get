@@ -1,173 +1,343 @@
-
 # git-get
 
-![build](https://github.com/grdl/git-get/workflows/build/badge.svg)
+[![build](https://github.com/grdl/git-get/workflows/build/badge.svg)](https://github.com/grdl/git-get/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/grdl/git-get)](https://goreportcard.com/report/github.com/grdl/git-get)
+[![Latest Release](https://img.shields.io/github/v/release/grdl/git-get)](https://github.com/grdl/git-get/releases/latest)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/grdl/git-get)](https://github.com/grdl/git-get/blob/master/go.mod)
+[![License](https://img.shields.io/github/license/grdl/git-get)](LICENSE.md)
 
-`git-get` is a better way to clone, organize and manage multiple git repositories. 
+A tool to clone, organize, and manage multiple Git repositories with an automatic directory structure based on repository URLs.
 
-- [git-get](#git-get)
-  - [Description](#description)
-  - [Installation](#installation)
-    - [macOS](#macos)
-    - [Linux](#linux)
-    - [Windows](#windows)
-  - [Usage](#usage)
-    - [git get](#git-get-1)
-    - [git list](#git-list)
-    - [Dump file](#dump-file)
-  - [Configuration](#configuration)
-    - [Env variables](#env-variables)
-    - [.gitconfig file](#gitconfig-file)
-  - [Contributing](#contributing)
-  - [Acknowledgments](#acknowledgments)
+## Table of Contents
 
-## Description
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+  - [macOS](#macos)
+  - [Linux](#linux)
+  - [Windows](#windows)
+  - [Building from Source](#building-from-source)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+  - [git get](#git-get)
+  - [git list](#git-list)
+  - [Batch Operations](#batch-operations)
+- [Configuration](#configuration)
+  - [Environment Variables](#environment-variables)
+  - [Git Configuration](#git-configuration)
+- [Examples](#examples)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
-`git-get` gives you two new git commands:
-- **`git get`** clones repositories into an automatically created directory tree based on repo's URL, owner and name (like golang's [`go get`](https://golang.org/cmd/go/)).
-- **`git list`** shows status of all your git repositories.
+## Overview
+
+**git-get** solves the problem of manually organizing multiple Git repositories. Instead of scattered clones in random directories, it creates a clean, predictable directory structure based on repository URLs, similar to Go's `go get` command.
+
+It provides two commands:
+- **`git get`** - Clones repositories into an organized directory tree
+- **`git list`** - Shows the status of all your repositories at a glance
 
 ![Example](./docs/example.svg)
 
-## Installation
+## Features
 
-Each release contains two binaries: `git-get` and `git-list`. When put on PATH, git automatically recognizes them as custom commands and allows to run them as `git get` or `git list`.
+- **Automatic organization** - Creates directory structure based on repository URL
+- **Git integration** - Seamlessly integrates as native Git commands
+- **Multi-platform** - Works on macOS, Linux, and Windows
+- **Repository discovery** - Lists all repositories with their status
+- **Flexible configuration** - Supports environment variables and Git config
+- **Multiple output formats** - Tree, flat, and dump formats for different use cases
+- **Dotfiles friendly** - Clone multiple repositories from a list kept in dotfiles
+
+## Prerequisites
+
+- Git 2.0+ installed and configured
+- Go 1.19+ (only if building from source)
+
+## Installation
 
 ### macOS
 
-Use Homebrew:
-```
+```bash
 brew install grdl/tap/git-get
 ```
 
 ### Linux
 
-Download and install `.deb` or `.rpm` file from the [latest release](https://github.com/grdl/git-get/releases/latest).
-
-Or install with [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux):
+**Option 1: Package managers**
+```bash
+# Download .deb or .rpm from releases
+wget https://github.com/grdl/git-get/releases/latest/download/git-get_linux_amd64.deb
+sudo dpkg -i git-get_linux_amd64.deb
 ```
+
+**Option 2: Homebrew on Linux**
+```bash
 brew install grdl/tap/git-get
 ```
 
 ### Windows
 
-Grab the `.zip` file from the [latest release](https://github.com/grdl/git-get/releases/latest) and put the binaries on your PATH.
+**Option 1: Download binary**
+1. Download the latest `.zip` file from [releases](https://github.com/grdl/git-get/releases/latest)
+2. Extract the binaries to a directory in your PATH
 
+**Option 2: Using Scoop**
+```powershell
+# Coming soon
+```
+
+### Building from Source
+
+```bash
+git clone https://github.com/grdl/git-get.git
+cd git-get
+go build -o bin/ ./cmd/...
+```
+
+Then add the `bin/` directory to your PATH.
+
+## Quick Start
+
+1. **Install git-get** using one of the methods above
+2. **Clone your first repository**:
+   ```bash
+   git get github.com/grdl/git-get
+   ```
+3. **List your repositories**:
+   ```bash
+   git list
+   ```
+
+That's it! Your repository is now organized in `~/repositories/github.com/grdl/git-get/`.
 
 ## Usage
 
 ### git get
-```
-git get <REPO> [flags]
 
-Flags:
-  -b, --branch              Branch (or tag) to checkout after cloning.
-  -d, --dump                Path to a dump file listing repos to clone. Ignored when <REPO> argument is used.
-  -h, --help                Print this help and exit.
-  -t, --host                Host to use when <REPO> doesn't have a specified host. (default "github.com")
-  -r, --root                Path to repos root where repositories are cloned. (default "~/repositories")
-  -c, --scheme              Scheme to use when <REPO> doesn't have a specified scheme. (default "ssh")
-  -s, --skip-host           Don't create a directory for host.
-  -v, --version             Print version and exit.
+Clone repositories with automatic directory structure:
+
+```bash
+git get <REPOSITORY> [flags]
 ```
 
-The `<REPO>` argument can be any valid URL supported by git. It also accepts a short `USER/REPO` format. In that case `git-get` will automatically use the configured host (github.com by default).
+**Flags:**
+- `-b, --branch <name>` - Branch or tag to checkout after cloning
+- `-d, --dump <file>` - Clone multiple repositories from a dump file
+- `-t, --host <host>` - Default host for short repository names (default: github.com)
+- `-r, --root <path>` - Root directory for repositories (default: ~/repositories)
+- `-c, --scheme <scheme>` - Default scheme for URLs (default: ssh)
+- `-s, --skip-host` - Skip creating host directory
+- `-h, --help` - Show help
+- `-v, --version` - Show version
 
-For example, `git get grdl/git-get` will clone `https://github.com/grdl/git-get`.
-
+**Repository formats:**
+- Full URL: `https://github.com/user/repo.git`
+- SSH URL: `git@github.com:user/repo.git`
+- Short format: `user/repo` (uses default host)
+- GitHub format: `github.com/user/repo`
 
 ### git list
-```
-Usage:
-  git list [flags]
 
-Flags:
-  -f, --fetch               First fetch from remotes before listing repositories.
-  -h, --help                Print this help and exit.
-  -o, --out                 Output format. Allowed values: [dump, flat, tree]. (default "tree")
-  -r, --root                Path to repos root where repositories are cloned. (default "~/repositories")
-  -v, --version             Print version and exit.
+Display repository status with multiple output formats:
+
+```bash
+git list [flags]
 ```
 
-`git list` provides different ways to view the list of the repositories and their statuses.
+**Flags:**
+- `-f, --fetch` - Fetch from remotes before listing
+- `-o, --out <format>` - Output format: tree, flat, or dump (default: tree)
+- `-r, --root <path>` - Root directory to scan (default: ~/repositories)
+- `-h, --help` - Show help
+- `-v, --version` - Show version
 
-- **tree** (default) - repos printed as a directory tree.
+**Output formats:**
 
+**Tree format (default):**
 ![output_tree](./docs/out_tree.png)
 
-- **flat** - each repo (and each branch) on a new line with full path to the repo.
-
+**Flat format:**
 ![output_flat](./docs/out_flat.png)
 
-- **dump** - each repo URL with its current branch on a new line. To be consumed by `git get --dump` command.
-
+**Dump format:**
 ![output_dump](./docs/out_dump.png)
 
-### Dump file
+### Batch Operations
 
-`git get` is dotfiles friendly. When run with `--dump` flag, it accepts a file with a list of repositories and clones all of them.
-
-Dump file format is simply:
-- Each repo URL on a separate line.
-- Each URL can have a space-separated suffix with a branch or tag name to check out after cloning. Without that suffix, repository HEAD is cloned (usually it's `master`).
-
-Example dump file content:
-```
-https://github.com/grdl/git-get v1.0.0
-git@github.com:grdl/another-repository.git
+Generate dump file from existing repositories:
+```bash
+git list --out dump > my-repos.txt
 ```
 
-You can generate a dump file with all your currently cloned repos by running:
+Clone all repositories from the dump file:
+
+```bash
+git get --dump repos.txt
 ```
-git list --out dump > repos.dump
-``` 
 
 ## Configuration
 
-Each configuration flag listed in the [Usage](#Usage) section can be also specified using environment variables or your global `.gitconfig` file.
+All configuration options that can be set via command-line flags, can also be set by environment variables, or Git configuration files.
 
-The order of precedence for configuration is as follows:
-- command line flag (have the highest precedence)
-- environment variable
-- .gitconfig entry
-- default value
+**Priority order** (highest to lowest):
+1. Command-line flags
+2. Environment variables
+3. Git configuration file
+4. Default values
 
+### Environment Variables
 
-### Env variables
+Use the `GITGET_` prefix with uppercase flag names:
 
-Use the `GITGET_` prefix and the uppercase flag name to set the configuration using env variables. For example, to use a different repos root path run:
+```bash
+export GITGET_ROOT=/workspace/repositories
+export GITGET_HOST=gitlab.com
+export GITGET_SKIP_HOST=true
 ```
-export GITGET_ROOT=/path/to/my/repos
+
+### Git Configuration
+
+Add a `[gitget]` section to your global Git configuration:
+
+```bash
+git config --global gitget.root /workspace/repositories
+git config --global gitget.host gitlab.com
+git config --global gitget.skip-host true
 ```
 
-### .gitconfig file
-
-You can define a `[gitget]` section inside your global `.gitconfig` file and set the configuration flags there. A recommended pattern is to set `root` and `host` variables there if you don't want to use the defaults. 
-
-If all of your repos come from the same host and you find creating directory for it redundant, you can use the `skip-host` flag to skip creating it.
-
-Here's an example of a working snippet from `.gitconfig` file:
-```
+Or edit `~/.gitconfig` directly:
+```ini
 [gitget]
-    root = /path/to/my/repos
+    root = /workspace/repositories
     host = gitlab.com
     skip-host = true
 ```
 
+## Examples
+
+**Clone a repository:**
+```bash
+git get facebook/react
+# Clones to: ~/repositories/github.com/facebook/react/
+```
+
+**Clone to custom location:**
+```bash
+git get --root /workspace golang/go
+# Clones to: /workspace/github.com/golang/go/
+```
+
+**Clone specific branch:**
+```bash
+git get --branch v1.19.0 golang/go
+```
+
+**Skip host directory:**
+```bash
+git get --skip-host facebook/react
+# Clones to: ~/repositories/facebook/react/
+```
+
+**List repositories with status:**
+```bash
+git list --fetch
+```
+
+**Generate backup list:**
+```bash
+git list --out dump > backup-$(date +%Y%m%d).txt
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -race -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+
+# Run specific package tests
+go test -v ./pkg/git
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Permission denied (SSH):**
+```bash
+# Make sure SSH keys are configured
+ssh-add -l
+# Or use HTTPS instead
+export GITGET_SCHEME=https
+```
+
+**Repository not found:**
+```bash
+# Check if repository URL is correct
+git ls-remote https://github.com/user/repo.git
+```
+
+**Path issues on Windows:**
+```bash
+# Use forward slashes or double backslashes in paths
+git get --root C:/workspace user/repo
+```
+
+### Debug Mode
+
+Enable verbose output:
+```bash
+# Set environment variable for debug logs
+export GITGET_DEBUG=1
+git get user/repo
+```
+
+### Getting Help
+
+- Check our [Issues](https://github.com/grdl/git-get/issues) for known problems
+- Create a [new issue](https://github.com/grdl/git-get/issues/new) if you need help
+- Include output from `git get --version` and relevant error messages
 
 ## Contributing
 
-Pull requests are welcome. The project is still very much work in progress. Here's some of the missing features planned to be fixed soon:
-- improvements to the `git list` output (feedback appreciated)
-- info about stashes and submodules
-- better recognition of different repo states: conflict, merging, rebasing, cherry picking etc.
-- plenty of bugfixes and missing tests
+We welcome contributions!
 
+### Quick Start for Contributors
+
+1. **Fork the repository** 
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Install dependencies**: `go mod download`
+3. **Make changes and add tests**
+4. **Run tests**: `go test ./...`
+5. **Run linter**: `golangci-lint run`
+6. **Commit changes**: `git commit -m 'Add amazing feature'`
+7. **Push to branch**: `git push origin feature/amazing-feature`
+8. **Open a Pull Request**
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Acknowledgments
 
-Inspired by:
-- golang's [`go get`](https://golang.org/cmd/go/) command
-- [x-motemen/ghq](https://github.com/x-motemen/ghq)
-- [fboender/multi-git-status](https://github.com/fboender/multi-git-status)
+**Inspired by:**
+- Go's [`go get`](https://golang.org/cmd/go/) command for its elegant repository organization
+- [ghq](https://github.com/x-motemen/ghq) by x-motemen for repository management concepts
+- [multi-git-status](https://github.com/fboender/multi-git-status) by fboender for status display ideas
+
+**Built with:**
+- [Cobra](https://github.com/spf13/cobra) for CLI framework
+- [Viper](https://github.com/spf13/viper) for configuration management
+- [Testify](https://github.com/stretchr/testify) for testing
+

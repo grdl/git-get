@@ -5,10 +5,10 @@ package cfg
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -100,7 +100,11 @@ func readGitconfig(cfg Gitconfig) {
 // Expand applies the variables expansion to a viper config of given key.
 // If expansion fails or is not needed, the config is not modified.
 func Expand(key string) {
-	if expanded, err := homedir.Expand(viper.GetString(key)); err == nil {
-		viper.Set(key, expanded)
+	path := viper.GetString(key)
+	if strings.HasPrefix(path, "~") {
+		if homeDir, err := os.UserHomeDir(); err == nil {
+			expanded := filepath.Join(homeDir, strings.TrimPrefix(path, "~"))
+			viper.Set(key, expanded)
+		}
 	}
 }
