@@ -4,27 +4,28 @@ import (
 	"git-get/pkg"
 	"git-get/pkg/cfg"
 	"git-get/pkg/git"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-const example = `  git get grdl/git-get
+const getExample = `  git get grdl/git-get
   git get https://github.com/grdl/git-get.git
   git get git@github.com:grdl/git-get.git
   git get -d path/to/dump/file`
 
-var cmd = &cobra.Command{
-	Use:          "git get <REPO>",
-	Short:        "Clone git repository into an automatically created directory tree based on the repo's URL.",
-	Example:      example,
-	RunE:         run,
-	Args:         cobra.MaximumNArgs(1), // TODO: add custom validator
-	Version:      cfg.Version(),
-	SilenceUsage: true, // We don't want to show usage on legit errors (eg, wrong path, repo already existing etc.)
-}
+func newGetCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:          "git get <REPO>",
+		Short:        "Clone git repository into an automatically created directory tree based on the repo's URL.",
+		Example:      getExample,
+		RunE:         runGetCommand,
+		Args:         cobra.MaximumNArgs(1), // TODO: add custom validator
+		Version:      cfg.Version(),
+		SilenceUsage: true, // We don't want to show usage on legit errors (eg, wrong path, repo already existing etc.)
+	}
 
-func init() {
 	cmd.PersistentFlags().StringP(cfg.KeyBranch, "b", "", "Branch (or tag) to checkout after cloning.")
 	cmd.PersistentFlags().StringP(cfg.KeyDefaultHost, "t", cfg.Defaults[cfg.KeyDefaultHost], "Host to use when <REPO> doesn't have a specified host.")
 	cmd.PersistentFlags().StringP(cfg.KeyDefaultScheme, "c", cfg.Defaults[cfg.KeyDefaultScheme], "Scheme to use when <REPO> doesn't have a specified scheme.")
@@ -41,10 +42,10 @@ func init() {
 	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
 	viper.BindPFlag(cfg.KeySkipHost, cmd.PersistentFlags().Lookup(cfg.KeySkipHost))
 
-	cfg.Init(&git.ConfigGlobal{})
+	return cmd
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func runGetCommand(cmd *cobra.Command, args []string) error {
 	var url string
 	if len(args) > 0 {
 		url = args[0]
@@ -64,6 +65,17 @@ func run(cmd *cobra.Command, args []string) error {
 	return pkg.Get(config)
 }
 
-func main() {
-	cmd.Execute()
+func runGet(args []string) {
+	// Initialize configuration
+	cfg.Init(&git.ConfigGlobal{})
+
+	// Create and execute the get command
+	cmd := newGetCommand()
+
+	// Set args for cobra to parse
+	cmd.SetArgs(args)
+
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

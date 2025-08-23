@@ -124,19 +124,20 @@ jobs:
           go-version: '1.24'
           cache: true
           
-      - name: Build binaries
+      - name: Build binary
         run: |
-          go build -v -o bin/git-get ./cmd/get
-          go build -v -o bin/git-list ./cmd/list
+          go build -v -o bin/git-get ./cmd/
           
-      - name: Test binaries
+      - name: Test binary and symlink behavior
         run: |
           ./bin/git-get --version
+          # Test symlink functionality
+          ln -sf git-get bin/git-list
           ./bin/git-list --version
           
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
+          name: binary
           path: bin/
           retention-days: 30

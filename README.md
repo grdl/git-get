@@ -37,9 +37,11 @@ A tool to clone, organize, and manage multiple Git repositories with an automati
 
 **git-get** solves the problem of manually organizing multiple Git repositories. Instead of scattered clones in random directories, it creates a clean, predictable directory structure based on repository URLs, similar to Go's `go get` command.
 
-It provides two commands:
-- **`git get`** - Clones repositories into an organized directory tree
+It provides two commands through a single binary:
+- **`git get`** - Clones repositories into an organized directory tree  
 - **`git list`** - Shows the status of all your repositories at a glance
+
+*Note: Both commands are provided by a single `git-get` binary that automatically detects how it was invoked (either directly or via symlink).*
 
 ![Example](./docs/example.svg)
 
@@ -56,51 +58,91 @@ It provides two commands:
 ## Prerequisites
 
 - Git 2.0+ installed and configured
-- Go 1.19+ (only if building from source)
+- Go 1.24+ (only if building from source)
 
 ## Installation
 
 ### macOS
 
+**Option 1: Homebrew (Recommended)**
 ```bash
 brew install grdl/tap/git-get
 ```
+*This automatically installs both `git-get` and `git-list` commands.*
+
+**Option 2: Manual Installation**
+1. Download the latest macOS `.tar.gz` file from [releases](https://github.com/grdl/git-get/releases/latest)
+2. Extract and install:
+   ```bash
+   tar -xzf git-get_*_darwin_*.tar.gz
+   sudo mv git-get /usr/local/bin/
+   sudo ln -sf /usr/local/bin/git-get /usr/local/bin/git-list
+   ```
 
 ### Linux
 
-**Option 1: Package managers**
+**Option 1: Package Managers (Recommended)**
 ```bash
-# Download .deb or .rpm from releases
-wget https://github.com/grdl/git-get/releases/latest/download/git-get_linux_amd64.deb
-sudo dpkg -i git-get_linux_amd64.deb
+# Ubuntu/Debian - Download and install .deb package
+wget https://github.com/grdl/git-get/releases/latest/download/git-get_*_linux_amd64.deb
+sudo dpkg -i git-get_*_linux_amd64.deb
+
+# CentOS/RHEL/Fedora - Download and install .rpm package
+wget https://github.com/grdl/git-get/releases/latest/download/git-get_*_linux_amd64.rpm
+sudo rpm -i git-get_*_linux_amd64.rpm
+```
+*Package installation automatically creates the `git-list` symlink.*
+
+**Option 2: Manual Installation**
+```bash
+# Download and extract
+wget https://github.com/grdl/git-get/releases/latest/download/git-get_*_linux_amd64.tar.gz
+tar -xzf git-get_*_linux_amd64.tar.gz
+
+# Install binary and create symlink
+sudo mv git-get /usr/local/bin/
+sudo ln -sf /usr/local/bin/git-get /usr/local/bin/git-list
 ```
 
-**Option 2: Homebrew on Linux**
+**Option 3: Homebrew on Linux**
 ```bash
 brew install grdl/tap/git-get
 ```
 
 ### Windows
 
-**Option 1: Download binary**
-1. Download the latest `.zip` file from [releases](https://github.com/grdl/git-get/releases/latest)
-2. Extract the binaries to a directory in your PATH
-
-**Option 2: Using Scoop**
+**Option 1: Scoop (Recommended)**
 ```powershell
-scoop bucket add git-get https://github.com/grdl/git-get
+scoop bucket add grdl https://github.com/grdl/git-get
 scoop install git-get
 ```
+*This automatically creates both `git-get.exe` and `git-list.exe` commands.*
+
+**Option 2: Manual Installation**
+1. Download the latest Windows `.zip` file from [releases](https://github.com/grdl/git-get/releases/latest)
+2. Extract `git-get.exe` to a directory in your PATH
+3. Create a copy or hard link for `git-list`:
+   ```powershell
+   # In the same directory as git-get.exe
+   Copy-Item git-get.exe git-list.exe
+   # OR create a hard link (requires admin privileges)
+   New-Item -ItemType HardLink -Path "git-list.exe" -Target "git-get.exe"
+   ```
 
 ### Building from Source
 
 ```bash
 git clone https://github.com/grdl/git-get.git
 cd git-get
-go build -o bin/ ./cmd/...
+go build -o git-get ./cmd/
+
+# Create symlink for git-list
+ln -sf git-get git-list  # Unix/Linux/macOS
+# OR
+copy git-get.exe git-list.exe  # Windows
 ```
 
-Then add the `bin/` directory to your PATH.
+**Note:** The single binary (`git-get`) automatically detects how it's invoked and behaves as either `git-get` or `git-list` accordingly.
 
 ## Quick Start
 
