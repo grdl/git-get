@@ -6,36 +6,39 @@ before:
 
 builds:
   - id: git-get
-    main: ./cmd/get/main.go
+    main: ./cmd/
     binary: git-get
     ldflags:
       - -s -w 
       - -X git-get/pkg/cfg.version={{.Version}} 
-      - -X git-get/pkg/cfg.commit={{.Commit}} 
-      - -X git-get/pkg/cfg.date={{.Date}}
+      - -X git-get/pkg/cfg.commit={{.Commit}}
     goos:
       - linux
-      - darwin
       - windows
-  - id: git-list
-    main: ./cmd/list/main.go
-    binary: git-list
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+  - id: git-get-macos
+    main: ./cmd/
+    binary: git-get
     ldflags:
       - -s -w 
       - -X git-get/pkg/cfg.version={{.Version}} 
-      - -X git-get/pkg/cfg.commit={{.Commit}} 
-      - -X git-get/pkg/cfg.date={{.Date}}
+      - -X git-get/pkg/cfg.commit={{.Commit}}
     goos:
-      - linux
       - darwin
-      - windows
+    goarch:
+      - amd64
+      - arm64
 
 archives:
   - id: archive
     ids:
       - git-get
-      - git-list
-    name_template: "git-get_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "git-get_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{- if .Arm }}v{{ .Arm }}{{ end }}{{- if .Amd64 }}v{{ .Amd64 }}{{ end }}"
     formats:
       - tar.gz
       - zip
@@ -43,6 +46,14 @@ archives:
       - goos: windows
         formats: [zip]
     # Don't include any additional files into the archives (such as README, CHANGELOG etc). 
+    files:
+      - none*
+  - id: macos-archive
+    ids:
+      - git-get-macos
+    name_template: "git-get_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{- if .Arm }}v{{ .Arm }}{{ end }}{{- if .Amd64 }}v{{ .Amd64 }}{{ end }}"
+    formats:
+      - tar.gz
     files:
       - none* 
 
@@ -64,8 +75,10 @@ release:
     owner: grdl
     name: git-get
 
-brews:
+homebrew_casks:
   - name: git-get
+    ids:
+      - macos-archive
     repository:
       owner: grdl
       name: homebrew-tap
@@ -73,13 +86,14 @@ brews:
     commit_author:
       name: Grzegorz Dlugoszewski
       email: git-get@grdl.dev
-    directory: Formula
     homepage: https://github.com/grdl/git-get/
     description: Better way to clone, organize and manage multiple git repositories
-    test: |
-      system "git-get --version"
-    install: |
-      bin.install "git-get", "git-list"
+    url:
+      verified: github.com/grdl/git-get
+    hooks:
+      post:
+        install: |
+          system_command "/bin/ln", args: ["-sf", "#{staged_path}/git-get", "#{HOMEBREW_PREFIX}/bin/git-list"]
 
 nfpms:
   - id: packages
@@ -94,6 +108,9 @@ nfpms:
     formats:
       - deb
       - rpm
+    scripts:
+      postinstall: "scripts/postinstall.sh"
+      preremove: "scripts/preremove.sh"
 
 scoops:
   - name: git-get
@@ -110,3 +127,6 @@ scoops:
     homepage: "https://github.com/grdl/git-get"
     description: "Better way to clone, organize and manage multiple git repositories"
     license: MIT
+    post_install: [
+      "New-Item -ItemType HardLink -Path \"$dir\\git-list.exe\" -Target \"$dir\\git-get.exe\" -Force | Out-Null"
+    ]
