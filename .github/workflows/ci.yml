@@ -25,7 +25,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          fetch-depth: 2
+          fetch-depth: 0
           
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -72,7 +72,6 @@ jobs:
           
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
-
         # TODO: Fix linting errors
         continue-on-error: true
         with:
