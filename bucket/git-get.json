@@ -1,0 +1,25 @@
+{
+    "version": "0.6.0",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/grdl/git-get/releases/download/v0.6.0/git-get_0.6.0_windows_amd64vv1.zip",
+            "bin": [
+                "git-get.exe"
+            ],
+            "hash": "63c86d5a82bfff5024ca27ca8ea972028d64b775a56f9facd3bde96e6d170958"
+        },
+        "arm64": {
+            "url": "https://github.com/grdl/git-get/releases/download/v0.6.0/git-get_0.6.0_windows_arm64.zip",
+            "bin": [
+                "git-get.exe"
+            ],
+            "hash": "9617ee7aef8fb9c6cc40efbb529e70867330172ccd78465b0fb28be7c4062211"
+        }
+    },
+    "homepage": "https://github.com/grdl/git-get",
+    "license": "MIT",
+    "description": "Better way to clone, organize and manage multiple git repositories",
+    "post_install": [
+        "New-Item -ItemType HardLink -Path \"$dir\\git-list.exe\" -Target \"$dir\\git-get.exe\" -Force | Out-Null"
+    ]
+}
