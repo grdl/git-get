@@ -49,17 +49,20 @@ var AllowedOut = []string{OutDump, OutFlat, OutTree}
 var (
 	version string
 	commit  string
-	date    string
 )
 
-// Version returns a string with version metadata: version number, git sha and build date.
-// It returns "development" if version variables are not set during the build.
+// Version returns a string with version metadata: version number and git commit.
+// It returns "git-get development" if version variables are not set during the build.
 func Version() string {
 	if version == "" {
-		return "development"
+		return "git-get development"
 	}
 
-	return fmt.Sprintf("%s - revision %s built at %s", version, commit[:6], date)
+	if commit != "" {
+		return fmt.Sprintf("git-get %s (%s)", version, commit[:7])
+	}
+
+	return fmt.Sprintf("git-get %s", version)
 }
 
 // Gitconfig represents gitconfig file
