@@ -8,7 +8,6 @@ on:
 permissions:
   contents: write
   security-events: write
-  id-token: write  # For SLSA provenance
 
 jobs:
   validate:
@@ -65,14 +64,3 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
-          
-  provenance:
-    name: Generate SLSA Provenance
-    needs: release
-    if: startsWith(github.ref, 'refs/tags/')
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
-    with:
-      base64-subjects: "${{ needs.release.outputs.hashes }}"
-      upload-assets: true
-    secrets:
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
