@@ -22,5 +22,10 @@ linters:
     rules:
       - path: _test.go
         linters:
-          - dupl # We don't mind duplicated code in tests. It helps with clarity
+          - dupl          # We don't mind duplicated code in tests. It helps with clarity
+          - varnamelen    # We don't mind short var names in tests.
+      - path: test/
+        linters:
+          - dupl
+          - varnamelen
 

@@ -18,18 +18,18 @@ func NewFlatPrinter() *FlatPrinter {
 func (p *FlatPrinter) Print(repos []Printable) string {
 	var str strings.Builder
 
-	for _, r := range repos {
-		str.WriteString(strings.TrimSuffix(r.Path(), string(os.PathSeparator)))
+	for _, repo := range repos {
+		str.WriteString(strings.TrimSuffix(repo.Path(), string(os.PathSeparator)))
 
-		if len(r.Errors()) > 0 {
+		if len(repo.Errors()) > 0 {
 			str.WriteString(" " + red("error") + "\n")
 			continue
 		}
 
-		str.WriteString(" " + blue(r.Current()))
+		str.WriteString(" " + blue(repo.Current()))
 
-		current := r.BranchStatus(r.Current())
-		worktree := r.WorkTreeStatus()
+		current := repo.BranchStatus(repo.Current())
+		worktree := repo.WorkTreeStatus()
 
 		if worktree != "" {
 			worktree = fmt.Sprintf("[ %s ]", worktree)
@@ -41,13 +41,13 @@ func (p *FlatPrinter) Print(repos []Printable) string {
 			str.WriteString(" " + strings.Join([]string{yellow(current), red(worktree)}, " "))
 		}
 
-		for _, branch := range r.Branches() {
-			status := r.BranchStatus(branch)
+		for _, branch := range repo.Branches() {
+			status := repo.BranchStatus(branch)
 			if status == "" {
 				status = green("ok")
 			}
 
-			indent := strings.Repeat(" ", len(r.Path())-1)
+			indent := strings.Repeat(" ", len(repo.Path())-1)
 			str.WriteString(fmt.Sprintf("\n%s %s %s", indent, blue(branch), yellow(status)))
 		}
 

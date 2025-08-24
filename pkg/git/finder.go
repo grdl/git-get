@@ -53,7 +53,7 @@ func (f *RepoFinder) Find() error {
 		return fmt.Errorf("failed to access root path: %w", err)
 	}
 
-	err := filepath.WalkDir(f.root, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(f.root, func(path string, dir fs.DirEntry, err error) error {
 		// Handle walk errors
 		if err != nil {
 			// Skip permission errors but continue walking
@@ -65,12 +65,12 @@ func (f *RepoFinder) Find() error {
 		}
 
 		// Only process directories
-		if !d.IsDir() {
+		if !dir.IsDir() {
 			return nil
 		}
 
 		// Case 1: We're looking at a .git directory itself
-		if d.Name() == dotgit {
+		if dir.Name() == dotgit {
 			parentPath := filepath.Dir(path)
 			f.addIfOk(parentPath)
 
@@ -101,7 +101,7 @@ func (f *RepoFinder) Find() error {
 // If fetch equals true, it first fetches from the remote repo before loading the status.
 // Each repo is loaded concurrently by a separate worker, with max 100 workers being active at the same time.
 func (f *RepoFinder) LoadAll(fetch bool) []*Status {
-	var ss []*Status
+	var statuses []*Status
 
 	reposChan := make(chan *Repo, f.maxWorkers)
 	statusChan := make(chan *Status, f.maxWorkers)
@@ -118,18 +118,18 @@ func (f *RepoFinder) LoadAll(fetch bool) []*Status {
 	// Read statuses from the statusChan and add then to the result slice.
 	// Close the channel when all repos are loaded.
 	for status := range statusChan {
-		ss = append(ss, status)
-		if len(ss) == len(f.repos) {
+		statuses = append(statuses, status)
+		if len(statuses) == len(f.repos) {
 			close(statusChan)
 		}
 	}
 
 	// Sort the status slice by path
-	sort.Slice(ss, func(i, j int) bool {
-		return strings.Compare(ss[i].path, ss[j].path) < 0
+	sort.Slice(statuses, func(i, j int) bool {
+		return strings.Compare(statuses[i].path, statuses[j].path) < 0
 	})
 
-	return ss
+	return statuses
 }
 
 func loadRepos(repos []*Repo, reposChan chan<- *Repo) {

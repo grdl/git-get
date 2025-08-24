@@ -16,24 +16,24 @@ type ListCfg struct {
 }
 
 // List executes the "git list" command.
-func List(c *ListCfg) error {
-	finder := git.NewRepoFinder(c.Root)
+func List(conf *ListCfg) error {
+	finder := git.NewRepoFinder(conf.Root)
 	if err := finder.Find(); err != nil {
 		return err
 	}
 
-	statuses := finder.LoadAll(c.Fetch)
+	statuses := finder.LoadAll(conf.Fetch)
 
 	printables := make([]print.Printable, len(statuses))
 	for i := range statuses {
 		printables[i] = statuses[i]
 	}
 
-	switch c.Output {
+	switch conf.Output {
 	case cfg.OutFlat:
 		fmt.Print(print.NewFlatPrinter().Print(printables))
 	case cfg.OutTree:
-		fmt.Print(print.NewTreePrinter().Print(c.Root, printables))
+		fmt.Print(print.NewTreePrinter().Print(conf.Root, printables))
 	case cfg.OutDump:
 		fmt.Print(print.NewDumpPrinter().Print(printables))
 	default:

@@ -88,8 +88,8 @@ func (n *Node) GetChild(val string) *Node {
 func buildTree(root string, repos []Printable) *Node {
 	tree := Root(root)
 
-	for _, r := range repos {
-		path := strings.TrimPrefix(r.Path(), root)
+	for _, repo := range repos {
+		path := strings.TrimPrefix(repo.Path(), root)
 		path = strings.Trim(path, string(filepath.Separator))
 		subs := strings.Split(path, string(filepath.Separator))
 
@@ -98,14 +98,14 @@ func buildTree(root string, repos []Printable) *Node {
 		// If not, add it to node's children and move to next fragment.
 		// If it does, just move to the next fragment.
 		node := tree
-		for i, sub := range subs {
+		for idx, sub := range subs {
 			child := node.GetChild(sub)
 			if child == nil {
 				node = node.Add(sub)
 
 				// If that's the last fragment, it's a tree leaf and needs a *Repo attached.
-				if i == len(subs)-1 {
-					node.repo = r
+				if idx == len(subs)-1 {
+					node.repo = repo
 				}
 
 				continue
@@ -120,28 +120,28 @@ func buildTree(root string, repos []Printable) *Node {
 
 // printTree renders the repo tree by recursively traversing the tree nodes.
 // If a node doesn't have any children, it's a leaf node containing the repo status.
-func (p *TreePrinter) printTree(node *Node, tp treeprint.Tree) {
+func (p *TreePrinter) printTree(node *Node, tree treeprint.Tree) {
 	if node.children == nil {
-		tp.SetValue(printLeaf(node))
+		tree.SetValue(printLeaf(node))
 	}
 
 	for _, child := range node.children {
-		branch := tp.AddBranch(child.val)
+		branch := tree.AddBranch(child.val)
 		p.printTree(child, branch)
 	}
 }
 
 func printLeaf(node *Node) string {
-	r := node.repo
+	repo := node.repo
 
 	// If any errors happened during status loading, don't print the status but "error" instead.
 	// Actual error messages are printed in bulk below the tree.
-	if len(r.Errors()) > 0 {
+	if len(repo.Errors()) > 0 {
 		return fmt.Sprintf("%s %s", node.val, red("error"))
 	}
 
-	current := r.BranchStatus(r.Current())
-	worktree := r.WorkTreeStatus()
+	current := repo.BranchStatus(repo.Current())
+	worktree := repo.WorkTreeStatus()
 
 	if worktree != "" {
 		worktree = fmt.Sprintf("[ %s ]", worktree)
@@ -150,13 +150,13 @@ func printLeaf(node *Node) string {
 	var str strings.Builder
 
 	if worktree == "" && current == "" {
-		str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), green("ok")))
+		str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(repo.Current()), green("ok")))
 	} else {
-		str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(r.Current()), strings.Join([]string{yellow(current), red(worktree)}, " ")))
+		str.WriteString(fmt.Sprintf("%s %s %s", node.val, blue(repo.Current()), strings.Join([]string{yellow(current), red(worktree)}, " ")))
 	}
 
-	for _, branch := range r.Branches() {
-		status := r.BranchStatus(branch)
+	for _, branch := range repo.Branches() {
+		status := repo.BranchStatus(branch)
 		if status == "" {
 			status = green("ok")
 		}

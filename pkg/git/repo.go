@@ -170,14 +170,14 @@ func (r *Repo) AheadBehind(branch string, upstream string) (int, int, error) {
 	}
 
 	// rev-list --left-right --count output is separated by a tab
-	lr := strings.Split(out, "\t")
+	count := strings.Split(out, "\t")
 
-	ahead, err := strconv.Atoi(lr[0])
+	ahead, err := strconv.Atoi(count[0])
 	if err != nil {
 		return 0, 0, err
 	}
 
-	behind, err := strconv.Atoi(lr[1])
+	behind, err := strconv.Atoi(count[1])
 	if err != nil {
 		return 0, 0, err
 	}

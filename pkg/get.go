@@ -18,32 +18,32 @@ type GetCfg struct {
 }
 
 // Get executes the "git get" command.
-func Get(c *GetCfg) error {
-	if c.URL == "" && c.Dump == "" {
+func Get(conf *GetCfg) error {
+	if conf.URL == "" && conf.Dump == "" {
 		return fmt.Errorf("missing <REPO> argument or --dump flag")
 	}
 
-	if c.URL != "" {
-		return cloneSingleRepo(c)
+	if conf.URL != "" {
+		return cloneSingleRepo(conf)
 	}
 
-	if c.Dump != "" {
-		return cloneDumpFile(c)
+	if conf.Dump != "" {
+		return cloneDumpFile(conf)
 	}
 
 	return nil
 }
 
-func cloneSingleRepo(c *GetCfg) error {
-	url, err := ParseURL(c.URL, c.DefHost, c.DefScheme)
+func cloneSingleRepo(conf *GetCfg) error {
+	url, err := ParseURL(conf.URL, conf.DefHost, conf.DefScheme)
 	if err != nil {
 		return err
 	}
 
 	opts := &git.CloneOpts{
 		URL:    url,
-		Path:   filepath.Join(c.Root, URLToPath(*url, c.SkipHost)),
-		Branch: c.Branch,
+		Path:   filepath.Join(conf.Root, URLToPath(*url, conf.SkipHost)),
+		Branch: conf.Branch,
 	}
 
 	_, err = git.Clone(opts)
@@ -51,21 +51,21 @@ func cloneSingleRepo(c *GetCfg) error {
 	return err
 }
 
-func cloneDumpFile(c *GetCfg) error {
-	parsedLines, err := parseDumpFile(c.Dump)
+func cloneDumpFile(conf *GetCfg) error {
+	parsedLines, err := parseDumpFile(conf.Dump)
 	if err != nil {
 		return err
 	}
 
 	for _, line := range parsedLines {
-		url, err := ParseURL(line.rawurl, c.DefHost, c.DefScheme)
+		url, err := ParseURL(line.rawurl, conf.DefHost, conf.DefScheme)
 		if err != nil {
 			return err
 		}
 
 		opts := &git.CloneOpts{
 			URL:    url,
-			Path:   filepath.Join(c.Root, URLToPath(*url, c.SkipHost)),
+			Path:   filepath.Join(conf.Root, URLToPath(*url, conf.SkipHost)),
 			Branch: line.branch,
 		}
 
