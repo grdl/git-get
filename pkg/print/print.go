@@ -27,9 +27,7 @@ func Errors(repos []Printable) string {
 	errors := []string{}
 
 	for _, repo := range repos {
-		for _, err := range repo.Errors() {
-			errors = append(errors, err)
-		}
+		errors = append(errors, repo.Errors()...)
 	}
 
 	if len(errors) == 0 {

@@ -4,7 +4,6 @@ package test
 import (
 	"fmt"
 	"git-get/pkg/run"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,7 +15,9 @@ import (
 func TempDir(t *testing.T, parent string) string {
 	t.Helper()
 
-	dir, err := ioutil.TempDir(parent, "git-get-repo-")
+	// t.TempDir() is not enough in this case, we need to be able to create dirs inside the parent dir
+	//nolint:usetesting
+	dir, err := os.MkdirTemp(parent, "git-get-repo-")
 	checkFatal(t, err)
 
 	// Automatically remove temp dir when the test is over.
