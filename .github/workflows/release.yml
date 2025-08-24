@@ -41,11 +41,9 @@ jobs:
         run: go test -race ./...
         
       - name: Run lints
-        uses: golangci/golangci-lint-action@v6
-        # TODO: Fix linting errors
-        continue-on-error: true
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          version: v2.4.0
           args: --timeout=5m
 
       - name: Validate GoReleaser config
@@ -74,7 +72,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
