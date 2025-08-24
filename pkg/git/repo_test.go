@@ -414,7 +414,14 @@ func createTestDirTree(t *testing.T) string {
 	t.Helper()
 	root := test.TempDir(t, "")
 	err := os.MkdirAll(filepath.Join(root, "a", "b", "c"), os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	err = os.MkdirAll(filepath.Join(root, "a", "x", "y"), os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	_, err = os.Create(filepath.Join(root, "a", "x", "y", "file.txt"))
 	if err != nil {
