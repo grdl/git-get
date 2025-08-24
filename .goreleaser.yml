@@ -61,14 +61,7 @@ checksum:
   name_template: 'checksums.txt'
 
 changelog:
-  sort: asc
-  use: github
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
-      - '^chore'
-      - typo
+  disable: true # Changelogs are crafted manually
 
 release:
   github:
@@ -110,17 +103,18 @@ nfpms:
     formats:
       - deb
       - rpm
-    scripts:
-      postinstall: "release/scripts/postinstall.sh"
-      preremove: "release/scripts/preremove.sh"
+    contents:
+      - src: /usr/local/bin/git-get
+        dst: /usr/local/bin/git-list
+        type: "symlink"
 
 scoops:
   - name: git-get
     repository:
       owner: grdl
-      name: git-get
+      name: homebrew-tap
       branch: master
-    directory: release/bucket
+    directory: Scoop
     url_template: "https://github.com/grdl/git-get/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     commit_author:
       name: Grzegorz Dlugoszewski
@@ -130,5 +124,9 @@ scoops:
     description: "Better way to clone, organize and manage multiple git repositories"
     license: MIT
     post_install: [
-      "New-Item -ItemType HardLink -Path \"$dir\\git-list.exe\" -Target \"$dir\\git-get.exe\" -Force | Out-Null"
+      "New-Item -ItemType HardLink -Path \"$dir\\git-list.exe\" -Target \"$dir\\git-get.exe\" -Force | Out-Null",
+      "scoop shim add git-list \"$dir\\git-list.exe\""
+    ],
+    post_uninstall: [
+      "scoop shim rm git-list"
     ]
