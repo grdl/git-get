@@ -13,9 +13,10 @@ linters:
   default: all
 
   disable:
-    - depguard # We don't have any packages we need to block
-    - paralleltest # Tests are fast already and paralellizing them adds complexity
-    - wsl # We use wsl_v5 instead
+    - depguard            # We don't have any packages we need to block
+    - paralleltest        # Tests are fast already and paralellizing them adds complexity
+    - wsl                 # We use wsl_v5 instead
+    - wrapcheck           # Adds too much bloat, many of the errors are contextual enough and don't need wrapping
 
   exclusions:
     rules:
