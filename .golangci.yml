@@ -20,6 +20,7 @@ linters:
     - godox               # TODO: enable it and handle all the remaning TODOs
     - paralleltest        # Tests are fast already and paralellizing them adds complexity
     - testpackage         # TODO: renable it and refactor tests into separate packages
+    - unparam             # Impractical, it flags functions that are designed to be general-purpose, but happen to only be used with specific values currently
     - wsl                 # We use wsl_v5 instead
     - wrapcheck           # Adds too much bloat, many of the errors are contextual enough and don't need wrapping
 
