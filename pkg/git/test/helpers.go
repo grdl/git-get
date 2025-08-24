@@ -28,11 +28,21 @@ func TempDir(t *testing.T, parent string) string {
 	return dir
 }
 
+// syncGitIndex forces git to refresh its index and ensures file system operations are flushed.
+// This helps to prevent race-condition issues when running tests on Windows.
+func (r *Repo) syncGitIndex() {
+	// Force git to refresh its index - this makes git re-scan the working directory
+	_ = run.Git("update-index", "--refresh").OnRepo(r.path).AndShutUp()
+	// Run status to ensure git has processed any pending changes
+	_ = run.Git("status", "--porcelain").OnRepo(r.path).AndShutUp()
+}
+
 func (r *Repo) init() {
 	err := run.Git("init", "--quiet", "--initial-branch=main", r.path).AndShutUp()
 	checkFatal(r.t, err)
 
 	r.setupGitConfig()
+	r.syncGitIndex()
 }
 
 // setupGitConfig sets up local git config for test repository only.
@@ -53,31 +63,46 @@ func (r *Repo) writeFile(filename string, content string) {
 
 	_, err = file.WriteString(content)
 	checkFatal(r.t, err)
+
+	// Ensure data is written to disk before closing
+	err = file.Sync()
+	checkFatal(r.t, err)
+
+	err = file.Close()
+	checkFatal(r.t, err)
+
+	// Force git to recognize the file changes
+	r.syncGitIndex()
 }
 
 func (r *Repo) stageFile(path string) {
 	err := run.Git("add", path).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) commit(msg string) {
 	err := run.Git("commit", "-m", fmt.Sprintf("%q", msg)).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) branch(name string) {
 	err := run.Git("branch", name).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) tag(name string) {
 	err := run.Git("tag", "-a", name, "-m", name).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) checkout(name string) {
 	err := run.Git("checkout", name).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) clone() *Repo {
@@ -94,6 +119,7 @@ func (r *Repo) clone() *Repo {
 
 	// Set up git config in the cloned repository
 	clone.setupGitConfig()
+	clone.syncGitIndex()
 
 	return clone
 }
@@ -101,6 +127,7 @@ func (r *Repo) clone() *Repo {
 func (r *Repo) fetch() {
 	err := run.Git("fetch", "--all").OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func checkFatal(t *testing.T, err error) {

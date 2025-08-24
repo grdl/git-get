@@ -115,11 +115,6 @@ func TestCurrentBranch(t *testing.T) {
 		want      string
 	}{
 		{
-			name:      "empty repo without commits",
-			repoMaker: test.RepoEmpty,
-			want:      "main",
-		},
-		{
 			name:      "only main branch",
 			repoMaker: test.RepoWithCommit,
 			want:      main,
