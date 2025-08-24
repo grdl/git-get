@@ -15,6 +15,7 @@ linters:
   disable:
     - depguard            # We don't have any packages we need to block
     - exhaustruct         # Too pedantic and impractical. Explicitly setting all struct values goes against Go's zero-value philosophy
+    - forbidigo           # Not suitable for CLI apps where printing to stdout is fine
     - gochecknoglobals    # It's too strict and doesn't distinguish between "bad" globals (mutable shared state) and "good" globals (immutable configuration)
     - paralleltest        # Tests are fast already and paralellizing them adds complexity
     - wsl                 # We use wsl_v5 instead
