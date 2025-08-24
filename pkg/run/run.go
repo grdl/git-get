@@ -3,6 +3,7 @@ package run
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -32,8 +33,9 @@ type Cmd struct {
 
 // Git creates a git command with given arguments.
 func Git(args ...string) *Cmd {
+	ctx := context.Background()
 	return &Cmd{
-		cmd:  exec.Command("git", args...),
+		cmd:  exec.CommandContext(ctx, "git", args...),
 		args: strings.Join(args, " "),
 	}
 }

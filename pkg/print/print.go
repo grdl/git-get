@@ -15,7 +15,7 @@ type Printable interface {
 	Path() string
 	Current() string
 	Branches() []string
-	BranchStatus(string) string
+	BranchStatus(branch string) string
 	WorkTreeStatus() string
 	Remote() string
 	Errors() []string

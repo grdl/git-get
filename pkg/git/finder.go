@@ -105,13 +105,13 @@ func (f *RepoFinder) Find() error {
 // If fetch equals true, it first fetches from the remote repo before loading the status.
 // Each repo is loaded concurrently by a separate worker, with max 100 workers being active at the same time.
 func (f *RepoFinder) LoadAll(fetch bool) []*Status {
-	var statuses []*Status
+	statuses := []*Status{}
 
 	reposChan := make(chan *Repo, f.maxWorkers)
 	statusChan := make(chan *Status, f.maxWorkers)
 
 	// Fire up workers. They listen on reposChan, load status and send the result to statusChan.
-	for i := 0; i < f.maxWorkers; i++ {
+	for range f.maxWorkers {
 		go statusWorker(fetch, reposChan, statusChan)
 	}
 

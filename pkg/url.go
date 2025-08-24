@@ -19,8 +19,8 @@ var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+)@([a-zA-Z0-9._-]+):(.*)$`)
 // ParseURL parses given rawURL string into a URL.
 // When the parsed URL has an empty host, use the defaultHost.
 // When the parsed URL has an empty scheme, use the defaultScheme.
-func ParseURL(rawURL string, defaultHost string, defaultScheme string) (url *urlpkg.URL, err error) {
-	url, err = parseRawURL(rawURL)
+func ParseURL(rawURL string, defaultHost string, defaultScheme string) (*urlpkg.URL, error) {
+	url, err := parseRawURL(rawURL)
 	if err != nil {
 		return nil, err
 	}
