@@ -61,14 +61,7 @@ checksum:
   name_template: 'checksums.txt'
 
 changelog:
-  sort: asc
-  use: github
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
-      - '^chore'
-      - typo
+  disable: true # Changelogs are crafted manually
 
 release:
   github:
