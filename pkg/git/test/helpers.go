@@ -39,7 +39,7 @@ func (r *Repo) writeFile(filename string, content string) {
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	checkFatal(r.t, err)
 
-	_, err = file.Write([]byte(content))
+	_, err = file.WriteString(content)
 	checkFatal(r.t, err)
 }
 

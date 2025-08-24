@@ -93,7 +93,7 @@ func readGitconfig(cfg Gitconfig) {
 
 	viper.SetConfigType("env")
 
-	if err := viper.ReadConfig(bytes.NewBuffer([]byte(strings.Join(lines, "\n")))); err != nil {
+	if err := viper.ReadConfig(bytes.NewBufferString(strings.Join(lines, "\n"))); err != nil {
 		// Log error but don't fail - configuration is optional
 		fmt.Fprintf(os.Stderr, "Warning: failed to read git config: %v\n", err)
 	}
