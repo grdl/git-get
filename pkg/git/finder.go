@@ -85,6 +85,7 @@ func (f *RepoFinder) Find() error {
 		gitPath := filepath.Join(path, dotgit)
 		if _, err := os.Stat(gitPath); err == nil {
 			f.addIfOk(path)
+
 			return fs.SkipDir // Skip this directory's contents since it's a repo
 		}
 

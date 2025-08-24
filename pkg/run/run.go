@@ -133,5 +133,6 @@ func (e GitError) Error() string {
 
 func lines(output []byte) []string {
 	lines := strings.TrimSuffix(string(output), "\n")
+
 	return strings.Split(lines, "\n")
 }

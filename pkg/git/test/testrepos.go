@@ -20,6 +20,7 @@ func (r *Repo) Path() string {
 // RepoEmpty creates an empty git repo.
 func RepoEmpty(t *testing.T) *Repo {
 	t.Helper()
+
 	return RepoEmptyInDir(t, "")
 }
 

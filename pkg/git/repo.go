@@ -57,6 +57,7 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 
 	if err != nil {
 		cleanupFailedClone(opts.Path)
+
 		return nil, err
 	}
 
@@ -68,6 +69,7 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 // Fetch preforms a git fetch on all remotes.
 func (r *Repo) Fetch() error {
 	err := run.Git("fetch", "--all").OnRepo(r.path).AndShutUp()
+
 	return err
 }
 

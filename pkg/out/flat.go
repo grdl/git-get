@@ -23,6 +23,7 @@ func (p *FlatPrinter) Print(repos []Printable) string {
 
 		if len(repo.Errors()) > 0 {
 			str.WriteString(" " + red("error") + "\n")
+
 			continue
 		}
 

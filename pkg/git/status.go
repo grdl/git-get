@@ -65,6 +65,7 @@ func (r *Repo) loadBranches() (map[string]string, []error) {
 	branches, err := r.Branches()
 	if err != nil {
 		errors = append(errors, err)
+
 		return statuses, errors
 	}
 

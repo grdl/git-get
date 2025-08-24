@@ -216,6 +216,7 @@ func (n *Node) isYoungest() bool {
 	for i, sis := range sisters {
 		if sis.val == n.val {
 			myIndex = i
+
 			break
 		}
 	}
