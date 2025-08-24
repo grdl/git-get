@@ -1,3 +1,4 @@
+// Package pkg implements the primary funcionality of the commands: list and get
 package pkg
 
 import (
@@ -18,27 +19,44 @@ var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+)@([a-zA-Z0-9._-]+):(.*)$`)
 // ParseURL parses given rawURL string into a URL.
 // When the parsed URL has an empty host, use the defaultHost.
 // When the parsed URL has an empty scheme, use the defaultScheme.
-func ParseURL(rawURL string, defaultHost string, defaultScheme string) (url *urlpkg.URL, err error) {
-	// If rawURL matches the SCP-like syntax, convert it into a standard ssh Path.
-	// eg, git@github.com:user/repo => ssh://git@github.com/user/repo
-	if m := scpSyntax.FindStringSubmatch(rawURL); m != nil {
-		url = &urlpkg.URL{
-			Scheme: "ssh",
-			User:   urlpkg.User(m[1]),
-			Host:   m[2],
-			Path:   path.Join("/", m[3]),
-		}
-	} else {
-		url, err = urlpkg.Parse(rawURL)
-		if err != nil {
-			return nil, fmt.Errorf("failed parsing URL %s: %w", rawURL, err)
-		}
+func ParseURL(rawURL string, defaultHost string, defaultScheme string) (*urlpkg.URL, error) {
+	url, err := parseRawURL(rawURL)
+	if err != nil {
+		return nil, err
 	}
 
 	if url.Host == "" && url.Path == "" {
 		return nil, errEmptyURLPath
 	}
 
+	normalizeURL(url, defaultHost, defaultScheme)
+
+	return url, nil
+}
+
+// parseRawURL handles the initial parsing of the raw URL string.
+func parseRawURL(rawURL string) (*urlpkg.URL, error) {
+	// If rawURL matches the SCP-like syntax, convert it into a standard ssh Path.
+	// eg, git@github.com:user/repo => ssh://git@github.com/user/repo
+	if m := scpSyntax.FindStringSubmatch(rawURL); m != nil {
+		return &urlpkg.URL{
+			Scheme: "ssh",
+			User:   urlpkg.User(m[1]),
+			Host:   m[2],
+			Path:   path.Join("/", m[3]),
+		}, nil
+	}
+
+	url, err := urlpkg.Parse(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed parsing URL %s: %w", rawURL, err)
+	}
+
+	return url, nil
+}
+
+// normalizeURL applies all the normalization rules to the parsed URL.
+func normalizeURL(url *urlpkg.URL, defaultHost string, defaultScheme string) {
 	if url.Scheme == "git+ssh" {
 		url.Scheme = "ssh"
 	}
@@ -65,15 +83,13 @@ func ParseURL(rawURL string, defaultHost string, defaultScheme string) (url *url
 		url.Path = path.Join(url.Host, url.Path)
 		url.Host = ""
 	}
-
-	return url, nil
 }
 
 // URLToPath cleans up the URL and converts it into a path string.
 // Eg, ssh://git@github.com:22/~user/repo.git => github.com/user/repo
 //
 // If skipHost is true, it removes the host part from the path.
-// Eg, ssh://git@github.com:22/~user/repo.git => user/repo
+// Eg, ssh://git@github.com:22/~user/repo.git => user/repo.
 func URLToPath(url urlpkg.URL, skipHost bool) string {
 	// Remove port numbers from host.
 	url.Host = strings.Split(url.Host, ":")[0]

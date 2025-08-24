@@ -86,32 +86,42 @@ func (c *gitconfigValid) Get(key string) string {
 }
 
 func testConfigEmpty(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigEmpty{})
 }
 
 func testConfigOnlyInGitconfig(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigValid{})
 }
 
 func testConfigOnlyInEnvVar(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigEmpty{})
-	os.Setenv(envVarName, fromEnv)
-
+	t.Setenv(envVarName, fromEnv)
 }
 
 func testConfigInGitconfigAndEnvVar(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigValid{})
-	os.Setenv(envVarName, fromEnv)
+	t.Setenv(envVarName, fromEnv)
 }
 
 func testConfigInFlag(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigValid{})
-	os.Setenv(envVarName, fromEnv)
+	t.Setenv(envVarName, fromEnv)
 
 	cmd := cobra.Command{}
 	cmd.PersistentFlags().String(KeyDefaultHost, Defaults[KeyDefaultHost], "")
-	viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost))
+
+	if err := viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost)); err != nil {
+		t.Fatalf("failed to bind flag: %v", err)
+	}
 
 	cmd.SetArgs([]string{"--" + KeyDefaultHost, fromFlag})
-	cmd.Execute()
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("failed to execute command: %v", err)
+	}
 }

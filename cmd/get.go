@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"git-get/pkg"
 	"git-get/pkg/cfg"
 	"git-get/pkg/git"
@@ -35,17 +36,14 @@ func newGetCommand() *cobra.Command {
 	cmd.PersistentFlags().BoolP("help", "h", false, "Print this help and exit.")
 	cmd.PersistentFlags().BoolP("version", "v", false, "Print version and exit.")
 
-	viper.BindPFlag(cfg.KeyBranch, cmd.PersistentFlags().Lookup(cfg.KeyBranch))
-	viper.BindPFlag(cfg.KeyDefaultHost, cmd.PersistentFlags().Lookup(cfg.KeyDefaultHost))
-	viper.BindPFlag(cfg.KeyDefaultScheme, cmd.PersistentFlags().Lookup(cfg.KeyDefaultScheme))
-	viper.BindPFlag(cfg.KeyDump, cmd.PersistentFlags().Lookup(cfg.KeyDump))
-	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
-	viper.BindPFlag(cfg.KeySkipHost, cmd.PersistentFlags().Lookup(cfg.KeySkipHost))
+	if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+		panic(fmt.Sprintf("failed to bind flags: %v", err))
+	}
 
 	return cmd
 }
 
-func runGetCommand(cmd *cobra.Command, args []string) error {
+func runGetCommand(_ *cobra.Command, args []string) error {
 	var url string
 	if len(args) > 0 {
 		url = args[0]
@@ -62,6 +60,7 @@ func runGetCommand(cmd *cobra.Command, args []string) error {
 		Root:      viper.GetString(cfg.KeyReposRoot),
 		URL:       url,
 	}
+
 	return pkg.Get(config)
 }
 

@@ -3,6 +3,7 @@ package run
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -32,8 +33,10 @@ type Cmd struct {
 
 // Git creates a git command with given arguments.
 func Git(args ...string) *Cmd {
+	ctx := context.Background()
+
 	return &Cmd{
-		cmd:  exec.Command("git", args...),
+		cmd:  exec.CommandContext(ctx, "git", args...),
 		args: strings.Join(args, " "),
 	}
 }
@@ -78,6 +81,7 @@ func (c *Cmd) AndCaptureLine() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return lines[0], nil
 }
 
@@ -90,6 +94,7 @@ func (c *Cmd) AndShow() error {
 	if err != nil {
 		return &GitError{&bytes.Buffer{}, c.args, c.path, err}
 	}
+
 	return nil
 }
 
@@ -104,6 +109,7 @@ func (c *Cmd) AndShutUp() error {
 	if err != nil {
 		return &GitError{errStream, c.args, c.path, err}
 	}
+
 	return nil
 }
 
@@ -123,10 +129,10 @@ func (e GitError) Error() string {
 	}
 
 	return fmt.Sprintf("git %s failed on %s: %s", e.Args, e.Path, msg)
-
 }
 
 func lines(output []byte) []string {
 	lines := strings.TrimSuffix(string(output), "\n")
+
 	return strings.Split(lines, "\n")
 }

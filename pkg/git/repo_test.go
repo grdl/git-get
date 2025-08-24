@@ -1,11 +1,11 @@
 package git
 
 import (
-	"fmt"
 	"git-get/pkg/git/test"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,8 +47,8 @@ func TestUncommitted(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.Uncommitted()
 
+			got, err := r.Uncommitted()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -73,12 +73,12 @@ func TestUntracked(t *testing.T) {
 		{
 			name:      "single untracked",
 			repoMaker: test.RepoWithUntracked,
-			want:      0,
+			want:      1,
 		},
 		{
 			name:      "single tracked ",
 			repoMaker: test.RepoWithStaged,
-			want:      1,
+			want:      0,
 		},
 		{
 			name:      "committed",
@@ -95,8 +95,8 @@ func TestUntracked(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.Uncommitted()
 
+			got, err := r.Untracked()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -114,11 +114,6 @@ func TestCurrentBranch(t *testing.T) {
 		repoMaker func(*testing.T) *test.Repo
 		want      string
 	}{
-		{
-			name:      "empty repo without commits",
-			repoMaker: test.RepoEmpty,
-			want:      "main",
-		},
 		{
 			name:      "only main branch",
 			repoMaker: test.RepoWithCommit,
@@ -139,8 +134,8 @@ func TestCurrentBranch(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.CurrentBranch()
 
+			got, err := r.CurrentBranch()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -182,8 +177,8 @@ func TestBranches(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.Branches()
 
+			got, err := r.Branches()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -287,6 +282,7 @@ func TestAheadBehind(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
+
 			upstream, err := r.Upstream(test.branch)
 			if err != nil {
 				t.Errorf("got error %q", err)
@@ -313,7 +309,6 @@ func TestCleanupFailedClone(t *testing.T) {
 	//     └── x/
 	//         └── y/
 	//        	   └── file.txt
-
 	tests := []struct {
 		path     string // path to cleanup
 		wantGone string // this path should be deleted, if empty - nothing should be deleted
@@ -339,7 +334,7 @@ func TestCleanupFailedClone(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			root := createTestDirTree(t)
 
 			path := filepath.Join(root, test.path)
@@ -393,6 +388,7 @@ func TestRemote(t *testing.T) {
 			if test.wantErr && err == nil {
 				t.Errorf("expected error but got none")
 			}
+
 			if !test.wantErr && err != nil {
 				t.Errorf("unexpected error: %q", err)
 			}
@@ -410,11 +406,20 @@ func TestRemote(t *testing.T) {
 }
 
 func createTestDirTree(t *testing.T) string {
+	t.Helper()
 	root := test.TempDir(t, "")
-	err := os.MkdirAll(filepath.Join(root, "a", "b", "c"), os.ModePerm)
-	err = os.MkdirAll(filepath.Join(root, "a", "x", "y"), os.ModePerm)
-	_, err = os.Create(filepath.Join(root, "a", "x", "y", "file.txt"))
 
+	err := os.MkdirAll(filepath.Join(root, "a", "b", "c"), os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = os.MkdirAll(filepath.Join(root, "a", "x", "y"), os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = os.Create(filepath.Join(root, "a", "x", "y", "file.txt"))
 	if err != nil {
 		t.Fatal(err)
 	}

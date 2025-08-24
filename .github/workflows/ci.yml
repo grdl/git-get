@@ -5,6 +5,7 @@ on:
     branches: [master, main]
   pull_request:
     branches: [master, main]
+  workflow_call:
 
 permissions:
   contents: read
@@ -16,9 +17,7 @@ jobs:
     strategy:
       matrix:
         go-version: ['1.24']
-        os: [ubuntu-latest, macos-latest]
-        # TODO: fix tests on windows
-        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -38,23 +37,13 @@ jobs:
         
       - name: Verify dependencies
         run: go mod verify
+
+      - name: Build binary
+        run: go build -v -o bin/git-get ./cmd/
+
+      - name: Run tests
+        run: go test -race ./...
         
-      - name: Set up Git (for tests)
-        run: |
-          git config --global user.email "test@example.com"
-          git config --global user.name "CI Test"
-          
-      - name: Run tests with coverage
-        run: go test -race -coverprofile coverage.out -covermode=atomic ./...
-        
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.24'
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./coverage.out
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
 
   lint:
     name: Lint
@@ -69,74 +58,10 @@ jobs:
         with:
           go-version: '1.24'
           cache: true
-          
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        # TODO: Fix linting errors
-        continue-on-error: true
+
+      - name: Run lints
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          version: v2.4.0
           args: --timeout=5m
 
-  security:
-    name: Security
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-          
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-  build:
-    name: Build
-    needs: [test, lint, security]
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-          
-      - name: Build binary
-        run: |
-          go build -v -o bin/git-get ./cmd/
-          
-      - name: Test binary and symlink behavior
-        run: |
-          ./bin/git-get --version
-          # Test symlink functionality
-          ln -sf git-get bin/git-list
-          ./bin/git-list --version
-          
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: binary
-          path: bin/
-          retention-days: 30

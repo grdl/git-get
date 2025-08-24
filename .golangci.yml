@@ -1,115 +1,55 @@
-version: 2
+version: "2"
 
 run:
-  timeout: 5m
-  go: '1.24'
+  timeout: 1m
 
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  govet:
-    enable-all: true
-    disable:
-      - shadow
-
-  gocyclo:
-    min-complexity: 15
-
-  dupl:
-    threshold: 100
-
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-
-  lll:
-    line-length: 120
-
-  unparam:
-    check-exported: false
-
-  nakedret:
-    max-func-lines: 30
-
-  prealloc:
-    simple: true
-    range-loops: true
-    for-loops: false
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-
-  funlen:
-    lines: 100
-    statements: 50
-
-  godox:
-    keywords:
-      - NOTE
-      - OPTIMIZE
-      - HACK
-
-  dogsled:
-    max-blank-identifiers: 2
-
-  whitespace:
-    multi-if: false
-    multi-func: false
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 linters:
-  disable-all: true
-  enable:
-    - bodyclose
-    - dogsled
-    - dupl
-    - errcheck
-    - funlen
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - godox
-    - goprintffuncname
-    - gosec
-    - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - noctx
-    - nolintlint
-    - prealloc
-    - revive
-    - staticcheck
-    - unconvert
-    - unparam
-    - unused
-    - whitespace
+  default: all
 
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - funlen
-        - goconst
-        - lll
+  disable:
+    - depguard            # We don't have any packages we need to block
+    - exhaustruct         # Too pedantic and impractical. Explicitly setting all struct values goes against Go's zero-value philosophy
+    - forbidigo           # Not suitable for CLI apps where printing to stdout is fine
+    - gochecknoglobals    # It's too strict and doesn't distinguish between "bad" globals (mutable shared state) and "good" globals (immutable configuration)
+    - godox               # TODO: enable it and handle all the remaning TODOs
+    - mnd                 # Impractical. We deal with numbers like file permissions here, it's much clearer to see them explicitly.
+    - noinlineerr         # Impractical. Inline error handling is a common and idiomatic practice
+    - paralleltest        # Tests are fast already and paralellizing them adds complexity
+    - testpackage         # TODO: renable it and refactor tests into separate packages
+    - unparam             # Impractical, it flags functions that are designed to be general-purpose, but happen to only be used with specific values currently
+    - wsl                 # We use wsl_v5 instead
+    - wrapcheck           # Adds too much bloat, many of the errors are contextual enough and don't need wrapping
 
-    - path: pkg/git/test/
-      linters:
-        - goconst
+  settings:
+    goconst:
+      ignore-string-values:
+        - "get"
+        - "list"
+    lll:
+      line-length: 180
 
-  exclude-use-default: false
-  max-issues-per-linter: 0
-  max-same-issues: 0
+  exclusions:
+    # Typical presets to exclude: https://golangci-lint.run/docs/linters/false-positives/#exclusion-presets
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
 
-output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
+    rules:
+      - path: _test.go
+        linters:
+          - dupl          # We don't mind duplicated code in tests. It helps with clarity
+          - varnamelen    # We don't mind short var names in tests.
+          - revive        # Complains too much about unused-params, but they help with tests readibility
+          - funlen        # We don't mind long functions in tests
+      - path: test/
+        linters:
+          - dupl
+          - varnamelen
+

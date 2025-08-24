@@ -28,10 +28,14 @@ func parseDumpFile(path string) ([]parsedLine, error) {
 
 	scanner := bufio.NewScanner(file)
 
-	var parsedLines []parsedLine
-	var line int
+	var (
+		parsedLines []parsedLine
+		line        int
+	)
+
 	for scanner.Scan() {
 		line++
+
 		parsed, err := parseLine(scanner.Text())
 		if err != nil && !errors.Is(errEmptyLine, err) {
 			return nil, fmt.Errorf("failed parsing dump file line %d: %w", line, err)
@@ -44,7 +48,7 @@ func parseDumpFile(path string) ([]parsedLine, error) {
 }
 
 // parseLine splits a dump file line into space-separated segments.
-// First part is the URL to clone. Second, optional, is the branch (or tag) to checkout after cloning
+// First part is the URL to clone. Second, optional, is the branch (or tag) to checkout after cloning.
 func parseLine(line string) (parsedLine, error) {
 	var parsed parsedLine
 

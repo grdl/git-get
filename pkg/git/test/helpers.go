@@ -1,9 +1,9 @@
+// Package test contains helper utilities and functions creating pre-configured test repositories for testing purposes
 package test
 
 import (
 	"fmt"
 	"git-get/pkg/run"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,7 +13,11 @@ import (
 // TempDir creates a temporary directory inside the parent dir.
 // If parent is empty, it will use a system default temp dir (usually /tmp).
 func TempDir(t *testing.T, parent string) string {
-	dir, err := ioutil.TempDir(parent, "git-get-repo-")
+	t.Helper()
+
+	// t.TempDir() is not enough in this case, we need to be able to create dirs inside the parent dir
+	//nolint:usetesting
+	dir, err := os.MkdirTemp(parent, "git-get-repo-")
 	checkFatal(t, err)
 
 	// Automatically remove temp dir when the test is over.
@@ -24,8 +28,29 @@ func TempDir(t *testing.T, parent string) string {
 	return dir
 }
 
+// syncGitIndex forces git to refresh its index and ensures file system operations are flushed.
+// This helps to prevent race-condition issues when running tests on Windows.
+func (r *Repo) syncGitIndex() {
+	// Force git to refresh its index - this makes git re-scan the working directory
+	_ = run.Git("update-index", "--refresh").OnRepo(r.path).AndShutUp()
+	// Run status to ensure git has processed any pending changes
+	_ = run.Git("status", "--porcelain").OnRepo(r.path).AndShutUp()
+}
+
 func (r *Repo) init() {
 	err := run.Git("init", "--quiet", "--initial-branch=main", r.path).AndShutUp()
+	checkFatal(r.t, err)
+
+	r.setupGitConfig()
+	r.syncGitIndex()
+}
+
+// setupGitConfig sets up local git config for test repository only.
+func (r *Repo) setupGitConfig() {
+	err := run.Git("config", "user.name", "Test User").OnRepo(r.path).AndShutUp()
+	checkFatal(r.t, err)
+
+	err = run.Git("config", "user.email", "test@example.com").OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
 }
 
@@ -36,33 +61,48 @@ func (r *Repo) writeFile(filename string, content string) {
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	checkFatal(r.t, err)
 
-	_, err = file.Write([]byte(content))
+	_, err = file.WriteString(content)
 	checkFatal(r.t, err)
+
+	// Ensure data is written to disk before closing
+	err = file.Sync()
+	checkFatal(r.t, err)
+
+	err = file.Close()
+	checkFatal(r.t, err)
+
+	// Force git to recognize the file changes
+	r.syncGitIndex()
 }
 
 func (r *Repo) stageFile(path string) {
 	err := run.Git("add", path).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) commit(msg string) {
-	err := run.Git("commit", "-m", fmt.Sprintf("%q", msg), "--author=\"user <user@example.com>\"").OnRepo(r.path).AndShutUp()
+	err := run.Git("commit", "-m", fmt.Sprintf("%q", msg)).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) branch(name string) {
 	err := run.Git("branch", name).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) tag(name string) {
 	err := run.Git("tag", "-a", name, "-m", name).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) checkout(name string) {
 	err := run.Git("checkout", name).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func (r *Repo) clone() *Repo {
@@ -77,22 +117,30 @@ func (r *Repo) clone() *Repo {
 		t:    r.t,
 	}
 
+	// Set up git config in the cloned repository
+	clone.setupGitConfig()
+	clone.syncGitIndex()
+
 	return clone
 }
 
 func (r *Repo) fetch() {
 	err := run.Git("fetch", "--all").OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
+	r.syncGitIndex()
 }
 
 func checkFatal(t *testing.T, err error) {
+	t.Helper()
+
 	if err != nil {
 		t.Fatalf("failed making test repo: %+v", err)
 	}
 }
 
-// removeTestDir removes a test directory
+// removeTestDir removes a test directory.
 func removeTestDir(t *testing.T, dir string) {
+	t.Helper()
 	// Skip cleanup on Windows to avoid file locking issues in CI
 	// The CI runner environment is destroyed after tests anyway
 	if runtime.GOOS == "windows" {

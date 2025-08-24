@@ -1,4 +1,5 @@
-package print
+// Package out implements different outputs for git-list command
+package out
 
 import (
 	"fmt"
@@ -9,12 +10,12 @@ const (
 	head = "HEAD"
 )
 
-// Printable represents a repository which status can be printed
+// Printable represents a repository which status can be printed.
 type Printable interface {
 	Path() string
 	Current() string
 	Branches() []string
-	BranchStatus(string) string
+	BranchStatus(branch string) string
 	WorkTreeStatus() string
 	Remote() string
 	Errors() []string
@@ -26,9 +27,7 @@ func Errors(repos []Printable) string {
 	errors := []string{}
 
 	for _, repo := range repos {
-		for _, err := range repo.Errors() {
-			errors = append(errors, err)
-		}
+		errors = append(errors, repo.Errors()...)
 	}
 
 	if len(errors) == 0 {

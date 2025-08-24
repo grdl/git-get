@@ -57,16 +57,19 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 
 	if err != nil {
 		cleanupFailedClone(opts.Path)
+
 		return nil, err
 	}
 
 	Repo, err := Open(opts.Path)
+
 	return Repo, err
 }
 
-// Fetch preforms a git fetch on all remotes
+// Fetch preforms a git fetch on all remotes.
 func (r *Repo) Fetch() error {
 	err := run.Git("fetch", "--all").OnRepo(r.path).AndShutUp()
+
 	return err
 }
 
@@ -79,6 +82,7 @@ func (r *Repo) Uncommitted() (int, error) {
 	}
 
 	count := 0
+
 	for _, line := range out {
 		// Don't count lines with untracked files and empty lines.
 		if !strings.HasPrefix(line, untracked) && strings.TrimSpace(line) != "" {
@@ -97,6 +101,7 @@ func (r *Repo) Untracked() (int, error) {
 	}
 
 	count := 0
+
 	for _, line := range out {
 		if strings.HasPrefix(line, untracked) {
 			count++
@@ -122,6 +127,7 @@ func (r *Repo) CurrentBranch() (string, error) {
 			// Fall back to "main" as the modern default
 			return "main", nil
 		}
+
 		return "", err
 	}
 
@@ -149,9 +155,10 @@ func (r *Repo) Branches() ([]string, error) {
 // Upstream returns the name of an upstream branch if a given branch is tracking one.
 // Otherwise it returns an empty string.
 func (r *Repo) Upstream(branch string) (string, error) {
-	out, err := run.Git("rev-parse", "--abbrev-ref", "--symbolic-full-name", fmt.Sprintf("%s@{upstream}", branch)).OnRepo(r.path).AndCaptureLine()
+	out, err := run.Git("rev-parse", "--abbrev-ref", "--symbolic-full-name", branch+"@{upstream}").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
 		// TODO: no upstream will also throw an error.
+		// lint:ignore nilerr fix when working on TODO
 		return "", nil
 	}
 
@@ -166,14 +173,14 @@ func (r *Repo) AheadBehind(branch string, upstream string) (int, int, error) {
 	}
 
 	// rev-list --left-right --count output is separated by a tab
-	lr := strings.Split(out, "\t")
+	count := strings.Split(out, "\t")
 
-	ahead, err := strconv.Atoi(lr[0])
+	ahead, err := strconv.Atoi(count[0])
 	if err != nil {
 		return 0, 0, err
 	}
 
-	behind, err := strconv.Atoi(lr[1])
+	behind, err := strconv.Atoi(count[1])
 	if err != nil {
 		return 0, 0, err
 	}
@@ -190,6 +197,7 @@ func (r *Repo) Remote() (string, error) {
 		if strings.Contains(err.Error(), "No remote configured to list refs from") {
 			return "", nil // Return empty string instead of error for missing remote
 		}
+
 		return "", err
 	}
 

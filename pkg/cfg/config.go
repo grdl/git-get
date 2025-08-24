@@ -62,10 +62,10 @@ func Version() string {
 		return fmt.Sprintf("git-get %s (%s)", version, commit[:7])
 	}
 
-	return fmt.Sprintf("git-get %s", version)
+	return "git-get " + version
 }
 
-// Gitconfig represents gitconfig file
+// Gitconfig represents gitconfig file.
 type Gitconfig interface {
 	Get(key string) string
 }
@@ -92,7 +92,11 @@ func readGitconfig(cfg Gitconfig) {
 	}
 
 	viper.SetConfigType("env")
-	viper.ReadConfig(bytes.NewBuffer([]byte(strings.Join(lines, "\n"))))
+
+	if err := viper.ReadConfig(bytes.NewBufferString(strings.Join(lines, "\n"))); err != nil {
+		// Log error but don't fail - configuration is optional
+		fmt.Fprintf(os.Stderr, "Warning: failed to read git config: %v\n", err)
+	}
 
 	// TODO: A hacky way to read boolean flag from gitconfig. Find a cleaner way.
 	if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, KeySkipHost)); strings.ToLower(val) == "true" {

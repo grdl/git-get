@@ -65,12 +65,16 @@ func TestGitConfig(t *testing.T) {
 }
 
 func makeConfigEmpty(t *testing.T) *cfgStub {
+	t.Helper()
+
 	return &cfgStub{
 		Repo: test.RepoWithEmptyConfig(t),
 	}
 }
 
 func makeConfigValid(t *testing.T) *cfgStub {
+	t.Helper()
+
 	return &cfgStub{
 		Repo: test.RepoWithValidConfig(t),
 	}

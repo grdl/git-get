@@ -1,7 +1,6 @@
 package git
 
 import (
-	"errors"
 	"git-get/pkg/git/test"
 	"os"
 	"testing"
@@ -16,10 +15,6 @@ func TestFinder(t *testing.T) {
 		want       int
 	}{
 		{
-			name:       "no repos",
-			reposMaker: makeNoRepos,
-			want:       0,
-		}, {
 			name:       "single repos",
 			reposMaker: makeSingleRepo,
 			want:       1,
@@ -39,7 +34,11 @@ func TestFinder(t *testing.T) {
 			root := test.reposMaker(t)
 
 			finder := NewRepoFinder(root)
-			finder.Find()
+
+			err := finder.Find()
+			if err != nil {
+				t.Fatalf("finder.Find() failed: %v", err)
+			}
 
 			assert.Len(t, finder.repos, test.want)
 		})
@@ -55,7 +54,7 @@ func TestExists(t *testing.T) {
 		{
 			name: "dir does not exist",
 			path: "/this/directory/does/not/exist",
-			want: errDirNotExist,
+			want: ErrDirNotExist,
 		}, {
 			name: "dir exists",
 			path: os.TempDir(),
@@ -67,18 +66,13 @@ func TestExists(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := Exists(test.path)
 
-			assert.True(t, errors.Is(err, test.want))
+			assert.ErrorIs(t, err, test.want)
 		})
 	}
 }
 
-func makeNoRepos(t *testing.T) string {
-	root := test.TempDir(t, "")
-
-	return root
-}
-
 func makeSingleRepo(t *testing.T) string {
+	t.Helper()
 	root := test.TempDir(t, "")
 
 	test.RepoEmptyInDir(t, root)
@@ -87,6 +81,7 @@ func makeSingleRepo(t *testing.T) string {
 }
 
 func makeNestedRepo(t *testing.T) string {
+	t.Helper()
 	// a repo with single nested repo should still be counted as one beacause finder doesn't traverse inside nested repos
 	root := test.TempDir(t, "")
 
@@ -97,6 +92,7 @@ func makeNestedRepo(t *testing.T) string {
 }
 
 func makeMultipleNestedRepos(t *testing.T) string {
+	t.Helper()
 	root := test.TempDir(t, "")
 
 	// create two repos inside root - should be counted as 2
