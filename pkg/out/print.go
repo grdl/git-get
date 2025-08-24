@@ -1,5 +1,5 @@
-// Package print implements different outputs for git-list command
-package print
+// Package out implements different outputs for git-list command
+package out
 
 import (
 	"fmt"

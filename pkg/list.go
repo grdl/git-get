@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"git-get/pkg/cfg"
 	"git-get/pkg/git"
-	"git-get/pkg/print"
+	"git-get/pkg/out"
 	"strings"
 )
 
@@ -27,18 +27,19 @@ func List(conf *ListCfg) error {
 
 	statuses := finder.LoadAll(conf.Fetch)
 
-	printables := make([]print.Printable, len(statuses))
+	printables := make([]out.Printable, len(statuses))
+
 	for i := range statuses {
 		printables[i] = statuses[i]
 	}
 
 	switch conf.Output {
 	case cfg.OutFlat:
-		fmt.Print(print.NewFlatPrinter().Print(printables))
+		fmt.Print(out.NewFlatPrinter().Print(printables))
 	case cfg.OutTree:
-		fmt.Print(print.NewTreePrinter().Print(conf.Root, printables))
+		fmt.Print(out.NewTreePrinter().Print(conf.Root, printables))
 	case cfg.OutDump:
-		fmt.Print(print.NewDumpPrinter().Print(printables))
+		fmt.Print(out.NewDumpPrinter().Print(printables))
 	default:
 		return fmt.Errorf("%w, allowed values: [%s]", ErrInvalidOutput, strings.Join(cfg.AllowedOut, ", "))
 	}
