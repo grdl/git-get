@@ -46,6 +46,7 @@ func Root(val string) *Node {
 	root := &Node{
 		val: val,
 	}
+
 	return root
 }
 
@@ -61,6 +62,7 @@ func (n *Node) Add(val string) *Node {
 		depth:  n.depth + 1,
 	}
 	n.children = append(n.children, child)
+
 	return child
 }
 
@@ -108,9 +110,11 @@ func buildTree(root string, repos []Printable) *Node {
 
 				continue
 			}
+
 			node = child
 		}
 	}
+
 	return tree
 }
 
@@ -180,8 +184,11 @@ func indentation(node *Node) string {
 
 	var indent strings.Builder
 
-	const space = "    "
-	const link = "│   "
+	const (
+		space = "    "
+		link  = "│   "
+	)
+
 	for _, y := range levels {
 		if y {
 			indent.WriteString(space)
@@ -203,12 +210,15 @@ func (n *Node) isYoungest() bool {
 	}
 
 	sisters := n.parent.children
+
 	var myIndex int
+
 	for i, sis := range sisters {
 		if sis.val == n.val {
 			myIndex = i
 			break
 		}
 	}
+
 	return myIndex == len(sisters)-1
 }

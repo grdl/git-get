@@ -29,6 +29,7 @@ func ParseURL(rawURL string, defaultHost string, defaultScheme string) (url *url
 	}
 
 	normalizeURL(url, defaultHost, defaultScheme)
+
 	return url, nil
 }
 
@@ -49,6 +50,7 @@ func parseRawURL(rawURL string) (*urlpkg.URL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed parsing URL %s: %w", rawURL, err)
 	}
+
 	return url, nil
 }
 

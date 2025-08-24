@@ -30,6 +30,7 @@ func RepoEmptyInDir(t *testing.T, parent string) *Repo {
 	}
 
 	r.init()
+
 	return r
 }
 
@@ -97,6 +98,7 @@ func RepoWithBranchWithUpstream(t *testing.T) *Repo {
 
 	r := origin.clone()
 	r.checkout("feature/branch")
+
 	return r
 }
 
@@ -107,6 +109,7 @@ func RepoWithBranchWithoutUpstream(t *testing.T) *Repo {
 	r := origin.clone()
 	r.branch("feature/branch")
 	r.checkout("feature/branch")
+
 	return r
 }
 

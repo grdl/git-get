@@ -32,12 +32,14 @@ func (r *Repo) LoadStatus(fetch bool) *Status {
 	}
 
 	var err error
+
 	status.current, err = r.CurrentBranch()
 	if err != nil {
 		status.errors = append(status.errors, err.Error())
 	}
 
 	var errs []error
+
 	status.branches, errs = r.loadBranches()
 	for _, err := range errs {
 		status.errors = append(status.errors, err.Error())
@@ -69,6 +71,7 @@ func (r *Repo) loadBranches() (map[string]string, []error) {
 	for _, branch := range branches {
 		status, err := r.loadBranchStatus(branch)
 		statuses[branch] = status
+
 		if err != nil {
 			errors = append(errors, err)
 		}
@@ -100,6 +103,7 @@ func (r *Repo) loadBranchStatus(branch string) (string, error) {
 	if ahead != 0 {
 		res = append(res, fmt.Sprintf("%d ahead", ahead))
 	}
+
 	if behind != 0 {
 		res = append(res, fmt.Sprintf("%d behind", behind))
 	}
@@ -126,6 +130,7 @@ func (r *Repo) loadWorkTree() (string, error) {
 	if uncommitted != 0 {
 		res = append(res, fmt.Sprintf("%d uncommitted", uncommitted))
 	}
+
 	if untracked != 0 {
 		res = append(res, fmt.Sprintf("%d untracked", untracked))
 	}
@@ -151,6 +156,7 @@ func (s *Status) Branches() []string {
 			branches = append(branches, b)
 		}
 	}
+
 	return branches
 }
 

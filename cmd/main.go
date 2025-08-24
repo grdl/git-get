@@ -33,6 +33,7 @@ func handleGitGetInvocation() (string, []string) {
 	if len(os.Args) > 1 && (os.Args[1] == "get" || os.Args[1] == "list") {
 		return os.Args[1], os.Args[2:]
 	}
+
 	return "get", os.Args[1:]
 }
 
@@ -44,6 +45,7 @@ func handleDefaultInvocation() (string, []string) {
 	if len(os.Args) > 1 {
 		return os.Args[1], os.Args[2:]
 	}
+
 	return "get", []string{}
 }
 

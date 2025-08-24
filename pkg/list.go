@@ -23,6 +23,7 @@ func List(c *ListCfg) error {
 	}
 
 	statuses := finder.LoadAll(c.Fetch)
+
 	printables := make([]print.Printable, len(statuses))
 	for i := range statuses {
 		printables[i] = statuses[i]

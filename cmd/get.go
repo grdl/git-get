@@ -62,6 +62,7 @@ func runGetCommand(cmd *cobra.Command, args []string) error {
 		Root:      viper.GetString(cfg.KeyReposRoot),
 		URL:       url,
 	}
+
 	return pkg.Get(config)
 }
 

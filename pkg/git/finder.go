@@ -18,7 +18,6 @@ var errDirNotExist = fmt.Errorf("directory doesn't exist")
 // Exists returns true if a directory exists. If it doesn't or the directory can't be accessed it returns an error.
 func Exists(path string) (bool, error) {
 	_, err := os.Stat(path)
-
 	if err == nil {
 		return true, nil
 	}
@@ -61,6 +60,7 @@ func (f *RepoFinder) Find() error {
 			if os.IsPermission(err) {
 				return nil // Skip this path but continue
 			}
+
 			return fmt.Errorf("failed to walk %s: %w", path, err)
 		}
 
@@ -73,6 +73,7 @@ func (f *RepoFinder) Find() error {
 		if d.Name() == dotgit {
 			parentPath := filepath.Dir(path)
 			f.addIfOk(parentPath)
+
 			return fs.SkipDir // Skip the .git directory contents
 		}
 
@@ -85,7 +86,6 @@ func (f *RepoFinder) Find() error {
 
 		return nil // Continue walking
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to walk directory tree: %w", err)
 	}

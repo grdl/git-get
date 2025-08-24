@@ -30,6 +30,7 @@ func Get(c *GetCfg) error {
 	if c.Dump != "" {
 		return cloneDumpFile(c)
 	}
+
 	return nil
 }
 
@@ -74,10 +75,12 @@ func cloneDumpFile(c *GetCfg) error {
 		}
 
 		fmt.Printf("Cloning %s...\n", opts.URL.String())
+
 		_, err = git.Clone(opts)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

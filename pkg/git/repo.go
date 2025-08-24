@@ -61,6 +61,7 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 	}
 
 	Repo, err := Open(opts.Path)
+
 	return Repo, err
 }
 
@@ -79,6 +80,7 @@ func (r *Repo) Uncommitted() (int, error) {
 	}
 
 	count := 0
+
 	for _, line := range out {
 		// Don't count lines with untracked files and empty lines.
 		if !strings.HasPrefix(line, untracked) && strings.TrimSpace(line) != "" {
@@ -97,6 +99,7 @@ func (r *Repo) Untracked() (int, error) {
 	}
 
 	count := 0
+
 	for _, line := range out {
 		if strings.HasPrefix(line, untracked) {
 			count++
@@ -122,6 +125,7 @@ func (r *Repo) CurrentBranch() (string, error) {
 			// Fall back to "main" as the modern default
 			return "main", nil
 		}
+
 		return "", err
 	}
 
@@ -190,6 +194,7 @@ func (r *Repo) Remote() (string, error) {
 		if strings.Contains(err.Error(), "No remote configured to list refs from") {
 			return "", nil // Return empty string instead of error for missing remote
 		}
+
 		return "", err
 	}
 

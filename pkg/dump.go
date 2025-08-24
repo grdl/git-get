@@ -28,10 +28,14 @@ func parseDumpFile(path string) ([]parsedLine, error) {
 
 	scanner := bufio.NewScanner(file)
 
-	var parsedLines []parsedLine
-	var line int
+	var (
+		parsedLines []parsedLine
+		line        int
+	)
+
 	for scanner.Scan() {
 		line++
+
 		parsed, err := parseLine(scanner.Text())
 		if err != nil && !errors.Is(errEmptyLine, err) {
 			return nil, fmt.Errorf("failed parsing dump file line %d: %w", line, err)

@@ -47,8 +47,8 @@ func TestUncommitted(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.Uncommitted()
 
+			got, err := r.Uncommitted()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -95,8 +95,8 @@ func TestUntracked(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.Uncommitted()
 
+			got, err := r.Uncommitted()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -139,8 +139,8 @@ func TestCurrentBranch(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.CurrentBranch()
 
+			got, err := r.CurrentBranch()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -182,8 +182,8 @@ func TestBranches(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
-			got, err := r.Branches()
 
+			got, err := r.Branches()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
@@ -287,6 +287,7 @@ func TestAheadBehind(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
+
 			upstream, err := r.Upstream(test.branch)
 			if err != nil {
 				t.Errorf("got error %q", err)
@@ -313,7 +314,6 @@ func TestCleanupFailedClone(t *testing.T) {
 	//     └── x/
 	//         └── y/
 	//        	   └── file.txt
-
 	tests := []struct {
 		path     string // path to cleanup
 		wantGone string // this path should be deleted, if empty - nothing should be deleted
@@ -393,6 +393,7 @@ func TestRemote(t *testing.T) {
 			if test.wantErr && err == nil {
 				t.Errorf("expected error but got none")
 			}
+
 			if !test.wantErr && err != nil {
 				t.Errorf("unexpected error: %q", err)
 			}
@@ -413,8 +414,8 @@ func createTestDirTree(t *testing.T) string {
 	root := test.TempDir(t, "")
 	err := os.MkdirAll(filepath.Join(root, "a", "b", "c"), os.ModePerm)
 	err = os.MkdirAll(filepath.Join(root, "a", "x", "y"), os.ModePerm)
-	_, err = os.Create(filepath.Join(root, "a", "x", "y", "file.txt"))
 
+	_, err = os.Create(filepath.Join(root, "a", "x", "y", "file.txt"))
 	if err != nil {
 		t.Fatal(err)
 	}

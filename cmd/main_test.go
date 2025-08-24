@@ -83,6 +83,7 @@ func TestDetermineCommand(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save original os.Args
 			oldArgs := os.Args
+
 			defer func() { os.Args = oldArgs }()
 
 			// Set test args
@@ -144,6 +145,7 @@ func TestHandleGitGetInvocation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save original os.Args
 			oldArgs := os.Args
+
 			defer func() { os.Args = oldArgs }()
 
 			// Set test args
@@ -187,6 +189,7 @@ func TestHandleGitListInvocation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save original os.Args
 			oldArgs := os.Args
+
 			defer func() { os.Args = oldArgs }()
 
 			// Set test args
@@ -236,6 +239,7 @@ func TestHandleDefaultInvocation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save original os.Args
 			oldArgs := os.Args
+
 			defer func() { os.Args = oldArgs }()
 
 			// Set test args

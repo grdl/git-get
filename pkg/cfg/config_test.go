@@ -96,7 +96,6 @@ func testConfigOnlyInGitconfig(t *testing.T) {
 func testConfigOnlyInEnvVar(t *testing.T) {
 	Init(&gitconfigEmpty{})
 	os.Setenv(envVarName, fromEnv)
-
 }
 
 func testConfigInGitconfigAndEnvVar(t *testing.T) {

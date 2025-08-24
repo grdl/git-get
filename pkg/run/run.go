@@ -78,6 +78,7 @@ func (c *Cmd) AndCaptureLine() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return lines[0], nil
 }
 
@@ -90,6 +91,7 @@ func (c *Cmd) AndShow() error {
 	if err != nil {
 		return &GitError{&bytes.Buffer{}, c.args, c.path, err}
 	}
+
 	return nil
 }
 
@@ -104,6 +106,7 @@ func (c *Cmd) AndShutUp() error {
 	if err != nil {
 		return &GitError{errStream, c.args, c.path, err}
 	}
+
 	return nil
 }
 
@@ -123,7 +126,6 @@ func (e GitError) Error() string {
 	}
 
 	return fmt.Sprintf("git %s failed on %s: %s", e.Args, e.Path, msg)
-
 }
 
 func lines(output []byte) []string {
