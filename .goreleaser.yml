@@ -119,9 +119,9 @@ scoops:
   - name: git-get
     repository:
       owner: grdl
-      name: git-get
+      name: homebrew-tap
       branch: master
-    directory: release/bucket
+    directory: Scoop
     url_template: "https://github.com/grdl/git-get/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     commit_author:
       name: Grzegorz Dlugoszewski

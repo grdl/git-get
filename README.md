@@ -113,7 +113,7 @@ brew install grdl/tap/git-get
 
 **Option 1: Scoop (Recommended)**
 ```powershell
-scoop bucket add grdl https://github.com/grdl/git-get
+scoop bucket add grdl https://github.com/grdl/homebrew-tap
 scoop install git-get
 ```
 *This automatically creates both `git-get.exe` and `git-list.exe` commands.*
