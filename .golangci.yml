@@ -19,6 +19,7 @@ linters:
     - gochecknoglobals    # It's too strict and doesn't distinguish between "bad" globals (mutable shared state) and "good" globals (immutable configuration)
     - godox               # TODO: enable it and handle all the remaning TODOs
     - paralleltest        # Tests are fast already and paralellizing them adds complexity
+    - testpackage         # TODO: renable it and refactor tests into separate packages
     - wsl                 # We use wsl_v5 instead
     - wrapcheck           # Adds too much bloat, many of the errors are contextual enough and don't need wrapping
 
