@@ -14,6 +14,7 @@ linters:
 
   disable:
     - depguard # We don't have any packages we need to block
+    - paralleltest # Tests are fast already and paralellizing them adds complexity
 
   exclusions:
     rules:

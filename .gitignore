@@ -2,3 +2,7 @@ dist/
 __debug_bin
 .claude/
 CLAUDE.md
+
+# Locally built executables
+git-get
+git-get.exe
