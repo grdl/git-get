@@ -73,12 +73,12 @@ func TestUntracked(t *testing.T) {
 		{
 			name:      "single untracked",
 			repoMaker: test.RepoWithUntracked,
-			want:      0,
+			want:      1,
 		},
 		{
 			name:      "single tracked ",
 			repoMaker: test.RepoWithStaged,
-			want:      1,
+			want:      0,
 		},
 		{
 			name:      "committed",
@@ -96,7 +96,7 @@ func TestUntracked(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			r, _ := Open(test.repoMaker(t).Path())
 
-			got, err := r.Uncommitted()
+			got, err := r.Untracked()
 			if err != nil {
 				t.Errorf("got error %q", err)
 			}
