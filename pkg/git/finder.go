@@ -1,26 +1,19 @@
 package git
 
 import (
-	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"syscall"
-
-	"github.com/karrick/godirwalk"
 )
 
 // Max number of concurrently running status loading workers.
 const maxWorkers = 100
 
-// errSkipNode is used as an error indicating that .git directory has been found.
-// It's handled by ErrorsCallback to tell the WalkCallback to skip this dir.
-var errSkipNode = errors.New(".git directory found, skipping this node")
-
-var errDirNoAccess = errors.New("directory can't be accessed")
-var errDirNotExist = errors.New("directory doesn't exist")
+var errDirNoAccess = fmt.Errorf("directory can't be accessed")
+var errDirNotExist = fmt.Errorf("directory doesn't exist")
 
 // Exists returns true if a directory exists. If it doesn't or the directory can't be accessed it returns an error.
 func Exists(path string) (bool, error) {
@@ -30,10 +23,8 @@ func Exists(path string) (bool, error) {
 		return true, nil
 	}
 
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, fmt.Errorf("can't access %s: %w", path, errDirNotExist)
-		}
+	if os.IsNotExist(err) {
+		return false, fmt.Errorf("can't access %s: %w", path, errDirNotExist)
 	}
 
 	// Directory exists but can't be accessed
@@ -60,19 +51,43 @@ func NewRepoFinder(root string) *RepoFinder {
 // Returns error if root repo path can't be found or accessed.
 func (f *RepoFinder) Find() error {
 	if _, err := Exists(f.root); err != nil {
-		return err
+		return fmt.Errorf("failed to access root path: %w", err)
 	}
 
-	walkOpts := &godirwalk.Options{
-		ErrorCallback: f.errorCb,
-		Callback:      f.walkCb,
-		// Use Unsorted to improve speed because repos will be processed by goroutines in a random order anyway.
-		Unsorted: true,
-	}
+	err := filepath.WalkDir(f.root, func(path string, d fs.DirEntry, err error) error {
+		// Handle walk errors
+		if err != nil {
+			// Skip permission errors but continue walking
+			if os.IsPermission(err) {
+				return nil // Skip this path but continue
+			}
+			return fmt.Errorf("failed to walk %s: %w", path, err)
+		}
 
-	err := godirwalk.Walk(f.root, walkOpts)
+		// Only process directories
+		if !d.IsDir() {
+			return nil
+		}
+
+		// Case 1: We're looking at a .git directory itself
+		if d.Name() == dotgit {
+			parentPath := filepath.Dir(path)
+			f.addIfOk(parentPath)
+			return fs.SkipDir // Skip the .git directory contents
+		}
+
+		// Case 2: Check if this directory contains a .git subdirectory
+		gitPath := filepath.Join(path, dotgit)
+		if _, err := os.Stat(gitPath); err == nil {
+			f.addIfOk(path)
+			return fs.SkipDir // Skip this directory's contents since it's a repo
+		}
+
+		return nil // Continue walking
+	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to walk directory tree: %w", err)
 	}
 
 	if len(f.repos) == 0 {
@@ -131,41 +146,12 @@ func statusWorker(fetch bool, reposChan <-chan *Repo, statusChan chan<- *Status)
 	}
 }
 
-func (f *RepoFinder) walkCb(path string, ent *godirwalk.Dirent) error {
-	// Do not traverse .git directories
-	if ent.IsDir() && ent.Name() == dotgit {
-		f.addIfOk(path)
-		return errSkipNode
-	}
-
-	// Do not traverse directories containing a .git directory
-	if ent.IsDir() {
-		_, err := os.Stat(filepath.Join(path, dotgit))
-		if err == nil {
-			f.addIfOk(path)
-			return errSkipNode
-		}
-	}
-	return nil
-}
-
 // addIfOk adds the found repo to the repos slice if it can be opened.
 func (f *RepoFinder) addIfOk(path string) {
-	// TODO: is the case below really correct? What if there's a race condition and the dir becomes unaccessible between finding it and opening?
-
-	// Open() should never return an error here. If a finder found a .git inside this dir, it means it could open and access it.
-	// If the dir was unaccessible, then it would have been skipped by the check in errorCb().
-	repo, err := Open(strings.TrimSuffix(path, dotgit))
+	// Open() should never return an error here since we already verified the .git directory exists.
+	// The path should already be the repository root (not the .git subdirectory).
+	repo, err := Open(path)
 	if err == nil {
 		f.repos = append(f.repos, repo)
 	}
-}
-
-func (f *RepoFinder) errorCb(_ string, err error) godirwalk.ErrorAction {
-	// Skip .git directory and directories we don't have permissions to access
-	// TODO: Will syscall.EACCES work on windows?
-	if errors.Is(err, errSkipNode) || errors.Is(err, syscall.EACCES) {
-		return godirwalk.SkipNode
-	}
-	return godirwalk.Halt
 }

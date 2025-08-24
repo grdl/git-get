@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	pathpkg "path"
+	"path/filepath"
 	"strings"
 )
 
@@ -45,7 +45,7 @@ func (c *Cmd) OnRepo(path string) *Cmd {
 		return c
 	}
 
-	insert := []string{"--work-tree", path, "--git-dir", pathpkg.Join(path, ".git")}
+	insert := []string{"--work-tree", path, "--git-dir", filepath.Join(path, ".git")}
 	// Insert into the args slice after the 1st element (https://github.com/golang/go/wiki/SliceTricks#insert)
 	c.cmd.Args = append(c.cmd.Args[:1], append(insert, c.cmd.Args[1:]...)...)
 
