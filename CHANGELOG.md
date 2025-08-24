@@ -1,8 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.6.0] - 2025-08-24
+
+### Added
+- Added support for [Scoop](https://scoop.sh/) installation for Windows.
+
+### Changed
+- [#5](https://github.com/grdl/git-get/issues/5) git-get is now built as a single binary with `git-list` symlinked. It automatically detect which command is invoked.
+- Updated Go version from `1.16` to `1.24`.
+- Updated all Go dependencies and GitHub Action workflows to recent versions.
+- Removed deprecated Go modules.
+### Fixed
+
+- [#14](https://github.com/grdl/git-get/issues/14) Fixed git-list crashing when running on an empty repository.
+
 
 ## [0.5.0] - 2021-06-03
 ### Changed
@@ -95,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release using [goreleaser](https://github.com/goreleaser/goreleaser).
 
 
+[0.6.0]: https://github.com/grdl/git-get/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/grdl/git-get/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/grdl/git-get/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/grdl/git-get/compare/v0.2.0...v0.3.0

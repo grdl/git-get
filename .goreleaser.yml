@@ -83,6 +83,7 @@ brews:
       owner: grdl
       name: homebrew-tap
       branch: master
+    directory: Formula
     commit_author:
       name: Grzegorz Dlugoszewski
       email: git-get@grdl.dev
