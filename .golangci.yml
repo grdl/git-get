@@ -5,7 +5,6 @@ run:
 
 formatters:
   enable:
-    - gci
     - gofmt
     - goimports
 
@@ -19,6 +18,7 @@ linters:
     - gochecknoglobals    # It's too strict and doesn't distinguish between "bad" globals (mutable shared state) and "good" globals (immutable configuration)
     - godox               # TODO: enable it and handle all the remaning TODOs
     - mnd                 # Impractical. We deal with numbers like file permissions here, it's much clearer to see them explicitly.
+    - noinlineerr         # Impractical. Inline error handling is a common and idiomatic practice
     - paralleltest        # Tests are fast already and paralellizing them adds complexity
     - testpackage         # TODO: renable it and refactor tests into separate packages
     - unparam             # Impractical, it flags functions that are designed to be general-purpose, but happen to only be used with specific values currently
