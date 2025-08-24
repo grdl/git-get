@@ -86,24 +86,29 @@ func (c *gitconfigValid) Get(key string) string {
 }
 
 func testConfigEmpty(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigEmpty{})
 }
 
 func testConfigOnlyInGitconfig(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigValid{})
 }
 
 func testConfigOnlyInEnvVar(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigEmpty{})
 	t.Setenv(envVarName, fromEnv)
 }
 
 func testConfigInGitconfigAndEnvVar(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigValid{})
 	t.Setenv(envVarName, fromEnv)
 }
 
 func testConfigInFlag(t *testing.T) {
+	t.Helper()
 	Init(&gitconfigValid{})
 	t.Setenv(envVarName, fromEnv)
 

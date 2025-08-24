@@ -29,6 +29,8 @@ linters:
       ignore-string-values:
         - "get"
         - "list"
+    lll:
+      line-length: 180
 
   exclusions:
     # Typical presets to exclude: https://golangci-lint.run/docs/linters/false-positives/#exclusion-presets

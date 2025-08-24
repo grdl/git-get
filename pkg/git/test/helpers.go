@@ -14,6 +14,8 @@ import (
 // TempDir creates a temporary directory inside the parent dir.
 // If parent is empty, it will use a system default temp dir (usually /tmp).
 func TempDir(t *testing.T, parent string) string {
+	t.Helper()
+
 	dir, err := ioutil.TempDir(parent, "git-get-repo-")
 	checkFatal(t, err)
 
@@ -87,6 +89,8 @@ func (r *Repo) fetch() {
 }
 
 func checkFatal(t *testing.T, err error) {
+	t.Helper()
+
 	if err != nil {
 		t.Fatalf("failed making test repo: %+v", err)
 	}
@@ -94,6 +98,7 @@ func checkFatal(t *testing.T, err error) {
 
 // removeTestDir removes a test directory.
 func removeTestDir(t *testing.T, dir string) {
+	t.Helper()
 	// Skip cleanup on Windows to avoid file locking issues in CI
 	// The CI runner environment is destroyed after tests anyway
 	if runtime.GOOS == "windows" {

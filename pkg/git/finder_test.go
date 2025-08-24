@@ -72,6 +72,7 @@ func TestExists(t *testing.T) {
 }
 
 func makeSingleRepo(t *testing.T) string {
+	t.Helper()
 	root := test.TempDir(t, "")
 
 	test.RepoEmptyInDir(t, root)
@@ -80,6 +81,7 @@ func makeSingleRepo(t *testing.T) string {
 }
 
 func makeNestedRepo(t *testing.T) string {
+	t.Helper()
 	// a repo with single nested repo should still be counted as one beacause finder doesn't traverse inside nested repos
 	root := test.TempDir(t, "")
 
@@ -90,6 +92,7 @@ func makeNestedRepo(t *testing.T) string {
 }
 
 func makeMultipleNestedRepos(t *testing.T) string {
+	t.Helper()
 	root := test.TempDir(t, "")
 
 	// create two repos inside root - should be counted as 2

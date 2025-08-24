@@ -411,6 +411,7 @@ func TestRemote(t *testing.T) {
 }
 
 func createTestDirTree(t *testing.T) string {
+	t.Helper()
 	root := test.TempDir(t, "")
 	err := os.MkdirAll(filepath.Join(root, "a", "b", "c"), os.ModePerm)
 	err = os.MkdirAll(filepath.Join(root, "a", "x", "y"), os.ModePerm)
