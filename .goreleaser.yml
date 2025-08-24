@@ -110,9 +110,10 @@ nfpms:
     formats:
       - deb
       - rpm
-    scripts:
-      postinstall: "release/scripts/postinstall.sh"
-      preremove: "release/scripts/preremove.sh"
+    contents:
+      - src: /usr/local/bin/git-get
+        dst: /usr/local/bin/git-list
+        type: "symlink"
 
 scoops:
   - name: git-get
