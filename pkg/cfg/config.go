@@ -65,7 +65,7 @@ func Version() string {
 	return fmt.Sprintf("git-get %s", version)
 }
 
-// Gitconfig represents gitconfig file
+// Gitconfig represents gitconfig file.
 type Gitconfig interface {
 	Get(key string) string
 }

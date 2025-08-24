@@ -203,7 +203,7 @@ func indentation(node *Node) string {
 	return indent.String()
 }
 
-// isYoungest checks if the node is the last one in the slice of children
+// isYoungest checks if the node is the last one in the slice of children.
 func (n *Node) isYoungest() bool {
 	if n.parent == nil {
 		return true

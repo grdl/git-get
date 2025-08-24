@@ -48,7 +48,7 @@ func parseDumpFile(path string) ([]parsedLine, error) {
 }
 
 // parseLine splits a dump file line into space-separated segments.
-// First part is the URL to clone. Second, optional, is the branch (or tag) to checkout after cloning
+// First part is the URL to clone. Second, optional, is the branch (or tag) to checkout after cloning.
 func parseLine(line string) (parsedLine, error) {
 	var parsed parsedLine
 

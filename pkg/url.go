@@ -89,7 +89,7 @@ func normalizeURL(url *urlpkg.URL, defaultHost string, defaultScheme string) {
 // Eg, ssh://git@github.com:22/~user/repo.git => github.com/user/repo
 //
 // If skipHost is true, it removes the host part from the path.
-// Eg, ssh://git@github.com:22/~user/repo.git => user/repo
+// Eg, ssh://git@github.com:22/~user/repo.git => user/repo.
 func URLToPath(url urlpkg.URL, skipHost bool) string {
 	// Remove port numbers from host.
 	url.Host = strings.Split(url.Host, ":")[0]

@@ -172,7 +172,7 @@ func RepoWithBranchAheadAndBehind(t *testing.T) *Repo {
 	return r
 }
 
-// RepoWithEmptyConfig creates a git repo with empty .git/config file
+// RepoWithEmptyConfig creates a git repo with empty .git/config file.
 func RepoWithEmptyConfig(t *testing.T) *Repo {
 	r := RepoEmpty(t)
 	r.writeFile(filepath.Join(".git", "config"), "")
@@ -180,7 +180,7 @@ func RepoWithEmptyConfig(t *testing.T) *Repo {
 	return r
 }
 
-// RepoWithValidConfig creates a git repo with valid content in .git/config file
+// RepoWithValidConfig creates a git repo with valid content in .git/config file.
 func RepoWithValidConfig(t *testing.T) *Repo {
 	r := RepoEmpty(t)
 

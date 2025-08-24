@@ -65,7 +65,7 @@ func Clone(opts *CloneOpts) (*Repo, error) {
 	return Repo, err
 }
 
-// Fetch preforms a git fetch on all remotes
+// Fetch preforms a git fetch on all remotes.
 func (r *Repo) Fetch() error {
 	err := run.Git("fetch", "--all").OnRepo(r.path).AndShutUp()
 	return err

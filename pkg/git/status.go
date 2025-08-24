@@ -160,22 +160,22 @@ func (s *Status) Branches() []string {
 	return branches
 }
 
-// BranchStatus returns status of a given branch
+// BranchStatus returns status of a given branch.
 func (s *Status) BranchStatus(branch string) string {
 	return s.branches[branch]
 }
 
-// WorkTreeStatus returns status of a worktree
+// WorkTreeStatus returns status of a worktree.
 func (s *Status) WorkTreeStatus() string {
 	return s.worktree
 }
 
-// Remote returns URL to remote repository
+// Remote returns URL to remote repository.
 func (s *Status) Remote() string {
 	return s.remote
 }
 
-// Errors is a slice of errors that occurred when loading repo status
+// Errors is a slice of errors that occurred when loading repo status.
 func (s *Status) Errors() []string {
 	return s.errors
 }

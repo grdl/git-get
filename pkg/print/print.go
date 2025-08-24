@@ -10,7 +10,7 @@ const (
 	head = "HEAD"
 )
 
-// Printable represents a repository which status can be printed
+// Printable represents a repository which status can be printed.
 type Printable interface {
 	Path() string
 	Current() string

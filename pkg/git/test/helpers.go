@@ -92,7 +92,7 @@ func checkFatal(t *testing.T, err error) {
 	}
 }
 
-// removeTestDir removes a test directory
+// removeTestDir removes a test directory.
 func removeTestDir(t *testing.T, dir string) {
 	// Skip cleanup on Windows to avoid file locking issues in CI
 	// The CI runner environment is destroyed after tests anyway
