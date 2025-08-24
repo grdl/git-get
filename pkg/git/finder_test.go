@@ -1,7 +1,6 @@
 package git
 
 import (
-	"errors"
 	"git-get/pkg/git/test"
 	"os"
 	"testing"
@@ -67,7 +66,7 @@ func TestExists(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := Exists(test.path)
 
-			assert.True(t, errors.Is(err, test.want))
+			assert.ErrorIs(t, err, test.want)
 		})
 	}
 }

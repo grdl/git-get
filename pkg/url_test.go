@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Following URLs are considered valid according to https://git-scm.com/docs/git-clone#_git_urls:
@@ -53,7 +54,7 @@ func TestURLParse(t *testing.T) {
 
 	for _, test := range tests {
 		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		got := URLToPath(*url, false)
 		assert.Equal(t, test.want, got)
@@ -93,7 +94,7 @@ func TestURLParseSkipHost(t *testing.T) {
 
 	for _, test := range tests {
 		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		got := URLToPath(*url, true)
 		assert.Equal(t, test.want, got)
@@ -119,12 +120,12 @@ func TestDefaultScheme(t *testing.T) {
 
 	for _, test := range tests {
 		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], test.scheme)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		want, err := url.Parse(test.want)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.Equal(t, url, want)
+		assert.Equal(t, want, url)
 	}
 }
 
