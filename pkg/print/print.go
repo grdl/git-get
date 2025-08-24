@@ -1,3 +1,4 @@
+// Package print implements different outputs for git-list command
 package print
 
 import (

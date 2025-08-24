@@ -26,6 +26,7 @@ linters:
         linters:
           - dupl          # We don't mind duplicated code in tests. It helps with clarity
           - varnamelen    # We don't mind short var names in tests.
+          - revive        # Complains too much about unused-params, but they help with tests readibility
       - path: test/
         linters:
           - dupl

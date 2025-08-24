@@ -45,7 +45,7 @@ func newGetCommand() *cobra.Command {
 	return cmd
 }
 
-func runGetCommand(cmd *cobra.Command, args []string) error {
+func runGetCommand(_ *cobra.Command, args []string) error {
 	var url string
 	if len(args) > 0 {
 		url = args[0]

@@ -35,7 +35,7 @@ func newListCommand() *cobra.Command {
 	return cmd
 }
 
-func runListCommand(cmd *cobra.Command, args []string) error {
+func runListCommand(_ *cobra.Command, _ []string) error {
 	cfg.Expand(cfg.KeyReposRoot)
 
 	config := &pkg.ListCfg{

@@ -1,3 +1,4 @@
+// Package pkg implements the primary funcionality of the commands: list and get
 package pkg
 
 import (

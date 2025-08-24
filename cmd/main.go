@@ -1,3 +1,7 @@
+// This program behaves as a git subcommand (see https://git.github.io/htmldocs/howto/new-command.html)
+// When added to PATH, git recognizes it as its subcommand and it can be invoked as "git get..." or "git list..."
+// It can also be invoked as a regular binary with subcommands: "git-get get..." or "git-get list"
+// The following flow detects the invokation method and runs the appropriate command.
 package main
 
 import (
@@ -5,11 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 )
-
-// This program behaves as a git subcommand (see https://git.github.io/htmldocs/howto/new-command.html)
-// When added to PATH, git recognizes it as its subcommand and it can be invoked as "git get..." or "git list..."
-// It can also be invoked as a regular binary with subcommands: "git-get get..." or "git-get list"
-// The following flow detects the invokation method and runs the appropriate command.
 
 func main() {
 	command, args := determineCommand()

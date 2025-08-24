@@ -1,3 +1,4 @@
+// Package test contains helper utilities and functions creating pre-configured test repositories for testing purposes
 package test
 
 import (
