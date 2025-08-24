@@ -131,11 +131,11 @@ func TestDefaultScheme(t *testing.T) {
 func TestInvalidURLParse(t *testing.T) {
 	invalidURLs := []string{
 		"",
-		//TODO: This Path is technically a correct scp-like syntax. Not sure how to handle it
+		// TODO: This Path is technically a correct scp-like syntax. Not sure how to handle it
 		"github.com:grdl/git-git.get.git",
 
-		//TODO: Is this a valid git Path?
-		//"git@github.com:1234:grdl/git-get.git",
+		// TODO: Is this a valid git Path?
+		// "git@github.com:1234:grdl/git-get.git",
 	}
 
 	for _, test := range invalidURLs {

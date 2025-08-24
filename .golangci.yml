@@ -22,6 +22,12 @@ linters:
     - wsl                 # We use wsl_v5 instead
     - wrapcheck           # Adds too much bloat, many of the errors are contextual enough and don't need wrapping
 
+  settings:
+    goconst:
+      ignore-string-values:
+        - "get"
+        - "list"
+
   exclusions:
     # Typical presets to exclude: https://golangci-lint.run/docs/linters/false-positives/#exclusion-presets
     presets:
@@ -36,6 +42,7 @@ linters:
           - dupl          # We don't mind duplicated code in tests. It helps with clarity
           - varnamelen    # We don't mind short var names in tests.
           - revive        # Complains too much about unused-params, but they help with tests readibility
+          - funlen        # We don't mind long functions in tests
       - path: test/
         linters:
           - dupl
