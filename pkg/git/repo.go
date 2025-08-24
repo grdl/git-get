@@ -153,7 +153,7 @@ func (r *Repo) Branches() ([]string, error) {
 // Upstream returns the name of an upstream branch if a given branch is tracking one.
 // Otherwise it returns an empty string.
 func (r *Repo) Upstream(branch string) (string, error) {
-	out, err := run.Git("rev-parse", "--abbrev-ref", "--symbolic-full-name", fmt.Sprintf("%s@{upstream}", branch)).OnRepo(r.path).AndCaptureLine()
+	out, err := run.Git("rev-parse", "--abbrev-ref", "--symbolic-full-name", branch+"@{upstream}").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
 		// TODO: no upstream will also throw an error.
 		// lint:ignore nilerr fix when working on TODO

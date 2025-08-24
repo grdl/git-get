@@ -1,11 +1,11 @@
 package git
 
 import (
-	"fmt"
 	"git-get/pkg/git/test"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -339,7 +339,7 @@ func TestCleanupFailedClone(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			root := createTestDirTree(t)
 
 			path := filepath.Join(root, test.path)

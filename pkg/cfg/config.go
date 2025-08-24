@@ -62,7 +62,7 @@ func Version() string {
 		return fmt.Sprintf("git-get %s (%s)", version, commit[:7])
 	}
 
-	return fmt.Sprintf("git-get %s", version)
+	return "git-get " + version
 }
 
 // Gitconfig represents gitconfig file.

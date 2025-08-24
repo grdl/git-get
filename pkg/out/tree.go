@@ -20,7 +20,7 @@ func NewTreePrinter() *TreePrinter {
 // Print generates a tree view of repos and their statuses.
 func (p *TreePrinter) Print(root string, repos []Printable) string {
 	if len(repos) == 0 {
-		return fmt.Sprintf("There are no git repos under %s", root)
+		return "There are no git repos under " + root
 	}
 
 	tree := buildTree(root, repos)
