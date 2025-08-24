@@ -75,25 +75,26 @@ release:
     owner: grdl
     name: git-get
 
-homebrew_casks:
+brews:
   - name: git-get
     ids:
       - macos-archive
     repository:
       owner: grdl
       name: homebrew-tap
-      branch: main
+      branch: master
     commit_author:
       name: Grzegorz Dlugoszewski
       email: git-get@grdl.dev
     homepage: https://github.com/grdl/git-get/
     description: Better way to clone, organize and manage multiple git repositories
-    url:
-      verified: github.com/grdl/git-get
-    hooks:
-      post:
-        install: |
-          system_command "/bin/ln", args: ["-sf", "#{staged_path}/git-get", "#{HOMEBREW_PREFIX}/bin/git-list"]
+    license: MIT
+    install: |
+      bin.install "git-get"
+      bin.install_symlink "git-get" => "git-list"
+    test: |
+      system "#{bin}/git-get", "--version"
+      system "#{bin}/git-list", "--version"
 
 nfpms:
   - id: packages
@@ -109,8 +110,8 @@ nfpms:
       - deb
       - rpm
     scripts:
-      postinstall: "scripts/postinstall.sh"
-      preremove: "scripts/preremove.sh"
+      postinstall: "release/scripts/postinstall.sh"
+      preremove: "release/scripts/preremove.sh"
 
 scoops:
   - name: git-get
@@ -118,7 +119,7 @@ scoops:
       owner: grdl
       name: git-get
       branch: master
-    directory: bucket
+    directory: release/bucket
     url_template: "https://github.com/grdl/git-get/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     commit_author:
       name: Grzegorz Dlugoszewski
