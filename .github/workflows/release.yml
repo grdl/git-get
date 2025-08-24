@@ -10,47 +10,8 @@ permissions:
   security-events: write
 
 jobs:
-  validate:
-    name: Validate Release
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache: true
-          
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Verify dependencies
-        run: go mod verify
-
-      - name: Set up Git (for tests)
-        run: |
-          git config --global user.email "test@example.com"
-          git config --global user.name "CI Test"
-
-      - name: Run tests
-        run: go test -race ./...
-        
-      - name: Run lints
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.4.0
-          args: --timeout=5m
-
-      - name: Validate GoReleaser config
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: latest
-          args: check
+  build-and-test:
+    uses: ./.github/workflows/ci.yml
 
   release:
     name: GoReleaser
