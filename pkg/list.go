@@ -1,12 +1,15 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 	"git-get/pkg/cfg"
 	"git-get/pkg/git"
 	"git-get/pkg/print"
 	"strings"
 )
+
+var ErrInvalidOutput = errors.New("invalid output format")
 
 // ListCfg provides configuration for the List command.
 type ListCfg struct {
@@ -37,7 +40,7 @@ func List(conf *ListCfg) error {
 	case cfg.OutDump:
 		fmt.Print(print.NewDumpPrinter().Print(printables))
 	default:
-		return fmt.Errorf("invalid --out flag; allowed values: [%s]", strings.Join(cfg.AllowedOut, ", "))
+		return fmt.Errorf("%w, allowed values: [%s]", ErrInvalidOutput, strings.Join(cfg.AllowedOut, ", "))
 	}
 
 	return nil

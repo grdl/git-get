@@ -1,6 +1,7 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,8 +13,11 @@ import (
 // Max number of concurrently running status loading workers.
 const maxWorkers = 100
 
-var errDirNoAccess = fmt.Errorf("directory can't be accessed")
-var errDirNotExist = fmt.Errorf("directory doesn't exist")
+var (
+	ErrDirNoAccess  = errors.New("directory can't be accessed")
+	ErrDirNotExist  = errors.New("directory doesn't exist")
+	ErrNoReposFound = errors.New("no git repositories found")
+)
 
 // Exists returns true if a directory exists. If it doesn't or the directory can't be accessed it returns an error.
 func Exists(path string) (bool, error) {
@@ -23,11 +27,11 @@ func Exists(path string) (bool, error) {
 	}
 
 	if os.IsNotExist(err) {
-		return false, fmt.Errorf("can't access %s: %w", path, errDirNotExist)
+		return false, fmt.Errorf("can't access %s: %w", path, ErrDirNotExist)
 	}
 
 	// Directory exists but can't be accessed
-	return true, fmt.Errorf("can't access %s: %w", path, errDirNoAccess)
+	return true, fmt.Errorf("can't access %s: %w", path, ErrDirNoAccess)
 }
 
 // RepoFinder finds git repositories inside a given path and loads their status.
@@ -91,7 +95,7 @@ func (f *RepoFinder) Find() error {
 	}
 
 	if len(f.repos) == 0 {
-		return fmt.Errorf("no git repos found in root path %s", f.root)
+		return fmt.Errorf("%w in root path %s", ErrNoReposFound, f.root)
 	}
 
 	return nil

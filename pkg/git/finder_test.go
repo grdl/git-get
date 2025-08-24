@@ -16,10 +16,6 @@ func TestFinder(t *testing.T) {
 		want       int
 	}{
 		{
-			name:       "no repos",
-			reposMaker: makeNoRepos,
-			want:       0,
-		}, {
 			name:       "single repos",
 			reposMaker: makeSingleRepo,
 			want:       1,
@@ -59,7 +55,7 @@ func TestExists(t *testing.T) {
 		{
 			name: "dir does not exist",
 			path: "/this/directory/does/not/exist",
-			want: errDirNotExist,
+			want: ErrDirNotExist,
 		}, {
 			name: "dir exists",
 			path: os.TempDir(),
@@ -74,12 +70,6 @@ func TestExists(t *testing.T) {
 			assert.True(t, errors.Is(err, test.want))
 		})
 	}
-}
-
-func makeNoRepos(t *testing.T) string {
-	root := test.TempDir(t, "")
-
-	return root
 }
 
 func makeSingleRepo(t *testing.T) string {

@@ -1,10 +1,13 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 	"git-get/pkg/git"
 	"path/filepath"
 )
+
+var ErrMissingRepoArg = errors.New("missing <REPO> argument or --dump flag")
 
 // GetCfg provides configuration for the Get command.
 type GetCfg struct {
@@ -20,7 +23,7 @@ type GetCfg struct {
 // Get executes the "git get" command.
 func Get(conf *GetCfg) error {
 	if conf.URL == "" && conf.Dump == "" {
-		return fmt.Errorf("missing <REPO> argument or --dump flag")
+		return ErrMissingRepoArg
 	}
 
 	if conf.URL != "" {
