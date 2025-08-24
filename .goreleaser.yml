@@ -130,5 +130,9 @@ scoops:
     description: "Better way to clone, organize and manage multiple git repositories"
     license: MIT
     post_install: [
-      "New-Item -ItemType HardLink -Path \"$dir\\git-list.exe\" -Target \"$dir\\git-get.exe\" -Force | Out-Null"
+      "New-Item -ItemType HardLink -Path \"$dir\\git-list.exe\" -Target \"$dir\\git-get.exe\" -Force | Out-Null",
+      "scoop shim add git-list \"$dir\\git-list.exe\""
+    ],
+    post_uninstall: [
+      "scoop shim rm git-list"
     ]
