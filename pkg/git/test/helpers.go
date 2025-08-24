@@ -31,6 +31,17 @@ func TempDir(t *testing.T, parent string) string {
 func (r *Repo) init() {
 	err := run.Git("init", "--quiet", "--initial-branch=main", r.path).AndShutUp()
 	checkFatal(r.t, err)
+
+	r.setupGitConfig()
+}
+
+// setupGitConfig sets up local git config for test repository only.
+func (r *Repo) setupGitConfig() {
+	err := run.Git("config", "user.name", "Test User").OnRepo(r.path).AndShutUp()
+	checkFatal(r.t, err)
+
+	err = run.Git("config", "user.email", "test@example.com").OnRepo(r.path).AndShutUp()
+	checkFatal(r.t, err)
 }
 
 // writeFile writes the content string into a file. If file doesn't exists, it will create it.
@@ -50,7 +61,7 @@ func (r *Repo) stageFile(path string) {
 }
 
 func (r *Repo) commit(msg string) {
-	err := run.Git("commit", "-m", fmt.Sprintf("%q", msg), "--author=\"user <user@example.com>\"").OnRepo(r.path).AndShutUp()
+	err := run.Git("commit", "-m", fmt.Sprintf("%q", msg)).OnRepo(r.path).AndShutUp()
 	checkFatal(r.t, err)
 }
 
@@ -80,6 +91,9 @@ func (r *Repo) clone() *Repo {
 		path: dir,
 		t:    r.t,
 	}
+
+	// Set up git config in the cloned repository
+	clone.setupGitConfig()
 
 	return clone
 }
