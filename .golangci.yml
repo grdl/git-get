@@ -12,6 +12,9 @@ formatters:
 linters:
   default: all
 
+  disable:
+    - depguard # We don't have any packages we need to block
+
   exclusions:
     rules:
       - path: _test.go
