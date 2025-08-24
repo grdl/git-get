@@ -21,6 +21,13 @@ linters:
     - wrapcheck           # Adds too much bloat, many of the errors are contextual enough and don't need wrapping
 
   exclusions:
+    # Typical presets to exclude: https://golangci-lint.run/docs/linters/false-positives/#exclusion-presets
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+
     rules:
       - path: _test.go
         linters:

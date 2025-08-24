@@ -39,7 +39,11 @@ func TestFinder(t *testing.T) {
 			root := test.reposMaker(t)
 
 			finder := NewRepoFinder(root)
-			finder.Find()
+
+			err := finder.Find()
+			if err != nil {
+				t.Fatalf("finder.Find() failed: %v", err)
+			}
 
 			assert.Len(t, finder.repos, test.want)
 		})

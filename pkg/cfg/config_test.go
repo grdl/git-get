@@ -95,22 +95,28 @@ func testConfigOnlyInGitconfig(t *testing.T) {
 
 func testConfigOnlyInEnvVar(t *testing.T) {
 	Init(&gitconfigEmpty{})
-	os.Setenv(envVarName, fromEnv)
+	t.Setenv(envVarName, fromEnv)
 }
 
 func testConfigInGitconfigAndEnvVar(t *testing.T) {
 	Init(&gitconfigValid{})
-	os.Setenv(envVarName, fromEnv)
+	t.Setenv(envVarName, fromEnv)
 }
 
 func testConfigInFlag(t *testing.T) {
 	Init(&gitconfigValid{})
-	os.Setenv(envVarName, fromEnv)
+	t.Setenv(envVarName, fromEnv)
 
 	cmd := cobra.Command{}
 	cmd.PersistentFlags().String(KeyDefaultHost, Defaults[KeyDefaultHost], "")
-	viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost))
+
+	if err := viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost)); err != nil {
+		t.Fatalf("failed to bind flag: %v", err)
+	}
 
 	cmd.SetArgs([]string{"--" + KeyDefaultHost, fromFlag})
-	cmd.Execute()
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("failed to execute command: %v", err)
+	}
 }

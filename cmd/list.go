@@ -28,9 +28,9 @@ func newListCommand() *cobra.Command {
 	cmd.PersistentFlags().BoolP("help", "h", false, "Print this help and exit.")
 	cmd.PersistentFlags().BoolP("version", "v", false, "Print version and exit.")
 
-	viper.BindPFlag(cfg.KeyFetch, cmd.PersistentFlags().Lookup(cfg.KeyFetch))
-	viper.BindPFlag(cfg.KeyOutput, cmd.PersistentFlags().Lookup(cfg.KeyOutput))
-	viper.BindPFlag(cfg.KeyReposRoot, cmd.PersistentFlags().Lookup(cfg.KeyReposRoot))
+	if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+		panic(fmt.Sprintf("failed to bind flags: %v", err))
+	}
 
 	return cmd
 }
