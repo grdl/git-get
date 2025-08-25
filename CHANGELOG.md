@@ -4,8 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.0] - 2025-08-24
+## [0.6.1] - 2025-08-25
+### Changed
+- Simplified CI/CD config
+- Simplified Go linters config and fixed linting errors
+- Moved Scoop manifests to grdl/homebrew-tap repository 
 
+### Fixed
+- [#30](https://github.com/grdl/git-get/issues/30) Fixed missing git-list shim when installed with Scoop on Windows
+- Fixed `Error: EOF` when running git-list on Windows
+- Fixed unit tests failing on Windows
+
+## [0.6.0] - 2025-08-24
 ### Added
 - Added support for [Scoop](https://scoop.sh/) installation for Windows.
 
@@ -14,8 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Go version from `1.16` to `1.24`.
 - Updated all Go dependencies and GitHub Action workflows to recent versions.
 - Removed deprecated Go modules.
-### Fixed
 
+### Fixed
 - [#14](https://github.com/grdl/git-get/issues/14) Fixed git-list crashing when running on an empty repository.
 
 
@@ -110,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release using [goreleaser](https://github.com/goreleaser/goreleaser).
 
 
+[0.6.1]: https://github.com/grdl/git-get/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/grdl/git-get/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/grdl/git-get/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/grdl/git-get/compare/v0.3.0...v0.4.0
