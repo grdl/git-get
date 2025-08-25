@@ -126,7 +126,12 @@ scoops:
     post_install: [
       "New-Item -ItemType HardLink -Path \"$dir\\git-list.exe\" -Target \"$dir\\git-get.exe\" -Force | Out-Null",
       "scoop shim add git-list \"$dir\\git-list.exe\""
-    ],
-    post_uninstall: [
-      "scoop shim rm git-list"
     ]
+
+    # goreleaser doesn't support pre/post uninstall scripts yet
+    # https://goreleaser.com/customization/scoop/
+    # https://github.com/ScoopInstaller/Scoop/wiki/Pre-Post-(un)install-scripts
+    #
+    # post_uninstall: [
+    #   "scoop shim rm git-list"
+    # ]
