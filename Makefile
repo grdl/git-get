@@ -1,4 +1,4 @@
-.PHONY: build test fmt lint clean all help
+.PHONY: build test fmt lint man clean all help
 
 # Default target
 all: fmt lint build test
@@ -23,10 +23,19 @@ lint:
 	@echo "Running linter..."
 	golangci-lint run --fix
 
-# Clean built binaries
+# Generate man page from README
+man:
+	@echo "Generating man page from README..."
+	@mkdir -p docs
+	go tool go-md2man -in README.md -out docs/git-get.1
+	@echo "Man page generated: docs/git-get.1"
+	@echo "To install: sudo cp docs/git-get.1 /usr/share/man/man1/"
+
+# Clean built binaries and generated files
 clean:
 	@echo "Cleaning..."
 	rm -f git-get
+	rm -f docs/git-get.1 docs/git-get.1.gz
 
 # Show help
 help:
@@ -35,6 +44,7 @@ help:
 	@echo "  test   - Run tests with race detection"
 	@echo "  fmt    - Format Go code"
 	@echo "  lint   - Run golangci-lint with auto-fix"
-	@echo "  clean  - Remove built binaries"
+	@echo "  man    - Generate man page from README"
+	@echo "  clean  - Remove built binaries and generated files"
 	@echo "  all    - Run fmt, lint, build, and test (default)"
 	@echo "  help   - Show this help message"
