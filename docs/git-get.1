@@ -1,0 +1,519 @@
+.nh
+.TH git-get
+
+\[la]https://github.com/grdl/git\-get/actions\[ra]
+
+\[la]https://goreportcard.com/report/github.com/grdl/git\-get\[ra]
+
+\[la]https://github.com/grdl/git\-get/releases/latest\[ra]
+
+\[la]https://github.com/grdl/git\-get/blob/main/go.mod\[ra]
+
+\[la]LICENSE.md\[ra]
+
+.PP
+A tool to clone, organize, and manage multiple Git repositories with an automatic directory structure based on repository URLs.
+
+.SH Table of Contents
+.IP \(bu 2
+Overview
+\[la]#overview\[ra]
+.IP \(bu 2
+Features
+\[la]#features\[ra]
+.IP \(bu 2
+Prerequisites
+\[la]#prerequisites\[ra]
+.IP \(bu 2
+Installation
+\[la]#installation\[ra]
+.RS
+.IP \(bu 2
+macOS
+\[la]#macos\[ra]
+.IP \(bu 2
+Linux
+\[la]#linux\[ra]
+.IP \(bu 2
+Windows
+\[la]#windows\[ra]
+.IP \(bu 2
+Building from Source
+\[la]#building\-from\-source\[ra]
+.RE
+.IP \(bu 2
+Quick Start
+\[la]#quick\-start\[ra]
+.IP \(bu 2
+Usage
+\[la]#usage\[ra]
+.RS
+.IP \(bu 2
+git get
+\[la]#git\-get\[ra]
+.IP \(bu 2
+git list
+\[la]#git\-list\[ra]
+.IP \(bu 2
+Batch Operations
+\[la]#batch\-operations\[ra]
+.RE
+.IP \(bu 2
+Configuration
+\[la]#configuration\[ra]
+.RS
+.IP \(bu 2
+Environment Variables
+\[la]#environment\-variables\[ra]
+.IP \(bu 2
+Git Configuration
+\[la]#git\-configuration\[ra]
+.RE
+.IP \(bu 2
+Examples
+\[la]#examples\[ra]
+.IP \(bu 2
+Testing
+\[la]#testing\[ra]
+.IP \(bu 2
+Troubleshooting
+\[la]#troubleshooting\[ra]
+.IP \(bu 2
+Contributing
+\[la]#contributing\[ra]
+.IP \(bu 2
+License
+\[la]#license\[ra]
+.IP \(bu 2
+Acknowledgments
+\[la]#acknowledgments\[ra]
+
+.SH Overview
+\fBgit-get\fP solves the problem of manually organizing multiple Git repositories. Instead of scattered clones in random directories, it creates a clean, predictable directory structure based on repository URLs, similar to Go's \fBgo get\fR command.
+
+.PP
+It provides two commands through a single binary:
+- \fB\fBgit get\fR\fP - Clones repositories into an organized directory tree
+.br
+- \fB\fBgit list\fR\fP - Shows the status of all your repositories at a glance
+
+.PP
+\fINote: Both commands are provided by a single \fBgit-get\fR binary that automatically detects how it was invoked (either directly or via symlink).\fP
+
+.PP
+
+
+.SH Features
+.IP \(bu 2
+\fBAutomatic organization\fP - Creates directory structure based on repository URL
+.IP \(bu 2
+\fBGit integration\fP - Seamlessly integrates as native Git commands
+.IP \(bu 2
+\fBMulti-platform\fP - Works on macOS, Linux, and Windows
+.IP \(bu 2
+\fBRepository discovery\fP - Lists all repositories with their status
+.IP \(bu 2
+\fBFlexible configuration\fP - Supports environment variables and Git config
+.IP \(bu 2
+\fBMultiple output formats\fP - Tree, flat, and dump formats for different use cases
+.IP \(bu 2
+\fBDotfiles friendly\fP - Clone multiple repositories from a list kept in dotfiles
+
+.SH Prerequisites
+.IP \(bu 2
+Git 2.0+ installed and configured
+.IP \(bu 2
+Go 1.24+ (only if building from source)
+
+.SH Installation
+.SS macOS
+\fBOption 1: Homebrew (Recommended)\fP
+
+.EX
+brew install grdl/tap/git-get
+.EE
+
+.PP
+\fIThis automatically installs both \fBgit-get\fR and \fBgit-list\fR commands.\fP
+
+.PP
+\fBOption 2: Manual Installation\fP
+1. Download the latest macOS \fB\&.tar.gz\fR file from releases
+\[la]https://github.com/grdl/git\-get/releases/latest\[ra]
+2. Extract and install:
+
+.EX
+   tar -xzf git-get_*_darwin_*.tar.gz
+   sudo mv git-get /usr/local/bin/
+   sudo ln -sf /usr/local/bin/git-get /usr/local/bin/git-list
+.EE
+
+.SS Linux
+\fBOption 1: Package Managers (Recommended)\fP
+
+.EX
+# Ubuntu/Debian - Download and install .deb package
+wget https://github.com/grdl/git-get/releases/latest/download/git-get_*_linux_amd64.deb
+sudo dpkg -i git-get_*_linux_amd64.deb
+
+# CentOS/RHEL/Fedora - Download and install .rpm package
+wget https://github.com/grdl/git-get/releases/latest/download/git-get_*_linux_amd64.rpm
+sudo rpm -i git-get_*_linux_amd64.rpm
+.EE
+
+.PP
+\fIPackage installation automatically creates the \fBgit-list\fR symlink.\fP
+
+.PP
+\fBOption 2: Manual Installation\fP
+
+.EX
+# Download and extract
+wget https://github.com/grdl/git-get/releases/latest/download/git-get_*_linux_amd64.tar.gz
+tar -xzf git-get_*_linux_amd64.tar.gz
+
+# Install binary and create symlink
+sudo mv git-get /usr/local/bin/
+sudo ln -sf /usr/local/bin/git-get /usr/local/bin/git-list
+.EE
+
+.PP
+\fBOption 3: Homebrew on Linux\fP
+
+.EX
+brew install grdl/tap/git-get
+.EE
+
+.SS Windows
+\fBOption 1: Scoop (Recommended)\fP
+
+.EX
+scoop bucket add grdl https://github.com/grdl/homebrew-tap
+scoop install git-get
+.EE
+
+.PP
+\fIThis automatically creates both \fBgit-get.exe\fR and \fBgit-list.exe\fR commands.\fP
+
+.PP
+\fBOption 2: Manual Installation\fP
+1. Download the latest Windows \fB\&.zip\fR file from releases
+\[la]https://github.com/grdl/git\-get/releases/latest\[ra]
+2. Extract \fBgit-get.exe\fR to a directory in your PATH
+3. Create a copy or hard link for \fBgit-list\fR:
+
+.EX
+   # In the same directory as git-get.exe
+   Copy-Item git-get.exe git-list.exe
+   # OR create a hard link (requires admin privileges)
+   New-Item -ItemType HardLink -Path "git-list.exe" -Target "git-get.exe"
+.EE
+
+.SS Building from Source
+.EX
+git clone https://github.com/grdl/git-get.git
+cd git-get
+go build -o git-get ./cmd/
+
+# Create symlink for git-list
+ln -sf git-get git-list  # Unix/Linux/macOS
+# OR
+copy git-get.exe git-list.exe  # Windows
+.EE
+
+.PP
+\fBNote:\fP The single binary (\fBgit-get\fR) automatically detects how it's invoked and behaves as either \fBgit-get\fR or \fBgit-list\fR accordingly.
+
+.SH Quick Start
+.IP "  1." 5
+\fBInstall git-get\fP using one of the methods above
+.IP "  2." 5
+\fBClone your first repository\fP:
+\fBbash
+git get github.com/grdl/git-get
+\fR
+3. \fBList your repositories\fP:
+\fBbash
+git list
+\fR
+
+.PP
+That's it! Your repository is now organized in \fB~/repositories/github.com/grdl/git-get/\fR\&.
+
+.SH Usage
+.SS git get
+Clone repositories with automatic directory structure:
+
+.EX
+git get <REPOSITORY> [flags]
+.EE
+
+.PP
+\fBFlags:\fP
+- \fB-b, --branch <name>\fR - Branch or tag to checkout after cloning
+- \fB-d, --dump <file>\fR - Clone multiple repositories from a dump file
+- \fB-t, --host <host>\fR - Default host for short repository names (default: github.com)
+- \fB-r, --root <path>\fR - Root directory for repositories (default: ~/repositories)
+- \fB-c, --scheme <scheme>\fR - Default scheme for URLs (default: ssh)
+- \fB-s, --skip-host\fR - Skip creating host directory
+- \fB-h, --help\fR - Show help
+- \fB-v, --version\fR - Show version
+
+.PP
+\fBRepository formats:\fP
+- Full URL: \fBhttps://github.com/user/repo.git\fR
+- SSH URL: \fBgit@github.com:user/repo.git\fR
+- Short format: \fBuser/repo\fR (uses default host)
+- GitHub format: \fBgithub.com/user/repo\fR
+
+.SS git list
+Display repository status with multiple output formats:
+
+.EX
+git list [flags]
+.EE
+
+.PP
+\fBFlags:\fP
+- \fB-f, --fetch\fR - Fetch from remotes before listing
+- \fB-o, --out <format>\fR - Output format: tree, flat, or dump (default: tree)
+- \fB-r, --root <path>\fR - Root directory to scan (default: ~/repositories)
+- \fB-h, --help\fR - Show help
+- \fB-v, --version\fR - Show version
+
+.PP
+\fBOutput formats:\fP
+
+.PP
+\fBTree format (default):\fP
+
+
+.PP
+\fBFlat format:\fP
+
+
+.PP
+\fBDump format:\fP
+
+
+.SS Batch Operations
+Generate dump file from existing repositories:
+
+.EX
+git list --out dump > my-repos.txt
+.EE
+
+.PP
+Clone all repositories from the dump file:
+
+.EX
+git get --dump repos.txt
+.EE
+
+.SH Configuration
+All configuration options that can be set via command-line flags, can also be set by environment variables, or Git configuration files.
+
+.PP
+\fBPriority order\fP (highest to lowest):
+1. Command-line flags
+2. Environment variables
+3. Git configuration file
+4. Default values
+
+.SS Environment Variables
+Use the \fBGITGET_\fR prefix with uppercase flag names:
+
+.EX
+export GITGET_ROOT=/workspace/repositories
+export GITGET_HOST=gitlab.com
+export GITGET_SKIP_HOST=true
+.EE
+
+.SS Git Configuration
+Add a \fB[gitget]\fR section to your global Git configuration:
+
+.EX
+git config --global gitget.root /workspace/repositories
+git config --global gitget.host gitlab.com
+git config --global gitget.skip-host true
+.EE
+
+.PP
+Or edit \fB~/.gitconfig\fR directly:
+
+.EX
+[gitget]
+    root = /workspace/repositories
+    host = gitlab.com
+    skip-host = true
+.EE
+
+.SH Examples
+\fBClone a repository:\fP
+
+.EX
+git get facebook/react
+# Clones to: ~/repositories/github.com/facebook/react/
+.EE
+
+.PP
+\fBClone to custom location:\fP
+
+.EX
+git get --root /workspace golang/go
+# Clones to: /workspace/github.com/golang/go/
+.EE
+
+.PP
+\fBClone specific branch:\fP
+
+.EX
+git get --branch v1.19.0 golang/go
+.EE
+
+.PP
+\fBSkip host directory:\fP
+
+.EX
+git get --skip-host facebook/react
+# Clones to: ~/repositories/facebook/react/
+.EE
+
+.PP
+\fBList repositories with status:\fP
+
+.EX
+git list --fetch
+.EE
+
+.PP
+\fBGenerate backup list:\fP
+
+.EX
+git list --out dump > backup-$(date +%Y%m%d).txt
+.EE
+
+.SH Troubleshooting
+.SS Common Issues
+\fBPermission denied (SSH):\fP
+
+.EX
+# Make sure SSH keys are configured
+ssh-add -l
+# Or use HTTPS instead
+export GITGET_SCHEME=https
+.EE
+
+.PP
+\fBRepository not found:\fP
+
+.EX
+# Check if repository URL is correct
+git ls-remote https://github.com/user/repo.git
+.EE
+
+.PP
+\fBPath issues on Windows:\fP
+
+.EX
+# Use forward slashes or double backslashes in paths
+git get --root C:/workspace user/repo
+.EE
+
+.SS Debug Mode
+Enable verbose output:
+
+.EX
+# Set environment variable for debug logs
+export GITGET_DEBUG=1
+git get user/repo
+.EE
+
+.SS Getting Help
+.IP \(bu 2
+Check our Issues
+\[la]https://github.com/grdl/git\-get/issues\[ra] for known problems
+.IP \(bu 2
+Create a new issue
+\[la]https://github.com/grdl/git\-get/issues/new\[ra] if you need help
+.IP \(bu 2
+Include output from \fBgit get --version\fR and relevant error messages
+
+.SH Contributing
+We welcome contributions!
+
+.SS Quick Start
+.IP "  1." 5
+\fBFork the repository\fP
+.IP "  2." 5
+\fBCreate a feature branch\fP: \fBgit checkout -b feature/amazing-feature\fR
+.IP "  3." 5
+\fBInstall dependencies\fP: \fBgo mod download\fR
+.IP "  4." 5
+\fBMake changes and add tests\fP
+.IP "  5." 5
+\fBFormat\fP: \fBgo fmt ./...\fR
+.IP "  6." 5
+\fBBuild\fP: \fBgo build -o git-get ./cmd/\fR
+.IP "  7." 5
+\fBRun tests\fP: \fBgo test ./...\fR
+.IP "  8." 5
+\fBRun linter\fP: \fBgolangci-lint run\fR
+.IP "  9." 5
+\fBCommit changes\fP: \fBgit commit -m 'Add amazing feature'\fR
+.IP " 10." 5
+\fBPush to branch\fP: \fBgit push origin feature/amazing-feature\fR
+.IP " 11." 5
+\fBOpen a Pull Request\fP
+
+.SS Testing
+Run the test suite:
+
+.EX
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -race -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+
+# Run specific package tests
+go test -v ./pkg/git
+.EE
+
+.SS Linting
+.EX
+# Install golangci-lint (if not already installed)
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Run linting with the project's configuration
+golangci-lint run
+
+# Run with verbose output
+golangci-lint run -v
+
+# Fix auto-fixable issues
+golangci-lint run --fix
+.EE
+
+.SH License
+This project is licensed under the MIT License - see the 
+\[la]LICENSE.md\[ra] file for details.
+
+.SH Acknowledgments
+\fBInspired by:\fP
+- Go's 
+\[la]https://golang.org/cmd/go/\[ra] command for its elegant repository organization
+- ghq
+\[la]https://github.com/x\-motemen/ghq\[ra] by x-motemen for repository management concepts
+- multi-git-status
+\[la]https://github.com/fboender/multi\-git\-status\[ra] by fboender for status display ideas
+
+.PP
+\fBBuilt with:\fP
+- Cobra
+\[la]https://github.com/spf13/cobra\[ra] for CLI framework
+- Viper
+\[la]https://github.com/spf13/viper\[ra] for configuration management
+- Testify
+\[la]https://github.com/stretchr/testify\[ra] for testing
