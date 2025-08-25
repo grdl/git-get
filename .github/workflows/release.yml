@@ -16,7 +16,7 @@ jobs:
   release:
     name: GoReleaser
     runs-on: ubuntu-latest
-    needs: validate
+    needs: build-and-test
     
     steps:
       - name: Checkout
