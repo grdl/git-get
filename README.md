@@ -3,7 +3,7 @@
 [![build](https://github.com/grdl/git-get/workflows/build/badge.svg)](https://github.com/grdl/git-get/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/grdl/git-get)](https://goreportcard.com/report/github.com/grdl/git-get)
 [![Latest Release](https://img.shields.io/github/v/release/grdl/git-get)](https://github.com/grdl/git-get/releases/latest)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/grdl/git-get)](https://github.com/grdl/git-get/blob/master/go.mod)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/grdl/git-get)](https://github.com/grdl/git-get/blob/main/go.mod)
 [![License](https://img.shields.io/github/license/grdl/git-get)](LICENSE.md)
 
 A tool to clone, organize, and manage multiple Git repositories with an automatic directory structure based on repository URLs.
