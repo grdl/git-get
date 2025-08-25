@@ -5,6 +5,8 @@ import (
 )
 
 func TestParsingRefs(t *testing.T) {
+	t.Parallel()
+
 	var tests = []struct {
 		name       string
 		line       string
@@ -39,6 +41,8 @@ func TestParsingRefs(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := parseLine(test.line)
 			if err != nil && test.wantErr == nil {
 				t.Fatalf("got error %q", err)

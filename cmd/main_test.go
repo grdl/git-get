@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+//nolint:paralleltest // Tests modifies global state (os.Args) and cannot run in parallel
 func TestDetermineCommand(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -102,6 +103,7 @@ func TestDetermineCommand(t *testing.T) {
 	}
 }
 
+//nolint:paralleltest // Tests modifies global state (os.Args) and cannot run in parallel
 func TestHandleGitGetInvocation(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -164,6 +166,7 @@ func TestHandleGitGetInvocation(t *testing.T) {
 	}
 }
 
+//nolint:paralleltest // Tests modifies global state (os.Args) and cannot run in parallel
 func TestHandleGitListInvocation(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -208,6 +211,7 @@ func TestHandleGitListInvocation(t *testing.T) {
 	}
 }
 
+//nolint:paralleltest // Tests modifies global state (os.Args) and cannot run in parallel
 func TestHandleDefaultInvocation(t *testing.T) {
 	tests := []struct {
 		name     string

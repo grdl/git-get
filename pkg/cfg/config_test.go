@@ -17,6 +17,7 @@ var (
 	fromFlag      = "value.from.flag"
 )
 
+//nolint:paralleltest // These tests modify global state (viper, env vars) and cannot run in parallel
 func TestConfig(t *testing.T) {
 	tests := []struct {
 		name        string

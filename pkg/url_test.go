@@ -21,6 +21,8 @@ import (
 // file:///path/to/repo.git/
 
 func TestURLParse(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   string
 		want string
@@ -61,6 +63,8 @@ func TestURLParse(t *testing.T) {
 	}
 }
 func TestURLParseSkipHost(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   string
 		want string
@@ -102,6 +106,8 @@ func TestURLParseSkipHost(t *testing.T) {
 }
 
 func TestDefaultScheme(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in     string
 		scheme string
@@ -130,6 +136,8 @@ func TestDefaultScheme(t *testing.T) {
 }
 
 func TestInvalidURLParse(t *testing.T) {
+	t.Parallel()
+
 	invalidURLs := []string{
 		"",
 		// TODO: This Path is technically a correct scp-like syntax. Not sure how to handle it

@@ -157,8 +157,7 @@ func (r *Repo) Branches() ([]string, error) {
 func (r *Repo) Upstream(branch string) (string, error) {
 	out, err := run.Git("rev-parse", "--abbrev-ref", "--symbolic-full-name", branch+"@{upstream}").OnRepo(r.path).AndCaptureLine()
 	if err != nil {
-		// TODO: no upstream will also throw an error.
-		// lint:ignore nilerr fix when working on TODO
+		//nolint:nilerr // TODO: no upstream will also throw an error.
 		return "", nil
 	}
 

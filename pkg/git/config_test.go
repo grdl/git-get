@@ -21,6 +21,7 @@ func (c *cfgStub) Get(key string) string {
 }
 
 func TestGitConfig(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		configMaker func(t *testing.T) *cfgStub
@@ -53,6 +54,7 @@ func TestGitConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := test.configMaker(t)
 
 			got := cfg.Get(test.key)
