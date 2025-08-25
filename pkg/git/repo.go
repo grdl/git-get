@@ -2,12 +2,13 @@ package git
 
 import (
 	"fmt"
-	"git-get/pkg/run"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/grdl/git-get/pkg/run"
 )
 
 const (

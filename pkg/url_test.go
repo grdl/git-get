@@ -1,8 +1,9 @@
 package pkg
 
 import (
-	"git-get/pkg/cfg"
 	"testing"
+
+	"github.com/grdl/git-get/pkg/cfg"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

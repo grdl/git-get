@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"git-get/pkg"
-	"git-get/pkg/cfg"
-	"git-get/pkg/git"
 	"os"
+
+	"github.com/grdl/git-get/pkg"
+	"github.com/grdl/git-get/pkg/cfg"
+	"github.com/grdl/git-get/pkg/git"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

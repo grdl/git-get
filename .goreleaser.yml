@@ -10,8 +10,8 @@ builds:
     binary: git-get
     ldflags:
       - -s -w 
-      - -X git-get/pkg/cfg.version={{.Version}} 
-      - -X git-get/pkg/cfg.commit={{.Commit}}
+      - -X github.com/grdl/git-get/pkg/cfg.version={{.Version}}
+      - -X github.com/grdl/git-get/pkg/cfg.commit={{.Commit}}
     goos:
       - linux
       - windows
@@ -26,8 +26,8 @@ builds:
     binary: git-get
     ldflags:
       - -s -w 
-      - -X git-get/pkg/cfg.version={{.Version}} 
-      - -X git-get/pkg/cfg.commit={{.Commit}}
+      - -X github.com/grdl/git-get/pkg/cfg.version={{.Version}}
+      - -X github.com/grdl/git-get/pkg/cfg.commit={{.Commit}}
     goos:
       - darwin
     goarch:

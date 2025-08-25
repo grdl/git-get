@@ -3,11 +3,12 @@ package test
 
 import (
 	"fmt"
-	"git-get/pkg/run"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/grdl/git-get/pkg/run"
 )
 
 // TempDir creates a temporary directory inside the parent dir.

@@ -1,4 +1,4 @@
-module git-get
+module github.com/grdl/git-get
 
 go 1.24
 

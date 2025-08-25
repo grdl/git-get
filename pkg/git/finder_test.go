@@ -1,9 +1,10 @@
 package git
 
 import (
-	"git-get/pkg/git/test"
 	"os"
 	"testing"
+
+	"github.com/grdl/git-get/pkg/git/test"
 
 	"github.com/stretchr/testify/assert"
 )
