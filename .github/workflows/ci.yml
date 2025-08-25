@@ -31,12 +31,6 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
           cache: true
-          
-      - name: Download dependencies
-        run: go mod download
-        
-      - name: Verify dependencies
-        run: go mod verify
 
       - name: Build binary
         run: go build -v -o bin/git-get ./cmd/
