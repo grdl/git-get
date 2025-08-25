@@ -19,8 +19,7 @@ linters:
     - godox               # TODO: enable it and handle all the remaning TODOs
     - mnd                 # Impractical. We deal with numbers like file permissions here, it's much clearer to see them explicitly.
     - noinlineerr         # Impractical. Inline error handling is a common and idiomatic practice
-    - paralleltest        # Tests are fast already and paralellizing them adds complexity
-    - testpackage         # TODO: renable it and refactor tests into separate packages
+    - testpackage         # Impractical for CLI apps. This linter is more valuable for libraries to ensure a clean public API.
     - unparam             # Impractical, it flags functions that are designed to be general-purpose, but happen to only be used with specific values currently
     - wsl                 # We use wsl_v5 instead
     - wrapcheck           # Adds too much bloat, many of the errors are contextual enough and don't need wrapping

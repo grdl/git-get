@@ -1,17 +1,20 @@
 package git
 
 import (
-	"git-get/pkg/git/test"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
 	"testing"
 
+	"github.com/grdl/git-get/pkg/git/test"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUncommitted(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		repoMaker func(*testing.T) *test.Repo
@@ -46,6 +49,7 @@ func TestUncommitted(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			r, _ := Open(test.repoMaker(t).Path())
 
 			got, err := r.Uncommitted()
@@ -60,6 +64,8 @@ func TestUncommitted(t *testing.T) {
 	}
 }
 func TestUntracked(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		repoMaker func(*testing.T) *test.Repo
@@ -94,6 +100,7 @@ func TestUntracked(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			r, _ := Open(test.repoMaker(t).Path())
 
 			got, err := r.Untracked()
@@ -109,6 +116,8 @@ func TestUntracked(t *testing.T) {
 }
 
 func TestCurrentBranch(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		repoMaker func(*testing.T) *test.Repo
@@ -133,6 +142,7 @@ func TestCurrentBranch(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			r, _ := Open(test.repoMaker(t).Path())
 
 			got, err := r.CurrentBranch()
@@ -147,6 +157,8 @@ func TestCurrentBranch(t *testing.T) {
 	}
 }
 func TestBranches(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		repoMaker func(*testing.T) *test.Repo
@@ -176,6 +188,7 @@ func TestBranches(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			r, _ := Open(test.repoMaker(t).Path())
 
 			got, err := r.Branches()
@@ -190,6 +203,8 @@ func TestBranches(t *testing.T) {
 	}
 }
 func TestUpstream(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		repoMaker func(*testing.T) *test.Repo
@@ -231,6 +246,7 @@ func TestUpstream(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			r, _ := Open(test.repoMaker(t).Path())
 			got, _ := r.Upstream(test.branch)
 
@@ -246,6 +262,8 @@ func TestUpstream(t *testing.T) {
 	}
 }
 func TestAheadBehind(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		repoMaker func(*testing.T) *test.Repo
@@ -281,6 +299,7 @@ func TestAheadBehind(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			r, _ := Open(test.repoMaker(t).Path())
 
 			upstream, err := r.Upstream(test.branch)
@@ -301,6 +320,7 @@ func TestAheadBehind(t *testing.T) {
 }
 
 func TestCleanupFailedClone(t *testing.T) {
+	t.Parallel()
 	// Test dir structure:
 	// root
 	// └── a/
@@ -335,6 +355,7 @@ func TestCleanupFailedClone(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			t.Parallel()
 			root := createTestDirTree(t)
 
 			path := filepath.Join(root, test.path)
@@ -354,6 +375,8 @@ func TestCleanupFailedClone(t *testing.T) {
 }
 
 func TestRemote(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		repoMaker func(*testing.T) *test.Repo
@@ -382,6 +405,7 @@ func TestRemote(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			r, _ := Open(test.repoMaker(t).Path())
 			got, err := r.Remote()
 

@@ -2,7 +2,7 @@
 package git
 
 import (
-	"git-get/pkg/run"
+	"github.com/grdl/git-get/pkg/run"
 )
 
 // ConfigGlobal represents a global gitconfig file.

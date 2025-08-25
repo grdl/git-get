@@ -1,9 +1,10 @@
 package git
 
 import (
-	"git-get/pkg/git/test"
-	"git-get/pkg/run"
 	"testing"
+
+	"github.com/grdl/git-get/pkg/git/test"
+	"github.com/grdl/git-get/pkg/run"
 )
 
 // cfgStub represents a gitconfig file but instead of using a global one, it creates a temporary git repo and uses its local gitconfig.
@@ -21,6 +22,7 @@ func (c *cfgStub) Get(key string) string {
 }
 
 func TestGitConfig(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		configMaker func(t *testing.T) *cfgStub
@@ -53,6 +55,7 @@ func TestGitConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := test.configMaker(t)
 
 			got := cfg.Get(test.key)

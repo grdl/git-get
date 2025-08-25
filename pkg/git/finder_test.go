@@ -1,14 +1,17 @@
 package git
 
 import (
-	"git-get/pkg/git/test"
 	"os"
 	"testing"
+
+	"github.com/grdl/git-get/pkg/git/test"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFinder(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		reposMaker func(*testing.T) string
@@ -31,6 +34,7 @@ func TestFinder(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			root := test.reposMaker(t)
 
 			finder := NewRepoFinder(root)
@@ -46,6 +50,8 @@ func TestFinder(t *testing.T) {
 }
 
 func TestExists(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		path string
@@ -64,6 +70,8 @@ func TestExists(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := Exists(test.path)
 
 			assert.ErrorIs(t, err, test.want)

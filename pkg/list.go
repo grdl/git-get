@@ -3,10 +3,11 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"git-get/pkg/cfg"
-	"git-get/pkg/git"
-	"git-get/pkg/out"
 	"strings"
+
+	"github.com/grdl/git-get/pkg/cfg"
+	"github.com/grdl/git-get/pkg/git"
+	"github.com/grdl/git-get/pkg/out"
 )
 
 var ErrInvalidOutput = errors.New("invalid output format")

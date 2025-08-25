@@ -3,8 +3,9 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"git-get/pkg/git"
 	"path/filepath"
+
+	"github.com/grdl/git-get/pkg/git"
 )
 
 var ErrMissingRepoArg = errors.New("missing <REPO> argument or --dump flag")
