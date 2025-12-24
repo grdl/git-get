@@ -184,19 +184,6 @@ func indentation(node *Node) string {
 
 	var indent strings.Builder
 
-	const (
-		space = "    "
-		link  = "│   "
-	)
-
-	for _, y := range levels {
-		if y {
-			indent.WriteString(space)
-		} else {
-			indent.WriteString(link)
-		}
-	}
-
 	// Finally, indent by the size of node name (to match the rest of the branches)
 	indent.WriteString(strings.Repeat(" ", len(node.val)+1))
 
