@@ -56,7 +56,7 @@ func TestURLParse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
+		url, err := ParseURL(test.in, cfg.Defaults.DefaultHost, cfg.Defaults.DefaultScheme)
 		require.NoError(t, err)
 
 		got := URLToPath(*url, false)
@@ -98,7 +98,7 @@ func TestURLParseSkipHost(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
+		url, err := ParseURL(test.in, cfg.Defaults.DefaultHost, cfg.Defaults.DefaultScheme)
 		require.NoError(t, err)
 
 		got := URLToPath(*url, true)
@@ -126,7 +126,7 @@ func TestDefaultScheme(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		url, err := ParseURL(test.in, cfg.Defaults[cfg.KeyDefaultHost], test.scheme)
+		url, err := ParseURL(test.in, cfg.Defaults.DefaultHost, test.scheme)
 		require.NoError(t, err)
 
 		want, err := url.Parse(test.want)
@@ -149,7 +149,7 @@ func TestInvalidURLParse(t *testing.T) {
 	}
 
 	for _, test := range invalidURLs {
-		_, err := ParseURL(test, cfg.Defaults[cfg.KeyDefaultHost], cfg.Defaults[cfg.KeyDefaultScheme])
+		_, err := ParseURL(test, cfg.Defaults.DefaultHost, cfg.Defaults.DefaultScheme)
 
 		assert.Error(t, err)
 	}

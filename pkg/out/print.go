@@ -24,7 +24,7 @@ type Printable interface {
 // Errors returns a printable list of errors from the slice of Printables or an empty string if there are no errors.
 // It's meant to be appended at the end of Print() result.
 func Errors(repos []Printable) string {
-	errors := []string{}
+	errors := make([]string, 0, len(repos))
 
 	for _, repo := range repos {
 		errors = append(errors, repo.Errors()...)

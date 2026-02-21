@@ -37,7 +37,7 @@ func TestFinder(t *testing.T) {
 			t.Parallel()
 			root := test.reposMaker(t)
 
-			finder := NewRepoFinder(root)
+			finder := NewRepoFinder([]string{root})
 
 			err := finder.Find()
 			if err != nil {

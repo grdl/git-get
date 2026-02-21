@@ -172,7 +172,7 @@ git get <REPOSITORY> [flags]
 - `-b, --branch <name>` - Branch or tag to checkout after cloning
 - `-d, --dump <file>` - Clone multiple repositories from a dump file
 - `-t, --host <host>` - Default host for short repository names (default: github.com)
-- `-r, --root <path>` - Root directory for repositories (default: ~/repositories)
+- `-r, --root <path>` - Root directory for repositories. If multiple roots are configured, the first one is used for cloning. (default: ~/repositories)
 - `-c, --scheme <scheme>` - Default scheme for URLs (default: ssh)
 - `-s, --skip-host` - Skip creating host directory
 - `-h, --help` - Show help
@@ -195,7 +195,7 @@ git list [flags]
 **Flags:**
 - `-f, --fetch` - Fetch from remotes before listing
 - `-o, --out <format>` - Output format: tree, flat, or dump (default: tree)
-- `-r, --root <path>` - Root directory to scan (default: ~/repositories)
+- `-r, --root <path>` - Root directory to scan. Can be specified multiple times to scan multiple directories. (default: ~/repositories)
 - `-h, --help` - Show help
 - `-v, --version` - Show version
 
@@ -248,7 +248,8 @@ export GITGET_SKIP_HOST=true
 Add a `[gitget]` section to your global Git configuration:
 
 ```bash
-git config --global gitget.root /workspace/repositories
+git config --global --add gitget.root /workspace/repositories
+git config --global --add gitget.root /another/path
 git config --global gitget.host gitlab.com
 git config --global gitget.skip-host true
 ```
@@ -257,6 +258,7 @@ Or edit `~/.gitconfig` directly:
 ```ini
 [gitget]
     root = /workspace/repositories
+    root = /another/path
     host = gitlab.com
     skip-host = true
 ```

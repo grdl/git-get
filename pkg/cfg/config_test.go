@@ -3,6 +3,7 @@ package cfg
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -29,7 +30,7 @@ func TestConfig(t *testing.T) {
 			name:        "no config",
 			configMaker: testConfigEmpty,
 			key:         KeyDefaultHost,
-			want:        Defaults[KeyDefaultHost],
+			want:        Defaults.DefaultHost,
 		},
 		{
 			name:        "value only in gitconfig",
@@ -55,14 +56,39 @@ func TestConfig(t *testing.T) {
 			key:         KeyDefaultHost,
 			want:        fromFlag,
 		},
+		{
+			name:        "multiple roots in gitconfig",
+			configMaker: testConfigMultipleRootsInGitconfig,
+			key:         KeyReposRoot,
+			want:        "root1,root2",
+		},
+		{
+			name:        "multiple roots in env var",
+			configMaker: testConfigMultipleRootsInEnvVar,
+			key:         KeyReposRoot,
+			want:        "root1,root2",
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			viper.SetDefault(test.key, Defaults[KeyDefaultHost])
+			// Set manual defaults for test keys
+			switch test.key {
+			case KeyDefaultHost:
+				viper.SetDefault(test.key, Defaults.DefaultHost)
+			case KeyReposRoot:
+				viper.SetDefault(test.key, Defaults.ReposRoot)
+			}
+
 			test.configMaker(t)
 
-			got := viper.GetString(test.key)
+			var got string
+			if test.key == KeyReposRoot {
+				got = strings.Join(viper.GetStringSlice(test.key), ",")
+			} else {
+				got = viper.GetString(test.key)
+			}
+
 			if got != test.want {
 				t.Errorf("expected %q; got %q", test.want, got)
 			}
@@ -80,10 +106,28 @@ func (c *gitconfigEmpty) Get(key string) string {
 	return ""
 }
 
+func (c *gitconfigEmpty) GetAll(key string) []string {
+	return nil
+}
+
 type gitconfigValid struct{}
 
 func (c *gitconfigValid) Get(key string) string {
 	return fromGitconfig
+}
+
+func (c *gitconfigValid) GetAll(key string) []string {
+	return []string{fromGitconfig}
+}
+
+type gitconfigMultipleRoots struct{}
+
+func (c *gitconfigMultipleRoots) Get(key string) string {
+	return "root1"
+}
+
+func (c *gitconfigMultipleRoots) GetAll(key string) []string {
+	return []string{"root1", "root2"}
 }
 
 func testConfigEmpty(t *testing.T) {
@@ -114,7 +158,7 @@ func testConfigInFlag(t *testing.T) {
 	t.Setenv(envVarName, fromEnv)
 
 	cmd := cobra.Command{}
-	cmd.PersistentFlags().String(KeyDefaultHost, Defaults[KeyDefaultHost], "")
+	cmd.PersistentFlags().String(KeyDefaultHost, Defaults.DefaultHost, "")
 
 	if err := viper.BindPFlag(KeyDefaultHost, cmd.PersistentFlags().Lookup(KeyDefaultHost)); err != nil {
 		t.Fatalf("failed to bind flag: %v", err)
@@ -125,4 +169,17 @@ func testConfigInFlag(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("failed to execute command: %v", err)
 	}
+}
+
+func testConfigMultipleRootsInGitconfig(t *testing.T) {
+	t.Helper()
+	Init(&gitconfigMultipleRoots{})
+}
+
+func testConfigMultipleRootsInEnvVar(t *testing.T) {
+	t.Helper()
+
+	envKey := fmt.Sprintf("%s_%s", strings.ToUpper(GitgetPrefix), strings.ToUpper(KeyReposRoot))
+	t.Setenv(envKey, strings.Join([]string{"root1", "root2"}, string(filepath.ListSeparator)))
+	Init(&gitconfigEmpty{})
 }

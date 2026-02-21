@@ -24,8 +24,8 @@ func newListCommand() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().BoolP(cfg.KeyFetch, "f", false, "First fetch from remotes before listing repositories.")
-	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.Defaults[cfg.KeyOutput], fmt.Sprintf("Output format. Allowed values: [%s].", strings.Join(cfg.AllowedOut, ", ")))
-	cmd.PersistentFlags().StringP(cfg.KeyReposRoot, "r", cfg.Defaults[cfg.KeyReposRoot], "Path to repos root where repositories are cloned.")
+	cmd.PersistentFlags().StringP(cfg.KeyOutput, "o", cfg.Defaults.Output, fmt.Sprintf("Output format. Allowed values: [%s].", strings.Join(cfg.AllowedOut, ", ")))
+	cmd.PersistentFlags().StringSliceP(cfg.KeyReposRoot, "r", cfg.Defaults.ReposRoot, "Path to repos root where repositories are scanned.")
 	cmd.PersistentFlags().BoolP("help", "h", false, "Print this help and exit.")
 	cmd.PersistentFlags().BoolP("version", "v", false, "Print version and exit.")
 
@@ -42,7 +42,7 @@ func runListCommand(_ *cobra.Command, _ []string) error {
 	config := &pkg.ListCfg{
 		Fetch:  viper.GetBool(cfg.KeyFetch),
 		Output: viper.GetString(cfg.KeyOutput),
-		Root:   viper.GetString(cfg.KeyReposRoot),
+		Roots:  viper.GetStringSlice(cfg.KeyReposRoot),
 	}
 
 	return pkg.List(config)

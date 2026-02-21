@@ -253,7 +253,7 @@ git get <REPOSITORY> [flags]
 - \fB-b, --branch <name>\fR - Branch or tag to checkout after cloning
 - \fB-d, --dump <file>\fR - Clone multiple repositories from a dump file
 - \fB-t, --host <host>\fR - Default host for short repository names (default: github.com)
-- \fB-r, --root <path>\fR - Root directory for repositories (default: ~/repositories)
+- \fB-r, --root <path>\fR - Root directory for repositories. If multiple roots are configured, the first one is used for cloning. (default: ~/repositories)
 - \fB-c, --scheme <scheme>\fR - Default scheme for URLs (default: ssh)
 - \fB-s, --skip-host\fR - Skip creating host directory
 - \fB-h, --help\fR - Show help
@@ -277,7 +277,7 @@ git list [flags]
 \fBFlags:\fP
 - \fB-f, --fetch\fR - Fetch from remotes before listing
 - \fB-o, --out <format>\fR - Output format: tree, flat, or dump (default: tree)
-- \fB-r, --root <path>\fR - Root directory to scan (default: ~/repositories)
+- \fB-r, --root <path>\fR - Root directory to scan. Can be specified multiple times to scan multiple directories. (default: ~/repositories)
 - \fB-h, --help\fR - Show help
 - \fB-v, --version\fR - Show version
 
@@ -333,7 +333,8 @@ export GITGET_SKIP_HOST=true
 Add a \fB[gitget]\fR section to your global Git configuration:
 
 .EX
-git config --global gitget.root /workspace/repositories
+git config --global --add gitget.root /workspace/repositories
+git config --global --add gitget.root /another/path
 git config --global gitget.host gitlab.com
 git config --global gitget.skip-host true
 .EE
@@ -344,6 +345,7 @@ Or edit \fB~/.gitconfig\fR directly:
 .EX
 [gitget]
     root = /workspace/repositories
+    root = /another/path
     host = gitlab.com
     skip-host = true
 .EE
