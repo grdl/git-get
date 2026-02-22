@@ -92,10 +92,12 @@ Acknowledgments
 \fBgit-get\fP solves the problem of manually organizing multiple Git repositories. Instead of scattered clones in random directories, it creates a clean, predictable directory structure based on repository URLs, similar to Go's \fBgo get\fR command.
 
 .PP
-It provides two commands through a single binary:
+It provides three commands through a single binary:
 - \fB\fBgit get\fR\fP - Clones repositories into an organized directory tree
 .br
 - \fB\fBgit list\fR\fP - Shows the status of all your repositories at a glance
+.br
+- \fB\fBgit cd\fR\fP - Fuzzy find and jump to a repository directory
 
 .PP
 \fINote: Both commands are provided by a single \fBgit-get\fR binary that automatically detects how it was invoked (either directly or via symlink).\fP
@@ -253,7 +255,7 @@ git get <REPOSITORY> [flags]
 - \fB-b, --branch <name>\fR - Branch or tag to checkout after cloning
 - \fB-d, --dump <file>\fR - Clone multiple repositories from a dump file
 - \fB-t, --host <host>\fR - Default host for short repository names (default: github.com)
-- \fB-r, --root <path>\fR - Root directory for repositories (default: ~/repositories)
+- \fB-r, --root <path>\fR - Root directory for repositories. If multiple roots are configured, the first one is used for cloning. (default: ~/repositories)
 - \fB-c, --scheme <scheme>\fR - Default scheme for URLs (default: ssh)
 - \fB-s, --skip-host\fR - Skip creating host directory
 - \fB-h, --help\fR - Show help
@@ -270,14 +272,52 @@ git get <REPOSITORY> [flags]
 Display repository status with multiple output formats:
 
 .EX
-git list [flags]
+git list [QUERY] [flags]
 .EE
+
+.PP
+\fBArguments:\fP
+- \fB[QUERY]\fR - Optional fuzzy search pattern to filter repositories by path.
 
 .PP
 \fBFlags:\fP
 - \fB-f, --fetch\fR - Fetch from remotes before listing
 - \fB-o, --out <format>\fR - Output format: tree, flat, or dump (default: tree)
-- \fB-r, --root <path>\fR - Root directory to scan (default: ~/repositories)
+- \fB-r, --root <path>\fR - Root directory to scan. Can be specified multiple times to scan multiple directories. (default: ~/repositories)
+- \fB-h, --help\fR - Show help
+- \fB-v, --version\fR - Show version
+
+.SS git cd
+Fuzzy find a repository and jump to its directory. \fBNote:\fP Since a child process cannot change the shell's directory, a shell function wrapper is required.
+
+To enable this, add the following to your shell profile:
+
+\fBBash/Zsh:\fP
+Add to \fB~/.bashrc\fR or \fB~/.zshrc\fR:
+.EX
+eval "$(git-get shell-init bash)"
+.EE
+
+\fBFish:\fP
+Add to \fB~/.config/fish/config.fish\fR:
+.EX
+git-get shell-init fish | source
+.EE
+
+This setup provides both a \fBgitcd\fR helper and a \fBgit cd\fR override that will correctly change your shell's current working directory.
+
+\fBUsage:\fP
+.EX
+git cd [QUERY] [flags]
+.EE
+
+.PP
+\fBArguments:\fP
+- \fB[QUERY]\fR - Optional fuzzy search pattern. If multiple repositories match, an interactive fuzzy finder will be shown.
+
+.PP
+\fBFlags:\fP
+- \fB-r, --root <path>\fR - Root directory to scan. Can be specified multiple times.
 - \fB-h, --help\fR - Show help
 - \fB-v, --version\fR - Show version
 
@@ -333,7 +373,8 @@ export GITGET_SKIP_HOST=true
 Add a \fB[gitget]\fR section to your global Git configuration:
 
 .EX
-git config --global gitget.root /workspace/repositories
+git config --global --add gitget.root /workspace/repositories
+git config --global --add gitget.root /another/path
 git config --global gitget.host gitlab.com
 git config --global gitget.skip-host true
 .EE
@@ -344,6 +385,7 @@ Or edit \fB~/.gitconfig\fR directly:
 .EX
 [gitget]
     root = /workspace/repositories
+    root = /another/path
     host = gitlab.com
     skip-host = true
 .EE

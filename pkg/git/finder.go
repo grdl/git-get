@@ -36,15 +36,15 @@ func Exists(path string) (bool, error) {
 
 // RepoFinder finds git repositories inside a given path and loads their status.
 type RepoFinder struct {
-	root       string
+	roots      []string
 	repos      []*Repo
 	maxWorkers int
 }
 
-// NewRepoFinder returns a RepoFinder pointed at given root path.
-func NewRepoFinder(root string) *RepoFinder {
+// NewRepoFinder returns a RepoFinder pointed at given root paths.
+func NewRepoFinder(roots []string) *RepoFinder {
 	return &RepoFinder{
-		root:       root,
+		roots:      roots,
 		maxWorkers: maxWorkers,
 	}
 }
@@ -53,50 +53,52 @@ func NewRepoFinder(root string) *RepoFinder {
 // It doesn't add repositories nested inside other git repos.
 // Returns error if root repo path can't be found or accessed.
 func (f *RepoFinder) Find() error {
-	if _, err := Exists(f.root); err != nil {
-		return fmt.Errorf("failed to access root path: %w", err)
-	}
+	for _, root := range f.roots {
+		if _, err := Exists(root); err != nil {
+			return fmt.Errorf("failed to access root path: %w", err)
+		}
 
-	err := filepath.WalkDir(f.root, func(path string, dir fs.DirEntry, err error) error {
-		// Handle walk errors
-		if err != nil {
-			// Skip permission errors but continue walking
-			if os.IsPermission(err) {
-				return nil // Skip this path but continue
+		err := filepath.WalkDir(root, func(path string, dir fs.DirEntry, err error) error {
+			// Handle walk errors
+			if err != nil {
+				// Skip permission errors but continue walking
+				if os.IsPermission(err) {
+					return nil // Skip this path but continue
+				}
+
+				return fmt.Errorf("failed to walk %s: %w", path, err)
 			}
 
-			return fmt.Errorf("failed to walk %s: %w", path, err)
+			// Only process directories
+			if !dir.IsDir() {
+				return nil
+			}
+
+			// Case 1: We're looking at a .git directory itself
+			if dir.Name() == dotgit {
+				parentPath := filepath.Dir(path)
+				f.addIfOk(parentPath)
+
+				return fs.SkipDir // Skip the .git directory contents
+			}
+
+			// Case 2: Check if this directory contains a .git subdirectory
+			gitPath := filepath.Join(path, dotgit)
+			if _, err := os.Stat(gitPath); err == nil {
+				f.addIfOk(path)
+
+				return fs.SkipDir // Skip this directory's contents since it's a repo
+			}
+
+			return nil // Continue walking
+		})
+		if err != nil {
+			return fmt.Errorf("failed to walk directory tree: %w", err)
 		}
-
-		// Only process directories
-		if !dir.IsDir() {
-			return nil
-		}
-
-		// Case 1: We're looking at a .git directory itself
-		if dir.Name() == dotgit {
-			parentPath := filepath.Dir(path)
-			f.addIfOk(parentPath)
-
-			return fs.SkipDir // Skip the .git directory contents
-		}
-
-		// Case 2: Check if this directory contains a .git subdirectory
-		gitPath := filepath.Join(path, dotgit)
-		if _, err := os.Stat(gitPath); err == nil {
-			f.addIfOk(path)
-
-			return fs.SkipDir // Skip this directory's contents since it's a repo
-		}
-
-		return nil // Continue walking
-	})
-	if err != nil {
-		return fmt.Errorf("failed to walk directory tree: %w", err)
 	}
 
 	if len(f.repos) == 0 {
-		return fmt.Errorf("%w in root path %s", ErrNoReposFound, f.root)
+		return fmt.Errorf("%w in root paths %s", ErrNoReposFound, strings.Join(f.roots, ", "))
 	}
 
 	return nil

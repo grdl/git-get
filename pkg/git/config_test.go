@@ -21,6 +21,15 @@ func (c *cfgStub) Get(key string) string {
 	return out
 }
 
+func (c *cfgStub) GetAll(key string) []string {
+	out, err := run.Git("config", "--local", "--get-all", key).OnRepo(c.Path()).AndCaptureLines()
+	if err != nil {
+		return nil
+	}
+
+	return out
+}
+
 func TestGitConfig(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

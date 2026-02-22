@@ -3,7 +3,6 @@
 package cfg
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -27,12 +26,20 @@ var (
 	KeyReposRoot     = "root"
 )
 
-// Defaults is a map of default values for config keys.
-var Defaults = map[string]string{
-	KeyDefaultHost:   "github.com",
-	KeyOutput:        OutTree,
-	KeyReposRoot:     fmt.Sprintf("~%c%s", filepath.Separator, "repositories"),
-	KeyDefaultScheme: "ssh",
+// ConfigDefaults is a struct with default values for config keys.
+type ConfigDefaults struct {
+	DefaultHost   string
+	Output        string
+	ReposRoot     []string
+	DefaultScheme string
+}
+
+// Defaults is an instance of ConfigDefaults with default values.
+var Defaults = ConfigDefaults{
+	DefaultHost:   "github.com",
+	Output:        OutTree,
+	ReposRoot:     []string{fmt.Sprintf("~%c%s", filepath.Separator, "repositories")},
+	DefaultScheme: "ssh",
 }
 
 // Values for the --out flag.
@@ -68,6 +75,7 @@ func Version() string {
 // Gitconfig represents gitconfig file.
 type Gitconfig interface {
 	Get(key string) string
+	GetAll(key string) []string
 }
 
 // Init initializes viper config registry. Values are looked up in the following order: cli flag, env variable, gitconfig file, default value.
@@ -76,41 +84,63 @@ func Init(cfg Gitconfig) {
 
 	viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
 	viper.AutomaticEnv()
+
+	// Handle GITGET_ROOT as a path list (like PATH), using OS separator.
+	envKey := fmt.Sprintf("%s_%s", strings.ToUpper(GitgetPrefix), strings.ToUpper(KeyReposRoot))
+	if val := os.Getenv(envKey); val != "" {
+		viper.Set(KeyReposRoot, filepath.SplitList(val))
+	}
 }
 
 // readGitConfig loads values from gitconfig file into viper's registry.
 // Viper doesn't support the gitconfig format so we load it using "git config --global" command and populate a temporary "env" string,
 // which is then feed to Viper.
 func readGitconfig(cfg Gitconfig) {
-	var lines []string
-
-	// TODO: Can we somehow iterate over all possible flags?
-	for key := range Defaults {
-		if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, key)); val != "" {
-			lines = append(lines, fmt.Sprintf("%s=%s", key, val))
-		}
+	// Root is a list of roots, so it needs to be handled separately using GetAll.
+	if val := cfg.GetAll(fmt.Sprintf("%s.%s", GitgetPrefix, KeyReposRoot)); len(val) > 0 {
+		viper.SetDefault(KeyReposRoot, val)
 	}
 
-	viper.SetConfigType("env")
-
-	if err := viper.ReadConfig(bytes.NewBufferString(strings.Join(lines, "\n"))); err != nil {
-		// Log error but don't fail - configuration is optional
-		fmt.Fprintf(os.Stderr, "Warning: failed to read git config: %v\n", err)
+	// For other keys we use Get.
+	keys := []string{KeyDefaultHost, KeyOutput, KeyDefaultScheme}
+	for _, key := range keys {
+		if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, key)); val != "" {
+			viper.SetDefault(key, val)
+		}
 	}
 
 	// TODO: A hacky way to read boolean flag from gitconfig. Find a cleaner way.
 	if val := cfg.Get(fmt.Sprintf("%s.%s", GitgetPrefix, KeySkipHost)); strings.ToLower(val) == "true" {
-		viper.Set(KeySkipHost, true)
+		viper.SetDefault(KeySkipHost, true)
 	}
 }
 
 // Expand applies the variables expansion to a viper config of given key.
 // If expansion fails or is not needed, the config is not modified.
 func Expand(key string) {
+	if key == KeyReposRoot {
+		roots := viper.GetStringSlice(KeyReposRoot)
+
+		expandedRoots := make([]string, 0, len(roots))
+		for _, path := range roots {
+			if after, ok := strings.CutPrefix(path, "~"); ok {
+				if homeDir, err := os.UserHomeDir(); err == nil {
+					path = filepath.Join(homeDir, after)
+				}
+			}
+
+			expandedRoots = append(expandedRoots, path)
+		}
+
+		viper.Set(key, expandedRoots)
+
+		return
+	}
+
 	path := viper.GetString(key)
-	if strings.HasPrefix(path, "~") {
+	if after, ok := strings.CutPrefix(path, "~"); ok {
 		if homeDir, err := os.UserHomeDir(); err == nil {
-			expanded := filepath.Join(homeDir, strings.TrimPrefix(path, "~"))
+			expanded := filepath.Join(homeDir, after)
 			viper.Set(key, expanded)
 		}
 	}

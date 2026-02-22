@@ -18,3 +18,13 @@ func (c *ConfigGlobal) Get(key string) string {
 
 	return out
 }
+
+// GetAll reads all values for a given key from global gitconfig file. Returns empty slice when key is missing.
+func (c *ConfigGlobal) GetAll(key string) []string {
+	out, err := run.Git("config", "--global", "--get-all", key).AndCaptureLines()
+	if err != nil {
+		return nil
+	}
+
+	return out
+}

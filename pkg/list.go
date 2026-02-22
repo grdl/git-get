@@ -8,6 +8,7 @@ import (
 	"github.com/grdl/git-get/pkg/cfg"
 	"github.com/grdl/git-get/pkg/git"
 	"github.com/grdl/git-get/pkg/out"
+	"github.com/sahilm/fuzzy"
 )
 
 var ErrInvalidOutput = errors.New("invalid output format")
@@ -16,17 +17,37 @@ var ErrInvalidOutput = errors.New("invalid output format")
 type ListCfg struct {
 	Fetch  bool
 	Output string
-	Root   string
+	Roots  []string
+	Query  string
 }
 
 // List executes the "git list" command.
 func List(conf *ListCfg) error {
-	finder := git.NewRepoFinder(conf.Root)
+	finder := git.NewRepoFinder(conf.Roots)
 	if err := finder.Find(); err != nil {
 		return err
 	}
 
 	statuses := finder.LoadAll(conf.Fetch)
+
+	// Filter statuses if query is provided
+	if conf.Query != "" {
+		paths := make([]string, len(statuses))
+		for i, s := range statuses {
+			paths[i] = s.Path()
+		}
+
+		searchPaths := getRelativePaths(conf.Roots, paths)
+
+		matches := fuzzy.Find(conf.Query, searchPaths)
+		filteredStatuses := make([]*git.Status, len(matches))
+
+		for i, match := range matches {
+			filteredStatuses[i] = statuses[match.Index]
+		}
+
+		statuses = filteredStatuses
+	}
 
 	printables := make([]out.Printable, len(statuses))
 
@@ -38,7 +59,7 @@ func List(conf *ListCfg) error {
 	case cfg.OutFlat:
 		fmt.Print(out.NewFlatPrinter().Print(printables))
 	case cfg.OutTree:
-		fmt.Print(out.NewTreePrinter().Print(conf.Root, printables))
+		printTree(conf.Roots, printables)
 	case cfg.OutDump:
 		fmt.Print(out.NewDumpPrinter().Print(printables))
 	default:
@@ -46,4 +67,26 @@ func List(conf *ListCfg) error {
 	}
 
 	return nil
+}
+
+func printTree(roots []string, printables []out.Printable) {
+	if len(roots) == 1 {
+		fmt.Print(out.NewTreePrinter().Print(roots[0], printables))
+
+		return
+	}
+
+	for _, root := range roots {
+		rootRepos := []out.Printable{}
+
+		for _, p := range printables {
+			if strings.HasPrefix(p.Path(), root) {
+				rootRepos = append(rootRepos, p)
+			}
+		}
+
+		if len(rootRepos) > 0 {
+			fmt.Print(out.NewTreePrinter().Print(root, rootRepos))
+		}
+	}
 }

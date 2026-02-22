@@ -44,6 +44,20 @@ func TestDetermineCommand(t *testing.T) {
 			wantArgs:    []string{},
 		},
 		{
+			name:        "git-get with cd subcommand",
+			programName: "git-get",
+			args:        []string{"git-get", "cd", "query"},
+			wantCmd:     "cd",
+			wantArgs:    []string{"query"},
+		},
+		{
+			name:        "git-get with shell-init subcommand",
+			programName: "git-get",
+			args:        []string{"git-get", "shell-init", "bash"},
+			wantCmd:     "shell-init",
+			wantArgs:    []string{"bash"},
+		},
+		{
 			name:        "git-list with no args",
 			programName: "git-list",
 			args:        []string{"git-list"},
@@ -134,6 +148,18 @@ func TestHandleGitGetInvocation(t *testing.T) {
 			args:     []string{"git-get", "list", "--fetch"},
 			wantCmd:  "list",
 			wantArgs: []string{"--fetch"},
+		},
+		{
+			name:     "with cd subcommand",
+			args:     []string{"git-get", "cd", "query"},
+			wantCmd:  "cd",
+			wantArgs: []string{"query"},
+		},
+		{
+			name:     "with shell-init subcommand",
+			args:     []string{"git-get", "shell-init", "zsh"},
+			wantCmd:  "shell-init",
+			wantArgs: []string{"zsh"},
 		},
 		{
 			name:     "with invalid subcommand",
