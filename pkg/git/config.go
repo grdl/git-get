@@ -8,10 +8,12 @@ import (
 // ConfigGlobal represents a global gitconfig file.
 type ConfigGlobal struct{}
 
-// Get reads a value from global gitconfig file. Returns empty string when key is missing.
+// Get reads a value from gitconfig using git's native scope resolution.
+// Returns empty string when key is missing in all scopes.
 func (c *ConfigGlobal) Get(key string) string {
-	out, err := run.Git("config", "--global", key).AndCaptureLine()
-	// In case of error return an empty string, the missing value will fall back to a default.
+	// Use git config without scope flags to let git handle precedence naturally.
+	// This ensures XDG config dir (~/.config/git/config) is checked when ~/.gitconfig exists.
+	out, err := run.Git("config", "--get", key).AndCaptureLine()
 	if err != nil {
 		return ""
 	}
