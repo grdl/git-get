@@ -75,6 +75,7 @@ func Init(cfg Gitconfig) {
 	readGitconfig(cfg)
 
 	viper.SetEnvPrefix(strings.ToUpper(GitgetPrefix))
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 }
 

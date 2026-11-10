@@ -74,6 +74,19 @@ func TestConfig(t *testing.T) {
 	}
 }
 
+//nolint:paralleltest // These tests modify global state (viper, env vars) and cannot run in parallel
+func TestConfigSkipHostEnvVar(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	Init(&gitconfigEmpty{})
+	t.Setenv("GITGET_SKIP_HOST", "true")
+
+	if !viper.GetBool(KeySkipHost) {
+		t.Error("expected skip-host to be true from GITGET_SKIP_HOST")
+	}
+}
+
 type gitconfigEmpty struct{}
 
 func (c *gitconfigEmpty) Get(key string) string {
